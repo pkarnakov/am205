@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>AM205 Lectures</title>
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/am205.css" id="theme">
+  </head>
+  <body>
+
+    <style>
+.katex{
+  font-size:1em;
+}
+    </style>
+
+    <div class="reveal">
+      <div class="slides">
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lectures</h2>
+
+<ul>
+  <li><a href="unit0/index.html">Unit 0. Introduction</a></li>
+  <li><a href="unit1/index.html">Unit 1. Data fitting</a></li>
+  <li><a href="unit2/index.html">Unit 2. Numerical linear algebra</a></li>
+  <li><a href="unit3/index.html">Unit 3. Numerical calculus</a></li>
+  <li><a href="unit4/index.html">Unit 4. Optimization</a></li>
+  <li><a href="unit5/index.html">Unit 5. Eigenvalue problems and iterative methods</a></li>
+</ul>
+</section>
+
+
+        <script src="dist/reveal.js"></script>
+        <script src="plugin/markdown/markdown.js"></script>
+        <script src="plugin/highlight/highlight.js"></script>
+        <script src="plugin/notes/notes.js"></script>
+        <script src="plugin/math/math.js"></script>
+
+        <script>
+          Reveal.initialize({
+            controls: false,
+            progress: false,
+            slideNumber: false,
+            history: false,
+            center: true,
+            hash: true,
+            transition: 'none',
+            transitionSpeed: 'fast',
+            backgroundTransition: 'none',
+            // Slide size and layout.
+            center: true,
+            width: 960,
+            height: 540,
+
+            katex: {
+              trust: true,
+            },
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX]
+          });
+          Reveal.configure({ pdfSeparateFragments: false });
+        </script>
+  </body>
+</html>

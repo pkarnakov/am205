@@ -1,0 +1,11 @@
+#!/bin/sh
+
+
+url=code.harvard.edu/AM205/public
+urln=github.com/pkarnakov/am205
+
+
+for f in unit*/index.html ; do
+  echo $f
+  sed -i "s,$url,$urln,g" "$f"
+done

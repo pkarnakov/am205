@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>AM205 Agenda</title>
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/am205.css" id="theme">
+    <link rel="stylesheet" href="../plugin/highlight/gruvbox-dark.css">
+
+    <script defer="" src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () {
+       var mathElements = document.getElementsByClassName("math");
+       var macros = [];
+       for (var i = 0; i < mathElements.length; i++) {
+        var texText = mathElements[i].firstChild;
+        if (mathElements[i].tagName == "SPAN") {
+         katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+         });
+      }}});
+    </script>
+  </head>
+  <body>
+
+    <style>
+.katex{
+  font-size:1em;
+}
+    </style>
+
+    <div class="reveal">
+      <div class="slides">
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 1</h2>
+<h3>
+<a href="../logistics">Logistics</a>.
+<a href="../unit0">Unit 0</a> (introduction, <br>sources of error, numerical sensitivity)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+August 31, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 2</h2>
+<h3><a href="../unit1">Unit 1</a> (data fitting, <br>interpolating discrete data,<br>function approximation)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+September 7, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 3</h2>
+<h3><a href="../unit1/#/39">Unit 1</a> (Lebesgue constant, <br>piecewise interpolation,<br>linear least squares)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+September 12, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 4</h2>
+<h3><a href="../unit1/#/74">Unit 1</a> (underdetermined least squares,<br>nonlinear least squares)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+September 14, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 5</h2>
+<h3><a href="../unit2/#/0">Unit 2</a> (numerical linear algebra,<br>norms, residual)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+September 19, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 6</h2>
+<h3><a href="../unit2/#/38">Unit 2</a> (linear systems, LU and Cholesky<br> factorizations, performance metrics)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+September 21, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 7</h2>
+<h3>Quiz 1 solution, <a href="../unit2/#/87">Unit 2</a> (sparse matrices,<br> QR factorization, Gram-Schmidt process)</h3>
+
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+September 26, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 8</h2>
+<h3><a href="../unit2/#/113">Unit 2</a> (Householder triangularization, <br>Givens rotations, sparsity patterns)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+September 28, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 9</h2>
+<h3><a href="../unit2/#/143">Unit 2</a> (singular value decomposition, <br>principal component analysis)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+October 3, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 10</h2>
+<h3><a href="../unit3/#/0">Unit 3</a> (numerical calculus, <br>numerical integration, Gauss quadrature)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+October 5, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 11</h2>
+<h3>Quiz 2 solution, <a href="../unit3/#/41">Unit 3</a> (Gauss quadrature,<br> finite differences, ODE initial value problems)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+October 12, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 12</h2>
+<h3><a href="../unit3/#/74">Unit 3</a> (ODE convergence, <br>stability, Runge-Kutta methods)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+October 17, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 13</h2>
+<h3><a href="../unit3/#/114">Unit 3</a> (Richardson extrapolation, <br>stiff systems, multistep methods)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+October 19, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 14</h2>
+<h3><a href="../unit3/#/127">Unit 3</a> (ODE boundary value problems, <br>hyperbolic PDEs, advection equation)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+October 24, 2022
+</section>
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 15</h2>
+<h3><a href="../unit3/#/158">Unit 3</a> (CFL condition, upwinding,<br> accuracy and stability, wave equation)</h3>
+
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+October 26, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 16</h2>
+<h3><a href="../unit3/#/192">Unit 3</a> (parabolic PDEs, heat equation,<br>elliptic PDEs, Poisson equation)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+October 31, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 17</h2>
+<h3><a href="../unit4/#/0">Unit 4</a> (nonlinear equations and optimization,<br> Newton and secant methods)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+November 2, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 18</h2>
+<h3><a href="../unit4/#/40">Unit 4</a> (nonlinear systems, optimization, <br> optimality conditions)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+November 7, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 19</h2>
+<h3><a href="../unit4/#/65">Unit 4</a> (optimality conditions,<br> steepest descent, Newton)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+November 9, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 20</h2>
+<h3>Quiz 3 solution, <a href="../unit4/#/96">Unit 4</a> (BFGS,<br>constrained optimization)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+November 14, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 21</h2>
+<h3><a href="../unit4/#/117">Unit 4</a> (SQP, penalty method, PDE-constrained <br> optimization, linear programming)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+November 16, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 22</h2>
+<h3><a href="../unit5/#/1">Unit 5</a> (eigenvalue problems, <br> Gershgorin theorem, power method)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+November 21, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 23</h2>
+<h3><a href="../unit5/#/41">Unit 5</a> (Rayleigh quotient, QR algorithm)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+November 28, 2022
+</section>
+
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Lecture 24</h2>
+<h3><a href="../unit5/#/66">Unit 5</a> (conjugate gradients, multigrid)</h3>
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+November 30, 2022
+</section>
+
+
+    </div>
+  </div>
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin/markdown/markdown.js"></script>
+        <script src="../plugin/highlight/highlight.js"></script>
+        <script src="../plugin/notes/notes.js"></script>
+        <script src="../plugin/math/math.js"></script>
+
+        <script>
+          Reveal.initialize({
+            controls: false,
+            progress: false,
+            slideNumber: false,
+            history: false,
+            center: true,
+            hash: true,
+            transition: 'none',
+            transitionSpeed: 'fast',
+            backgroundTransition: 'none',
+            // Slide size and layout.
+            center: true,
+            width: 960,
+            height: 540,
+
+            katex: {
+              trust: true,
+            },
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX]
+          });
+          Reveal.configure({ pdfSeparateFragments: false });
+        </script>
+  </body>
+</html>
