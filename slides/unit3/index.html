@@ -1,0 +1,3532 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>AM205 Unit 3. Numerical Calculus</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, minimal-ui">
+  <link rel="stylesheet" href="..//dist/reset.css">
+  <link rel="stylesheet" href="..//dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
+  <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
+</head>
+<body>
+
+  <style>
+.katex{
+  font-size:1em;
+}
+  </style>
+
+  <div class="reveal">
+    <div class="slides">
+
+<section class="slide level2">
+
+<section>
+<h1>
+Applied Mathematics 205
+</h1>
+<h2>
+Unit 3. Numerical Calculus
+</h2>
+<br> Lecturer: Petr Karnakov <br> <br> October 5, 2022
+</section>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>Since the time of Newton, calculus has been ubiquitous in science</li>
+<li>Calculus problems that arise in applications<br />
+typically do not have closed-form solutions</li>
+<li><span class="color5">Numerical approximation is essential</span></li>
+<li>In this Unit we will consider
+<ul>
+<li>numerical integration</li>
+<li>numerical differentiation</li>
+<li>numerical methods for ordinary differential equations</li>
+<li>numerical methods for partial differential equations</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Integration</h2>
+<ul>
+<li>The process of approximating a definite integral<br />
+using a numerical method is called <span class="color5">quadrature</span></li>
+<li>The Riemann sum suggests how to perform quadrature <img data-src="media/quad_rect.svg" style="margin:auto; display: block;" height="250" /></li>
+<li>We will examine more accurate/efficient quadrature methods</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Integration</h2>
+<ul>
+<li><span class="color5">Question:</span> Why is quadrature important?</li>
+<li>We know how to evaluate many integrals analytically,
+\[
+\int_0^1 e^x{\rm d}x \qquad \text{or} \qquad \int_0^\pi \cos x \,{\rm d}x
+\]
+</li>
+<li>But how about
+\[
+\int_1^{2000} \exp(\sin(\cos(\sinh(\cosh(\arctan(\log(x)))))))\,{\rm d}x
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Integration</h2>
+<ul>
+<li>We can numerically approximate this integral<br />
+using <code>scipy.integrate.quad()</code>
+<pre style="width:550px"><code data-trim class="language-python-repl">
+>>> import scipy
+>>> from math import *
+>>> def f(x):
+...    return exp(sin(cos(sinh(cosh(atan(log(x)))))))
+>>> scipy.integrate.quad(f, 1, 2000)
+(1514.7806778270256, 4.231109731546272e-06)
+</code></pre></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Integration</h2>
+<ul>
+<li>Quadrature also generalizes naturally to higher dimensions,<br />
+and allows us to compute integrals on irregular domains</li>
+<li>For example, we can approximate an integral on a triangle<br />
+based on a finite sum of samples at quadrature points
+<p><img data-src="media/fekete/fekete_rule_1.svg" width=230> <img data-src="media/fekete/fekete_rule_2.svg" width=230> <img data-src="media/fekete/fekete_rule_3.svg" width=230></p>
+<p><a href="https://people.sc.fsu.edu/~jburkardt/cpp_src/triangle_fekete_rule_test/triangle_fekete_rule_test.html">people.sc.fsu.edu/~jburkardt/cpp_src/triangle_fekete_rule_test</a></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Integration</h2>
+<ul>
+<li>And then evaluate integrals in complex geometries<br />
+by triangulating the domain</li>
+</ul>
+<blockquote>
+<p><a href="https://commons.wikimedia.org/wiki/File:Example_of_2D_mesh.png"><img data-src="media/triangular_mesh.png" height=250></a></p>
+</blockquote>
+</section>
+<section class="slide level2">
+<h2>Differentiation</h2>
+<ul>
+<li>Numerical differentiation is another fundamental tool</li>
+<li>We have already discussed the most common, intuitive approach<br />
+to numerical differentiation: <span class="color5">finite differences</span></li>
+<li>Examples
+<ul>
+<li>$f'(x) = \frac{f(x+h) - f(x)}{h} + \mathcal{O}(h)$ <span style="margin-left:5em">forward difference</span></li>
+<li>$f'(x) = \frac{f(x) - f(x-h)}{h} + \mathcal{O}(h)$ <span style="margin-left:5em">backward difference</span></li>
+<li>$f'(x) = \frac{f(x+h) - f(x-h)}{2h} + \mathcal{O}(h^2)$ <span style="margin-left:3.8em">centered difference</span></li>
+<li>$f''(x) = \frac{f(x+h) -2f(x) + f(x-h)}{h^2} + \mathcal{O}(h^2)$ <span style="margin-left:1.35em">centered, second derivative</span></li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Differentiation</h2>
+<ul>
+<li>We will see how to derive these and other<br />
+finite difference formulas and quantify their accuracy</li>
+<li>Wide range of choices, with trade-offs in terms of
+<ul>
+<li>accuracy</li>
+<li>stability</li>
+<li>complexity</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Differentiation</h2>
+<ul>
+<li>In Unit 0, we saw that finite differences<br />
+can be sensitive to rounding error when <span class="color0">$h$ is “too small”</span></li>
+<li>But in most applications we obtain sufficient accuracy<br />
+with $h$ large enough that rounding error is still negligible</li>
+<li>Hence finite differences generally work very well<br />
+and provide a very popular approach<br />
+to solving problems involving derivatives</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs</h2>
+<ul>
+<li>The most common situation in which we need<br />
+to approximate derivatives is to solve <span class="color5">differential equations</span></li>
+<li>Ordinary Differential Equations (ODEs):<br />
+Differential equations involving functions of one variable</li>
+<li>Examples of problems
+<ul>
+<li>initial value problem (IVP) for a <span class="color1">first order</span> ODE<br />
+$y'(t) = y^2(t) + t^4 - 6t$<br />
+$y(0) = y_0$<br />
+</li>
+<li>boundary value problem (BVP) for a <span class="color1">second order</span> ODE<br />
+$y''(x) + 2xy(x) = 1$<br />
+$y(0) = y(1) = 0$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: IVP</h2>
+<ul>
+<li>Newton’s second law of motion<br />
+\[
+y''(t) = \frac{F(t,y,y')}{m}, \quad y(0) = y_0, \quad y'(0) = v_0
+\]
+where $y(t) \in \mathbb R$ is the position of a particle of mass $m$ at time $t \geq 0$</li>
+<li>This is a <span class="color5">scalar</span> ODE to simulate one particle</li>
+<li>An $N$-body problem involves a system of $N$ interacting particles</li>
+<li>For example, $F$ can be gravitational force due to other particles,<br />
+and the force on particle $i$ depends on positions of the other particles</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: IVP</h2>
+<ul>
+<li>$N$-body problems are the basis of many cosmological simulations</li>
+<li>Recall the galaxy formation simulations from Unit 0
+<div style="display:inline-block;">
+<p><img data-src="media/galaxy1.png" width=180> <img data-src="media/galaxy2.png" width=180> <img data-src="media/galaxy3.png" width=180> <img data-src="media/galaxy4.png" width=180></p>
+</div></li>
+<li>Computationally expensive when $N$ is large!</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: BVP</h2>
+<ul>
+<li>Boundary value problems for ODEs are also important<br />
+in many circumstances</li>
+<li>The <span class="color5">steady-state heat equation</span> for the temperature $u(x)$
+\[
+-u''(x) = f(x), \quad u(-1) = 0,\quad u'(1) = 0
+\]
+
+<ul>
+<li>apply a heat source $f(x)=1 - x^2$</li>
+<li>impose zero temperature at $x=-1$</li>
+<li>insulate at $x=1$</li>
+</ul></li>
+<li>Here $u(x)$ is the temperature of a 1D rod</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: BVP</h2>
+<ul>
+<li>We can approximate the equation $-u''(x) = f(x)$ with finite differences
+\[
+
+-\frac{u(x+h) -2u(x) + u(x-h)}{h^2} = f(x)
+
+\]
+and impose $u(-1) = 0$ and $u(1) - u(1 - h) = 0$</li>
+</ul>
+<p><img data-src="media/heat_1d.svg" style="margin:auto; display: block;" height="300" /></p>
+</section>
+<section class="slide level2">
+<h2>PDEs</h2>
+<ul>
+<li>It is also natural to introduce time-dependence</li>
+<li>Now $u(x,t)$ is a function of $x$ and $t$<br />
+so derivatives of $u$ are <span class="color5">partial derivatives</span><br />
+and we obtain a partial differential equation (PDE)</li>
+<li>The time-dependent heat equation for $u(x,t)$
+\[
+\frac{\partial u}{\partial t} - \frac{\partial^2 u}{\partial x^2} = f(x)
+\]
+with initial conditions $u(x,0) = 0$<br />
+and boundary conditions $u(-1,t) = 0$, $\frac{\partial u}{\partial x}(1,t) = 0$</li>
+<li>This is an <span class="color5">initial-boundary value problem</span> (IBVP)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDEs</h2>
+<ul>
+<li>Again, we can approximate the equation $\frac{\partial u}{\partial t} - \frac{\partial^2 u}{\partial x^2} = f(x)$<br />
+with finite differences
+\[
+\textstyle
+\frac{u(x,t)-u(x,t-\Delta t)}{\Delta t}-\frac{u(x+h,t) -2u(x,t) + u(x-h,t)}{h^2} = f(x)
+
+\]
+and impose $u(x,0)=0$, $u(-1,t) = 0$, and $u(1,t) - u(1 - h,t) = 0$</li>
+</ul>
+<p><img data-src="media/heat_1d_time.svg" style="margin:auto; display: block;" height="300" /></p>
+</section>
+<section class="slide level2">
+<h2>PDEs</h2>
+<ul>
+<li>This extends to 2D and 3D domains</li>
+<li>The time-dependent heat equation in a 3D domain $\Omega \subset \mathbb R^3$<br />
+for the temperature $u(x,y,z,t)$
+\[
+\frac{\partial u}{\partial t} -\frac{\partial^2 u}{\partial x^2} - \frac{\partial^2 u}{\partial y^2} - \frac{\partial^2 u}{\partial z^2} = f(x,y,z)
+\]
+with initial conditions $u(x,y,z,0)=u_0(x,y,z)$<br />
+and boundary conditions $u=0$ on $\partial\Omega$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDEs</h2>
+<ul>
+<li>This equation is typically written as<br />
+\[
+\frac{\partial u}{\partial t} - \nabla^2 u = f(x,y,z)
+\]
+where $\nabla^2 u = \nabla \cdot \nabla u = \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2} + \frac{\partial^2 u}{\partial z^2}$</li>
+<li>Here we have
+<ul>
+<li>the <span class="color5">Laplacian</span> $\nabla^2 = \frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2} + \frac{\partial^2}{\partial z^2}$</li>
+<li>the <span class="color5">gradient</span> $\nabla = (\frac{\partial}{\partial x}, \frac{\partial}{\partial y}, \frac{\partial}{\partial z})$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDEs</h2>
+<ul>
+<li>We can add a transport term to the heat equation<br />
+to obtain the <span class="color5">convection-diffusion equation</span><br />
+\[
+\frac{\partial u}{\partial t} + \mathbf{w}\cdot\nabla u - \nabla^2 u = f(x,y)
+\]
+</li>
+<li>Now $u(x,t)$ models the concentration of some substance<br />
+in a medium moving with velocity $\mathbf{w}(x,y,t)\in\mathbb{R}^2$
+<div>
+<p><img data-src="media/convdiff_u0.png" width=180><span style="margin-left:30px"> </span> <img data-src="media/convdiff_u3.png" width=180><span style="margin-left:30px"> </span> <img data-src="media/convdiff_u5.png" width=180></p>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDEs</h2>
+<ul>
+<li>The Navier-Stokes equations describe the motion of viscous liquids
+\[
+\frac{\partial \mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla) \mathbf{u} = -\nabla p + \nu \nabla^2 \mathbf{u}
+\]
+together with the continuity equation (the liquid is incompressible)
+\[
+\nabla \cdot \mathbf{u}=0
+\]
+for the unknown velocity $\mathbf{u}$ and pressure $p$, where $\nu$ is the viscosity</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDEs</h2>
+<ul>
+<li>Numerical methods for PDEs are a major topic in scientific computing</li>
+<li>Recall examples from Unit 0<br />
+
+<div style="display:block;text-align:center;">
+<div style="display:inline-block;">
+<img data-src="media/f1_cfd_2.jpg" height=130 style="display:inline-block;margin-bottom:-0.2em;"><br>CFD
+</div>
+<div style="display:inline-block;">
+<img data-src="media/ghattas_1.jpg" height=120 style="display:inline-block;margin-bottom:-0.2em;"><br>Geophysics
+</div>
+</div></li>
+<li>In the course, we will focus on the finite difference method</li>
+<li>Alternative methods: finite element, finite volume,<br />
+spectral, boundary element, particles, …</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Summary</h2>
+<ul>
+<li><span class="color5">Numerical calculus includes a wide range of topics<br />
+and has important applications</span></li>
+<li>We will consider various algorithms and<br />
+analyze their stability, accuracy, and efficiency</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Quadrature</h2>
+<ul>
+<li>Suppose we want to evaluate the integral $I(f) = \int_a^bf(x)\text{d}x$</li>
+<li>We can proceed as follows
+<ul>
+<li>approximate $f$ using a polynomial interpolant $p_n$</li>
+<li>define $Q_n(f) = \int_a^b p_n(x)\text{d}x$<br />
+we can integrate polynomials exactly</li>
+</ul></li>
+<li>$Q_n(f)$ provides a <span class="color5">quadrature</span> formula,<br />
+and we should have $Q_n(f) \approx I(f)$</li>
+<li>A quadrature rule based on an interpolant $p_n$<br />
+at $n+1$ <span class="color1">equally spaced points</span> in $[a,b]$<br />
+is known as <span class="color1">Newton–Cotes</span> formula of order $n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton–Cotes Quadrature</h2>
+<ul>
+<li>Let $x_k = a + kh, k=0,1,\ldots,n$, where $h = (b-a)/n$</li>
+<li>We write the interpolant of $f$ in the Lagrange form as
+\[
+p_n(x) = \sum_{k=0}^n f(x_k)L_k(x), \quad \text{where} \quad \textstyle L_k(x) = \prod_{i=0, i\neq k}^n \frac{x-x_i}{x_k-x_i}
+\]
+</li>
+<li>Then
+\[
+Q_n(f) = \int_a^b p_n(x)\text{d}x = \sum_{k=0}^n f(x_k) \htmlClass{color1}{ \int_a^b L_k(x)\text{d}x} = \sum_{k=0}^n \htmlClass{color1}{ w_k} f(x_k)
+\]
+where $w_k = \int_a^b L_k(x)\text{d}x \in \mathbb R$ is the $k$-th <span class="color5">quadrature weight</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton–Cotes Quadrature</h2>
+<ul>
+<li>Note that quadrature weights <span class="color5">do not depend</span> on $f$,<br />
+so they can be precomputed and stored
+<ul>
+<li>trapezoid rule: $Q_1(f) = \frac{b-a}{2}\left[ f(a) + f(b)\right]$</li>
+<li>Simpson’s rule: $Q_2(f) = \frac{b-a}{6}\left[ f(a) + 4f\left(\frac{a+b}{2}\right) + f(b)\right]$</li>
+</ul></li>
+<li>We can develop higher-order Newton–Cotes formulas in the same way</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Error Estimates</h2>
+<ul>
+<li>Let $E_n(f) = I(f) - Q_n(f)$</li>
+<li>Then
+\[
+\begin{aligned}
+E_n(f) &amp;= \textstyle \int_a^b f(x) \text{d}x - \sum_{k=0}^n w_k f(x_k)\\
+      &amp;= \textstyle \int_a^b f(x) \text{d}x - \sum_{k=0}^n \left(\int_a^b L_k(x)\text{d}x\right) f(x_k)\\
+      &amp;= \textstyle \int_a^b f(x) \text{d}x - \int_a^b\left(\sum_{k=0}^n  L_k(x) f(x_k) \right)\text{d}x\\
+      &amp;= \textstyle \int_a^b f(x) \text{d}x - \int_a^b p_n(x) \text{d}x\\
+      &amp;= \textstyle \int_a^b \left(f(x) - p_n(x) \right)\text{d}x
+\end{aligned}
+\]
+</li>
+<li>From Unit 1, <span class="color5">we have an expression for $f(x) - p_n(x)$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Error Estimates</h2>
+<ul>
+<li>Recall
+\[
+f(x) - p_n(x) = \frac{f^{n+1}(\theta)}{(n+1)!} (x - x_0) \ldots (x - x_n)
+\]
+</li>
+<li>Hence
+\[
+|E_n(f)| \leq \frac{M_{n+1}}{(n+1)!} \int_a^b |(x-x_0)(x-x_1)\cdots(x-x_n)|\text{d}x
+\]
+where $M_{n+1} = \max\limits_{\theta \in [a,b]} |f^{n+1}(\theta)|$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Error Estimates</h2>
+<ul>
+<li>For the <span class="color5">trapezoid rule</span>, the error bound is
+\[
+|E_1(f)| \leq \frac{(b-a)^3}{12}M_2
+\]
+</li>
+<li>The bound for $E_n$ depends directly on the integrand $f$ (via $M_{n+1}$)</li>
+<li>Just like with the Lebesgue constant, it is informative to be able<br />
+to compare quadrature rules independently of the integrand</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Error Estimates: Another Perspective</h2>
+<ul>
+<li><span class="color5">Theorem:</span> If $Q_n$ integrates polynomials of degree $n$ exactly,<br />
+then $\exists C_n &gt; 0$ such that $|E_n(f)| \leq C_n \min\limits_{p \in \mathbb{P}_n}\|f-p\|_\infty$</li>
+<li><span class="color5">Proof:</span> For any $p \in \mathbb{P}_n$, we have
+\[
+\begin{aligned}
+|E_n(f)|        &amp;=|I(f) - Q_n(f)| \\
+                 &amp;\leq |I(f) - I(p)| + |I(p) - Q_n(f)|\\
+                 &amp;= |I(f-p)| + |Q_n(f-p)|\\
+                 &amp;\textstyle \leq  \int_a^b\text{d}x \|f-p\|_\infty + \left(\sum_{k=0}^n|w_k|\right)\|f-p\|_\infty\\
+                 &amp;= C_n \|f-p\|_\infty\end{aligned}
+\]
+where $C_n = b-a + \sum_{k=0}^n|w_k|$ does not depend on $p$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Error Estimates</h2>
+<ul>
+<li>Hence a convenient way to compare accuracy of quadrature rules is to<br />
+<span class="color1">compare the polynomial degree they integrate exactly</span></li>
+<li>Newton–Cotes of order $n$ is based on polynomial interpolation,<br />
+hence in general integrates polynomials of degree $n$ exactly</li>
+<li>Also follows from the fact that $M_{n+1}=0$ for a polynomial of degree $n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge’s Phenomenon Again</h2>
+<ul>
+<li>However, Newton–Cotes formulas are based on interpolation<br />
+at <span class="color0">equally spaced points</span></li>
+<li>Hence they’re susceptible to <span class="color0">Runge’s phenomenon</span>,<br />
+and we expect them to be inaccurate for large $n$</li>
+<li><span class="color5">Question:</span> How does this show up in our error bound?
+\[
+|E_n(f)| \leq C_n \min\limits_{p \in \mathbb{P}_n}\|f-p\|_\infty
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge Phenomenon Again</h2>
+<ul>
+<li><span class="color5">Answer:</span> In the constant $C_n$</li>
+<li>Recall that $C_n = b-a + \sum_{k=0}^n|w_k|$, and that $w_k = \int_a^b L_k(x) \text{d}x$
+<p><img data-src="media/lagrange_blowup.svg" style="margin:auto; display: block;" height="300" /></p></li>
+<li>If the $L_k$ blow up due to equally spaced points, so does $C_n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge Phenomenon Again</h2>
+<ul>
+<li>In fact, we know that $\sum_{k=0}^n w_k = b-a$, <span class="color0">why?</span></li>
+<li>This tells us that if all the $w_k$ are positive, then
+\[
+C_n = b-a + \sum_{k=0}^n|w_k| = b-a + \sum_{k=0}^nw_k = 2(b-a)
+\]
+</li>
+<li>If <span class="color1">weights are positive</span>, then $C_n$ is a constant (independent of $n$)<br />
+and the <span class="color1">quadrature converges to the exact integral</span>
+\[
+Q_n(f) \to I(f)\quad\text{as}\;n \to \infty
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge Phenomenon Again</h2>
+<ul>
+<li>But with Newton–Cotes, quadrature weights become <span class="color0">negative</span> for $n&gt;8$<br />
+(in example above, $L_{10}(x)$ would clearly yield $w_{10} &lt; 0$)</li>
+<li><span class="color5">Key point:</span> Newton–Cotes is not useful for large $n$</li>
+<li>However, there are two natural ways to get quadrature rules<br />
+that <span class="color1">converge</span> as $n\to\infty$
+<ul>
+<li>integrate piecewise polynomial interpolant</li>
+<li>do not use equally spaced interpolation points</li>
+</ul></li>
+<li>We consider piecewise polynomial-based quadrature rules first</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Composite Quadrature Rules</h2>
+<ul>
+<li>Integrating a piecewise polynomial interpolant<br />
+leads to a <span class="color5">composite quadrature rule</span></li>
+<li>Suppose we divide $[a,b]$ into $m$ subintervals,<br />
+each of width $h = (b-a)/m$, and $x_i = a + ih$, $i=0,1,\ldots,m$</li>
+<li>Then we have
+\[
+I(f) = \int_a^b f(x) \text{d}x = \sum_{i=1}^m \int_{x_{i-1}}^{x_i} f(x) \text{d}x
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Composite Trapezoid Rule</h2>
+<ul>
+<li><span class="color5">Composite trapezoid rule:</span> Apply trapezoid rule to each interval
+\[
+\int_{x_{i-1}}^{x_i} f(x) \text{d}x \approx \frac{1}{2}h[f(x_{i-1})+f(x_i)]
+\]
+</li>
+<li>The composite quadrature is denoted as
+\[
+\begin{aligned}
+Q_{1,h}(f) &amp;= \sum_{i=1}^m \frac{1}{2}h[f(x_{i-1})+f(x_i)]\\
+&amp;= h\left[ \frac{1}{2}f(x_0) + f(x_1) + \cdots + f(x_{m-1}) + \frac{1}{2}f(x_m)\right]\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Composite Trapezoid Rule</h2>
+<ul>
+<li>Composite trapezoid rule error analysis
+\[
+E_{1,h}(f) \textstyle= I(f) - Q_{1,h}(f) = \sum_{i=1}^m\left[ \int_{x_{i-1}}^{x_i} f(x)\text{d}x - \frac{1}{2}h[f(x_{i-1})+f(x_i)]\right]
+\]
+</li>
+<li>Hence,
+\[
+\begin{aligned}
+\htmlClass{color5}{ |E_{1,h}(f)|} &amp;\leq \textstyle\sum_{i=1}^m\left| \int_{x_{i-1}}^{x_i} f(x)\text{d}x - \frac{1}{2}h[f(x_{i-1})+f(x_i)]\right|\\
+&amp;\leq \frac{h^3}{12} \sum_{i=1}^m  \textstyle\max_{\theta \in [x_{i-1},x_i]} |f''(\theta)|\\
+&amp;\leq \frac{h^3}{12} m\|f''\|_\infty\\
+&amp;= \htmlClass{color5}{ \frac{h^2}{12}(b-a)\|f''\|_\infty}\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Composite Simpson Rule</h2>
+<ul>
+<li>We can obtain composite Simpson’s rule in the same way</li>
+<li>Suppose that $[a,b]$ is divided into $2m$ intervals by the points<br />
+$x_i = a + ih$, $\;i=0,\ldots,2m$, where $h=(b-a)/2m$</li>
+<li>Applying Simpson’s rule on each interval $[x_{2i-2},x_{2i}]$, $i=1,\ldots,m$ yields
+\[
+\begin{aligned}
+Q_{2,h}(f) &amp;= \frac{h}{3}[f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + \cdots \\
+&amp; \qquad + 2f(x_{2m-2}) + 4f(x_{2m-1}) + f(x_{2m})]\end{aligned}
+\]
+</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/quadcomp.py">[examples/unit3/quadcomp.py]</a><br />
+with composite trapezoid and Simpson’s rules</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Adaptive Quadrature</h2>
+<ul>
+<li>Composite quadrature rules are very flexible,<br />
+can be applied to intervals of variable sizes</li>
+<li><span class="color1">We should use smaller intervals where $f$ varies rapidly,<br />
+and larger intervals where $f$ varies slowly</span></li>
+<li>This can be achieved by adaptive quadrature:
+<ol type="1">
+<li>Initialize to $m=1$ (one interval)</li>
+<li>On each interval, evaluate quadrature rule<br />
+and estimate quadrature error</li>
+<li>If error estimate is larger than a given tolerance on interval $i$,<br />
+subdivide into two smaller intervals and return to step 2</li>
+</ol></li>
+<li><span class="color5">Question:</span> How can we estimate the quadrature error on an interval?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Adaptive Quadrature</h2>
+<ul>
+<li>One straightforward way to estimate quadrature error on interval $i$<br />
+is to compare to a more refined result for interval $i$</li>
+<li>Let $I^i(f)$ denote the exact integral and<br />
+$Q_h^i(f)$ denote quadrature approximation on interval $i$</li>
+<li>Let $\hat Q_h^i(f)$ denote a more refined quadrature approximation on interval $i$,<br />
+e.g. obtained by subdividing interval $i$</li>
+<li>Then for the error on interval $i$, we have
+\[
+|I^i(f) - Q_h^i(f)| \leq |I^i(f) - \hat Q_h^i(f)| + |\hat Q_h^i(f) - Q_h^i(f)|
+\]
+</li>
+<li>Suppose we can neglect $|I^i(f) - \hat Q_h^i(f)|$ so that we use<br />
+$|\hat Q_h^i(f) - Q_h^i(f)|$ as a <span class="color5">computable estimator</span> for $|I^i(f) - Q_h^i(f)|$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss Quadrature</h2>
+<ul>
+<li>Next we consider the second approach to developing<br />
+more accurate quadrature rules: <span class="color1">unevenly spaced quadrature points</span></li>
+<li><span class="color5">Recall that we can compare accuracy of quadrature rules<br />
+based on the polynomial degree that is integrated exactly</span></li>
+<li>So far, we have only used equally spaced points</li>
+<li>More accurate quadrature rules can be derived by choosing the $x_i$<br />
+to maximize the degree of polynomials integrated exactly</li>
+<li>Resulting family of quadrature rules is called <span class="color1">Gauss quadrature</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss Quadrature</h2>
+<ul>
+<li>With $n+1$ quadrature points and $n+1$ quadrature weights,<br />
+we have $2n+2$ parameters to choose</li>
+<li>We might hope to integrate a polynomial with $2n+2$ parameters,<br />
+i.e. of degree $2n+1$</li>
+<li>It can be shown that this is possible and leads to <span class="color1">Gauss quadrature</span></li>
+<li>Again the idea is to integrate a polynomial interpolant,<br />
+but we choose a specific set of interpolation points:<br />
+<span class="color5">Gauss quadrature points are roots of a Legendre polynomial</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss Quadrature</h2>
+<ul>
+<li>Legendre polynomials $\{P_0, P_1, \ldots, P_n\}$ form<br />
+an <span class="color5">orthogonal basis</span> for $\mathbb{P}_n$ in the $L_2$ inner product
+\[
+\int_{-1}^1 P_m(x) P_n(x) \text{d}x =
+\begin{cases}
+\frac{2}{2n+1}, \qquad m=n\\
+0, \qquad \quad ~\, m\neq n
+\end{cases}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss Quadrature</h2>
+<ul>
+<li>Legendre polynomials satisfy a recurrence relation
+\[
+\begin{aligned}
+  P_0(x) &amp;= 1\\
+  P_1(x) &amp;= x\\
+(n+1)P_{n+1}(x) &amp;= (2n+1)xP_n(x) - nP_{n-1}(x)
+\end{aligned}
+\]
+</li>
+<li>The first six Legendre polynomials
+<p><img data-src="media/legendre.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss Quadrature</h2>
+<ul>
+<li>We can find the roots of $P_n(x)$ and derive the $n$-point<br />
+Gauss quadrature rule in the same way as for Newton–Cotes:<br />
+<span class="color5">integrate the Lagrange interpolant</span></li>
+<li>Gauss quadrature rules have been extensively tabulated for $x \in [-1,1]$
+<div style="font-size:0.8em;">
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Number of points</th>
+<th style="text-align: center;">Quadrature points</th>
+<th style="text-align: center;">Quadrature weights</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">$-1/{\sqrt{3}}, 1/{\sqrt{3}}$</td>
+<td style="text-align: center;">$1, 1$</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">$-\sqrt{3/5}, 0, \sqrt{3/5}$</td>
+<td style="text-align: center;">$5/9, 8/9, 5/9$</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">…</td>
+<td style="text-align: center;">…</td>
+<td style="text-align: center;">…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table></li>
+<li><span class="color5">Key point:</span> Gauss quadrature weights are always positive,<br />
+so <span class="color1">Gauss quadrature converges as $n\to \infty$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss Quadrature Points</h2>
+<ul>
+<li>Points cluster toward $\pm 1$ which <span class="color5">prevents Runge’s phenomenon!</span></li>
+</ul>
+<blockquote>
+<p><img data-src="media/legendre_roots_5.svg" width=300> <img data-src="media/legendre_roots_10.svg" width=300></p>
+</blockquote>
+<blockquote>
+<p><img data-src="media/legendre_roots_15.svg" width=300> <img data-src="media/legendre_roots_20.svg" width=300></p>
+</blockquote>
+<!---
+## Generalization
+
+* Suppose we wish to exactly evaluate integrals of the form $$\int_{-1}^1 w(x) f(x) \, dx$$
+
+* Then we can calculate quadrature based on polynomials $u_k$  
+  that are orthogonal with respect to the inner product $$\langle u_j, u_k \rangle =\int_{-1}^1 w(x) u_j(x) u_k(x) dx.$$ 
+
+## Generalization
+
+* A typical example case is $$w(x) = \frac{1}{\sqrt{1-x^2}}.$$ 
+
+* Orthogonality relation is then $$\langle u_j, u_k \rangle =\int_{-1}^1 \frac{1}{\sqrt{1-x^2}} u_j(x) u_k(x) dx.$$ 
+
+* Try the Chebyshev polynomials $u_j(x)=T_j(x)=\cos(j\arccos x)$.
+
+## Generalization
+
+* Using the substitution $x=\cos \theta$, $$\begin{aligned}
+  \langle T_j,T_k \rangle &= \int_{-1}^1 \frac{1}{\sqrt{1-x^2}}\cos(j\arccos x) \cos(k\arccos x) dx \\
+  &= \int_0^\pi \frac{1}{\sqrt{1-\cos^2 \theta}} \cos j\theta \cos k\theta (\sin \theta \, d\theta) \\
+  &= \int_0^\pi \cos j\theta \cos k\theta \, d\theta.\end{aligned}$$
+
+* Using the Fourier orthogonality relations, $\langle T_j,T_k \rangle=0$ for $j\ne k$, so the  
+  Chebyshev polynomials are orthogonal with respect to this weight function
+* Hence the roots of the Chebyshev polynomials can be used to construct a quadrature formula for this $w(x)$.  
+* This is one example of many possible generalizations to Gauss quadrature
+
+## Legendre/Chebyshev comparison
+
+* Chebyshev roots are closer to the ends,  
+  better sampling of the function near $\pm 1$, as expected based on $w(x)$
+
+> ![](media/legendre_cheb.svg){height=350}
+--->
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+<ul>
+<li>Finite differences approximate a derivative of function
+\[
+f : \mathbb R\to \mathbb R
+\]
+using samples of $f$ on a finite set of points</li>
+<li>The points often form a uniform grid,<br />
+so the approximation at point $x$ involves values
+\[
+\ldots,\;\;f(x-2h),\;\;  f(x-h),\;\; f(x),\;\; f(x+h),\;\; f(x+2h),\;\; \ldots
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+<ul>
+<li>An approximation of the first derivative at point $x$ can be derived<br />
+from <span class="color5">Taylor expansion</span> about $x$ evaluated at $x+h$
+\[
+f(x+h) = f(x) + f'(x)h + \frac{f''(x)}{2}h^2 + \frac{f'''(x)}{6}h^3 + \cdots
+\]
+</li>
+<li>Solving for $f'(x)$ we get the <span class="color1">forward difference formula</span>
+\[
+\begin{aligned}
+f'(x) &amp;= \frac{f(x+h) - f(x)}{h} - \frac{f''(x)}{2}h + \cdots\\
+       &amp;\approx \htmlClass{color1}{ \frac{f(x+h) - f(x)}{h}}\end{aligned}
+\]
+</li>
+<li>Here we neglected an $\mathcal{O}(h)$ term</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+<ul>
+<li>The same expansion evaluated at $x-h$
+\[
+f(x-h) = f(x) - f'(x)h + \frac{f''(x)}{2}h^2 - \frac{f'''(x)}{6}h^3 + \cdots
+\]
+yields the <span class="color1">backward difference formula</span>
+\[
+f'(x) \approx \htmlClass{color1}{ \frac{f(x) - f(x-h)}{h}}
+\]
+</li>
+<li>Again, we neglected an $\mathcal{O}(h)$ term</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+<ul>
+<li>Subtracting Taylor expansions for $f(x+h)$ and $f(x-h)$<br />
+gives the <span class="color1">centered difference formula</span>
+\[
+\begin{aligned}
+f'(x) &amp;= \frac{f(x+h) - f(x-h)}{2h} - \frac{f'''(x)}{6}h^2 + \cdots\\
+         &amp;\approx \htmlClass{color1}{ \frac{f(x+h) - f(x-h)}{2h}}\end{aligned}
+\]
+</li>
+<li>This one has a higher order, we neglected an $\mathcal{O}(h^2)$ term</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+<ul>
+<li>Adding Taylor expansions for $f(x+h)$ and expansion for $f(x-h)$<br />
+gives the <span class="color1">centered difference formula</span> for the <span class="color5">second derivative</span>
+<p>
+\[
+\begin{aligned}
+f''(x) &amp;= \frac{f(x+h) - 2f(x) + f(x-h)}{h^2} - \frac{f^{(4)}(x)}{12}h^2 + \cdots\\
+         &amp;\approx \htmlClass{color1}{ \frac{f(x+h) -2f(x) + f(x-h)}{h^2}}\end{aligned}
+\]
+</p></li>
+<li>Again, we neglected an $\mathcal{O}(h^2)$ term</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Finite Difference Stencils</h2>
+<ul>
+<li>The pattern of points involved in a finite difference<br />
+approximation is called a <span class="color5">stencil</span></li>
+<li>Examples of stencils, <span class="color0">$x_i$</span> is the point of interest<br />
+ <br />
+<img data-src="media/fd_stencils_1d.png" style="margin:auto; display: block;" height="250" /></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+<ul>
+<li>By evaluating a Taylor expansion on stencils with more points,<br />
+we can derive:
+<ul>
+<li>approximations with a higher order of accuracy</li>
+<li>approximations for higher derivatives</li>
+</ul></li>
+<li>However, there is a more systematic way: <span class="color5">differentiate an interpolant</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+<ul>
+<li>Linear interpolant through $(x,f(x))$ and $(x+h,f(x+h))$ is
+\[
+p_1(t) = f(x)\frac{x+h-t}{h} + f(x+h) \frac{t-x}{h}
+\]
+</li>
+<li>Differentiating $p_1$ gives
+\[
+p_1'(t) = \frac{f(x+h) - f(x)}{h}
+\]
+which is the <span class="color1">forward difference formula</span></li>
+<li><span class="color0">Exercise:</span> Derive the backward difference formula using interpolation</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Finite Differences</h2>
+<ul>
+<li>Quadratic interpolant $p_2$ from interpolation points $x-h,\;x,\;x+h$<br />
+gives the centered difference formula for $f'(x)$:
+<ul>
+<li>differentiate $p_2$ to get a linear polynomial $p_2'$</li>
+<li>evaluate $p_2'(x)$ to get centered difference formula for $f'(x)$</li>
+</ul></li>
+<li>Also, $p_2''(x)$ gives the centered difference formula for $f''$</li>
+<li>This approach can be applied to
+<ul>
+<li>higher degree interpolants (higher order, higher derivatives)</li>
+<li>unevenly spaced points (adaptive approximations)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Differentiation Matrices</h2>
+<ul>
+<li>So far we have talked about finite difference formulas<br />
+to approximate $f'(x)$ at a single point $x$</li>
+<li>Now consider a grid $x_1,\ldots,\;x_n\in\mathbb{R}$ and vectors of
+<ul>
+<li>values $F= [f(x_1),\ldots,\;f(x_n)]^T \in \mathbb R^n$</li>
+<li>derivatives $F' = [f'(x_1),\ldots,\;f'(x_n)]^T \in \mathbb R^n$</li>
+<li>approximations $\tilde{F}' = [\tilde{f}'(x_1),\ldots,\;\tilde{f}'(x_n)]^T \in \mathbb R^n$</li>
+</ul></li>
+<li>Introduce a mapping
+\[
+D:\mathbb{R}^n\to\mathbb{R}^n
+\]
+from values $F$ to approximations $\tilde{F}'$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Differentiation Matrices</h2>
+<ul>
+<li>Since the exact differentiation is a linear operation,<br />
+it is natural to assume that $D$ is a linear mapping,<br />
+i.e. $D(\alpha F + \beta G) = \alpha DF + \beta DG$</li>
+<li>Then $D$ corresponds to a square matrix $D\in\mathbb{R}^{n\times n}$<br />
+called a <span class="color5">differentiation matrix</span></li>
+<li>Row $i$ of $D$ corresponds to the finite difference formula for $f'(x_i)$
+\[
+D_{(i,:)}F \approx f'(x_i)
+\]
+</li>
+<li>Note that discretizations of PDEs often involve<br />
+<span class="color5">nonlinear approximations</span> of derivatives (will be considered later)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Differentiation Matrix</h2>
+<ul>
+<li>Forward difference corresponds to a bidiagonal matrix<br />
+with elements $D_{ii} = -\frac{1}{h},\;D_{i,i+1} = \frac{1}{h}$
+<pre style="width:550px"><code data-trim class="language-python-repl">
+>>> import numpy as np
+>>> import matplotlib.pyplot as plt
+>>> n = 11
+>>> h = 1 / (n - 1)
+>>> D = np.diag(-np.ones(n) / h) + np.diag(np.ones(n - 1) / h, 1)
+>>> plt.spy(D)
+>>> plt.show()
+</code></pre></li>
+</ul>
+<blockquote>
+<p><img data-src="media/sparsity.svg" width=250 style="margin-top:-15px;"></p>
+</blockquote>
+</section>
+<section class="slide level2">
+<h2>Example: Differentiation Matrix</h2>
+<ul>
+<li>But the last row is incorrect,<br />
+$D_{n,n+1} = \frac{1}{h}$ <span class="color0">is ignored!</span></li>
+</ul>
+<blockquote>
+<p><img data-src="media/sparsity.svg" width=250></p>
+</blockquote>
+</section>
+<section class="slide level2">
+<h2>Example: Differentiation Matrix</h2>
+<ul>
+<li>Boundary points need different formulas</li>
+<li>For example, use the backward difference in the last row<br />
+$D_{n,n-1} = -\frac{1}{h},\;D_{nn} = \frac{1}{h}$
+<blockquote>
+<p><img data-src="media/sparsity_bc.svg" width=250></p>
+</blockquote></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/diff_matr.py">[examples/unit3/diff_matr.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Initial Value Problems for ODEs</h2>
+</section>
+<section class="slide level2">
+<h2>Initial Value Problems for ODEs</h2>
+<ul>
+<li>An <span class="color5">initial value problem</span> for an ODE has the form
+\[
+y'(t) = f(t,y(t)), \quad y(0) = y_0
+\]
+where
+<ul>
+<li>$y(t) \in \mathbb{R}^n$ is an unknown vector function</li>
+<li>$f : \mathbb{R}\times \mathbb{R}^n \to \mathbb{R}^n$ is the right-hand side</li>
+<li>$y(0) = y_0 \in \mathbb{R}^n$ is the <span class="color5">initial condition</span></li>
+</ul></li>
+<li>The <span class="color5">order</span> of an ODE is the highest-order derivative that appears</li>
+<li>Therefore, $y'(t) = f(t,y)$ is a <span class="color5">first order</span> ODE</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Initial Value Problems for ODEs</h2>
+<ul>
+<li>We only consider first order ODEs since higher order problems<br />
+can be transformed to first order by <span class="color5">introducing extra variables</span></li>
+<li>For example, recall Newton’s second law:
+\[
+y''(t) = \frac{F(t,y,y')}{m}, \qquad y(0) = y_0, \;\;y'(0) = v_0
+\]
+</li>
+<li>Introduce $v = y'$, then the original problem is equivalent to
+\[
+\begin{aligned}
+v'(t) &amp;= \frac{F(t,y,v)}{m}\\
+y'(t) &amp;= v(t)\end{aligned}
+\]
+and $y(0) = y_0$, $v(0) = v_0$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: A Predator–Prey Model</h2>
+<ul>
+<li>The <span class="color5">Lotka–Volterra equation</span> is a two-variable nonlinear ODE<br />
+that models the evolution of populations of two species
+\[
+y' =
+\left[
+\begin{array}{c}
+y_1(\alpha_1 - \beta_1 y_2) \\
+y_2(-\alpha_2 + \beta_2 y_1)
+\end{array}
+\right]
+\equiv f(y)
+\]
+</li>
+<li>Unknowns are the populations $y_1$ (prey) and $y_2$ (predator)</li>
+<li>Parameters are $\alpha_1$ (birth rate), $\alpha_2$ (death rate), $\beta_1$, and $\beta_2$ (interactions)</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/lotka_volterra.py">[examples/unit3/lotka_volterra.py]</a></li>
+</ul>
+<blockquote>
+<p><img data-src="media/lotka_volterra.svg" width=400 style="margin-top:-13px;"></p>
+</blockquote>
+</section>
+<section class="slide level2">
+<h2>ODEs in Python</h2>
+<ul>
+<li><code>scipy.integrate</code> has functions to solve initial value problems for ODEs
+<ul>
+<li><code>odeint()</code>, uses <code>lsoda()</code> from FORTRAN library <code>odepack</code></li>
+<li><code>solve_ivp()</code>, modern alternative with various methods</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Forward Euler Method</h2>
+<ul>
+<li>Suppose we want to compute an approximate solution to
+\[
+y' = f(t,y),\quad y(0) = y_0
+\]
+at points $t_k = kh$ for $k = 0,1,\ldots$</li>
+<li>Denote the approximation as $y_k\approx y(t_k)$</li>
+<li><span class="color5">Forward Euler method:</span> use forward difference for $y'$
+\[
+\frac{y_{k+1} - y_k}{h} = f(t_k,y_k),\quad k = 0,1,\ldots
+\]
+</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/euler.py">[examples/unit3/euler.py]</a>, Lotka-Volterra solved with forward Euler</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Forward Euler Method</h2>
+<ul>
+<li>Quadrature-based interpretation:<br />
+integrating the ODE $y' = f(t,y)$ from $t_k$ to $t_{k+1}$ gives
+\[
+y(t_{k+1}) = y(t_k) + \int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s
+\]
+</li>
+<li>Apply $n=0$ Newton–Cotes quadrature to $\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s$<br />
+based on <span class="color5">interpolation point $t_k$</span>
+\[
+\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s \approx (t_{k+1} - t_k) f(t_k,y_k) = hf(t_k,y_k)
+\]
+to get the <span class="color5">forward Euler method</span>
+\[
+y_{k+1} = y_k + h f(t_k,y_k)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Backward Euler Method</h2>
+<ul>
+<li>We can derive other methods using the same quadrature-based approach</li>
+<li>Apply $n=0$ Newton–Cotes quadrature to $\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s$<br />
+based on <span class="color5">interpolation point $t_{k+1}$</span>
+\[
+\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s \approx (t_{k+1} - t_k) f(t_{k+1},y_{k+1}) = hf(t_{k+1},y_{k+1})
+\]
+to get the <span class="color5">backward Euler method</span>
+\[
+y_{k+1} = y_k + h f(t_{k+1},y_{k+1})
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Backward Euler Method</h2>
+<ul>
+<li>Forward Euler method is an <span class="color5">explicit method</span>:<br />
+we have an explicit formula for $y_{k+1}$ in terms of $y_k$
+\[
+y_{k+1} = y_k + h f(t_k,y_k)
+\]
+</li>
+<li>Backward Euler is an <span class="color5">implicit method</span>:<br />
+we have to solve a nonlinear equation for $y_{k+1}$
+\[
+y_{k+1} = y_k + h f(t_{k+1},y_{k+1})
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Backward Euler Method</h2>
+<ul>
+<li>For example, approximate <span class="color5">$y' = 2\sin(ty)$</span> using backward Euler
+<ul>
+<li>at the first step $k=0$, we get
+\[
+y_1 = y_0 + h\sin(t_1 y_1)
+\]
+</li>
+<li>to compute $y_1$, let $F(y_1) = y_1 - y_0 - h\sin(t_1 y_1)$<br />
+and solve $F(y_1) = 0$ (e.g. using Newton’s method)</li>
+</ul></li>
+<li>Implicit methods are more complicated and<br />
+<span class="color5">more computationally expensive to make one time step</span></li>
+<li>However, they can be <span class="color1">more stable and accurate</span> (to be seen shortly)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Trapezoid Method</h2>
+<ul>
+<li>Higher-order quadrature leads to more accurate methods</li>
+<li>Apply $n=1$ Newton–Cotes (trapezoid rule) to $\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s$<br />
+based on <span class="color5">interpolation points $t_k$, $t_{k+1}$</span>
+\[
+\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s \approx \frac{h}{2} (f(t_{k},y_{k})+f(t_{k+1},y_{k+1}))
+\]
+to get the <span class="color5">trapezoid method</span>
+\[
+y_{k+1} = y_k + \frac{h}{2}\left(f(t_{k},y_{k}) + f(t_{k+1},y_{k+1})\right)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>One-Step Methods</h2>
+<ul>
+<li>The three methods we have considered so far have the form
+\[
+\begin{aligned}
+y_{k+1} &amp;= y_k + h\Phi(t_k,y_k;h) ~~\qquad\qquad\qquad \text{(explicit)}\\
+y_{k+1} &amp;= y_k + h\Phi(t_{k+1},y_{k+1};h) ~~\qquad\qquad \text{(implicit)}\\
+y_{k+1} &amp;= y_k + h\Phi(t_{k},y_{k},t_{k+1},y_{k+1};h) \qquad \text{(implicit)}\end{aligned}
+\]
+where the choice of the function $\Phi$ determines our method</li>
+<li>These are called <span class="color5">one-step methods</span>: $y_{k+1}$ depends only on $y_{k}$</li>
+<li>In a <span class="color5">multistep method</span>, $y_{k+1}$ depends on more values $y_k, y_{k-1}, y_{k-2}, \ldots$<br />
+(will be discussed briefly later)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+<ul>
+<li>We now consider whether one-step methods <span class="color5">converge</span><br />
+to the exact solution as $h \to 0$</li>
+<li>Convergence is a <span class="color5">crucial property</span> since we want to be able<br />
+to approach the exact solution at an arbitrary tolerance<br />
+by taking a sufficiently small $h&gt;0$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+<ul>
+<li>Define the <span class="color5">global error</span> $e_k$<br />
+as the total accumulated error at $t=t_k$
+\[
+e_k = y(t_k) -  y_k
+\]
+</li>
+<li>Define the <span class="color5">truncation error</span> $T_k$ as the error introduced at one step $k$,<br />
+starting from the exact solution, divided by $h$</li>
+<li>For example, the truncation error of an explicit one-step method is
+\[
+T_k = \frac{y(t_{k+1}) - y(t_k)}{h} - \Phi(t_k,y(t_k);h)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+<ul>
+<li>The truncation error defined above determines<br />
+the <span class="color5">local error</span> introduced by the ODE approximation</li>
+<li>For example, suppose $y_k = y(t_k)$, then for the case above we have
+\[
+hT_k = y(t_{k+1}) - y_k - h\Phi(t_k,y_k;h) = y(t_{k+1}) - y_{k+1}
+\]
+</li>
+<li>Therefore, $hT_k$ is the error introduced in one step of our ODE approximation</li>
+<li>The local error accumulates and determines the global error</li>
+<li>Now let’s consider the global error of the Euler method in detail</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+<ul>
+<li><span class="color5">Theorem:</span> Suppose we apply forward Euler method to
+\[
+y' = f(t,y)
+\]
+for steps $k=0,1,\ldots, M-1$, where $f$ satisfies a <span class="color5">Lipschitz condition</span>
+\[
+|f(t,u) - f(t,v)| \leq L_f |u - v|,
+\]
+where $L_f \in \mathbb{R}_{&gt;0}$ is called a <span class="color5">Lipschitz constant</span>.<br />
+Then the <span class="color1">global error is bounded</span> as
+\[
+|e_k| \leq \frac{\left( e^{L_f t_k} - 1\right)}{L_f} \left[\max\limits_{0\leq j \leq k-1}|T_j| \right],\quad k = 0,1,\ldots,M
+\]
+where $T_j$ is the truncation error of the method</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+<p><span class="color5">Proof (1/3)</span></p>
+<ul>
+<li>From the definition of the truncation error, we have
+\[
+y(t_{k+1}) = y(t_k) + h f(t_k,y(t_k);h) + hT_k
+\]
+</li>
+<li>Subtracting $y_{k+1} = y_k + hf(t_k,y_k;h)$ gives
+\[
+e_{k+1} = e_k + h\left[ f(t_k,y(t_k)) - f(t_k, y_k) \right] + hT_k
+\]
+therefore
+\[
+|e_{k+1}| \leq |e_k| + hL_f|e_k| + h|T_k| = (1+hL_f)|e_k| + h|T_k|
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+<p><span class="color5">Proof (2/3)</span></p>
+<ul>
+<li>This gives a geometric progression, e.g. for $k=2$ we have
+\[
+\begin{aligned}
+|e_3| &amp;\leq (1+hL_f)|e_2| + h|T_2|\\
+      &amp;\leq (1+hL_f)((1+hL_f)|e_1| + h|T_1|) + h|T_2|\\
+      &amp;\leq (1 + hL_f)^2 h |T_0| + (1 + hL_f)h|T_1| + h |T_2|\\
+      &amp;\leq h\left[\max_{0\leq j\leq 2}|T_j|\right]\sum_{j=0}^2 (1 + hL_f)^j\end{aligned}
+\]
+</li>
+<li>In general
+\[
+|e_k| \leq h\left[\max_{0\leq j\leq k-1}|T_j|\right]\sum_{j=0}^{k-1} (1 + hL_f)^j
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+<p><span class="color5">Proof (3/3)</span></p>
+<ul>
+<li>Use the formula for the sum
+\[
+\sum_{j=0}^{k-1} r^j = \frac{1-r^{k}}{1-r}
+\]
+with $r = (1 + hL_f)$, to get
+\[
+|e_{k}| \leq \frac{1}{L_f} \left[\max\limits_{0\leq j \leq k-1}|T_j| \right]((1+hL_f)^k - 1)
+\]
+</li>
+<li>Finally, use the bound $1+hL_f \leq \exp(hL_f)$<br />
+to get the desired result$\;\square$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence: Lipschitz Condition</h2>
+<ul>
+<li>A simple case where we can <span class="color5">calculate a Lipschitz constant</span><br />
+is if $y \in \mathbb{R}$ and $f$ is continuously differentiable</li>
+<li>Then from the mean value theorem we have
+\[
+|f(t,u) - f(t,v)| = \Big|\frac{\partial f}{\partial y}(t,\theta)\Big||u-v|,
+\]
+for $\theta \in (u,v)$</li>
+<li>Therefore, a Lipschitz constant is given by
+\[
+L_f = \max\limits_{\substack{t\in[0,t_M]\\ \theta\in(u,v)}} |f_y(t,\theta)|
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence: Lipschitz Condition</h2>
+<ul>
+<li>However, the <span class="color5">Lipschitz condition is weaker</span>,<br />
+$f$ does not have to be continuously differentiable</li>
+<li>For example, let $f(x) = |x|$,<br />
+then $|f(x) - f(y)| = ||x| - |y|| \leq |x-y|$,<br />
+and therefore $L_{f} = 1$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convergence</h2>
+<ul>
+<li>For a fixed $t$ (i.e. $t=kh$, as $h\to 0$ and $k \to \infty$),<br />
+the factor $(e^{L_f t} - 1)/L_f$ in the bound is a constant</li>
+<li><span class="color1">Hence the global convergence rate for each fixed $t$<br />
+is given by the dependence of $T_k$ on $h$</span></li>
+<li>Our proof was for forward Euler, but the same dependence<br />
+of global error on local error holds in general</li>
+<li>We say that a method has <span class="color5">order of accuracy</span> $p$ if
+\[
+|T_k| = \mathcal{O}(h^p)
+\]
+</li>
+<li>From our error bound, ODE methods with order $\geq 1$ are <span class="color5">convergent</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Order of Accuracy</h2>
+<ul>
+<li><span class="color1">Forward Euler is first order accurate</span>
+\[
+\begin{aligned}
+T_k &amp;= \frac{y(t_{k+1}) - y(t_k)}{h} - f(t_k,y(t_k))\\
+  &amp;= \frac{y(t_{k+1}) - y(t_k)}{h} - y'(t_k)\\
+  &amp;= \frac{y(t_{k}) + hy'(t_k) + h^2y''(\theta)/2 - y(t_k)}{h} - y'(t_k)\\
+  &amp;= \frac{h}{2}y''(\theta)\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Order of Accuracy</h2>
+<ul>
+<li><span class="color1">Backward Euler is first order accurate</span>
+\[
+\begin{aligned}
+T_k &amp;= \frac{y(t_{k+1}) - y(t_k)}{h} - f(t_{k+1},y(t_{k+1}))\\
+  &amp;= \frac{y(t_{k+1}) - y(t_k)}{h} - y'(t_{k+1})\\
+  &amp;= \frac{y(t_{k+1}) - y(t_{k+1}) + hy'(t_{k+1}) - h^2y''(\theta)/2}{h} - y'(t_{k+1})\\
+  &amp;= -\frac{h}{2}y''(\theta)\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Order of Accuracy</h2>
+<ul>
+<li><span class="color1">Trapezoid method is second order accurate</span></li>
+<li>Let’s prove this using a quadrature error bound, recall that
+\[
+\frac{y(t_{k+1}) - y(t_k)}{h} = \frac{1}{h}\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s
+\]
+so the truncation error is
+\[
+T_k = \frac{1}{h}\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s - \frac{1}{2}\left[f(t_{k},y(t_{k})) + f(t_{k+1},y(t_{k+1}))\right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Order of Accuracy</h2>
+<ul>
+<li>Then
+\[
+\begin{aligned}
+T_k &amp;= \frac{1}{h}\left[\int_{t_k}^{t_{k+1}} f(s,y(s))\text{d}s - \frac{h}{2}\left(f(t_{k},y(t_{k})) + f(t_{k+1},y(t_{k+1}))\right)\right]\\
+   &amp;= \frac{1}{h}\left[\int_{t_k}^{t_{k+1}} y'(s)\text{d}s - \frac{h}{2}\left(y'(t_k) + y'(t_{k+1})\right)\right]\end{aligned}
+\]
+</li>
+<li>Therefore, $T_k$ is determined by the trapezoid quadrature rule<br />
+error for the integrand $y'$ on $t \in [t_k,t_{k+1}]$</li>
+<li>Recall that trapezoid quadrature rule error bound<br />
+depends on $(b-a)^3 = (t_{k+1}-t_k)^3 = h^3$ and hence
+\[
+T_k = \mathcal{O}(h^2)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Order of Accuracy</h2>
+<ul>
+<li>The table below shows global error at $t=1$ for $y' = y$, $y(0) = 1$<br />
+solved using forward Euler and trapezoid methods
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">$h$</th>
+<th style="text-align: center;">$E_\text{Euler}$</th>
+<th style="text-align: center;">$E_\text{trap}$</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">2.0e-2</td>
+<td style="text-align: center;">2.67e-2</td>
+<td style="text-align: center;">9.06e-05</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1.0e-2</td>
+<td style="text-align: center;">1.35e-2</td>
+<td style="text-align: center;">2.26e-05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">5.0e-3</td>
+<td style="text-align: center;">6.76e-3</td>
+<td style="text-align: center;">5.66e-06</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">2.5e-3</td>
+<td style="text-align: center;">3.39e-3</td>
+<td style="text-align: center;">1.41e-06</td>
+</tr>
+</tbody>
+</table></li>
+</ul>
+<p>
+\[
+h \to h/2 \implies E_\text{Euler} \to E_\text{Euler}/2
+\]
+</p>
+<p>
+\[
+h \to h/2 \implies E_\text{trap} \to E_\text{trap}/4
+\]
+</p>
+</section>
+<section class="slide level2">
+<h2>Stability</h2>
+</section>
+<section class="slide level2">
+<h2>Stability</h2>
+<ul>
+<li>So far we have discussed convergence of numerical methods<br />
+for initial value problems for ODEs, i.e. asymptotic behavior as $h \to 0$</li>
+<li>It is also crucial to consider <span class="color5">stability</span> of numerical methods:<br />
+<span class="color1">for what values of $h$ is the method stable?</span></li>
+<li>We want the method to be stable for as large a step size as possible</li>
+<li>Taking fewer larger steps can be more efficient</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability</h2>
+<ul>
+<li>In this context, the key idea is that we want our methods to inherit the stability properties of the ODE</li>
+<li>If an ODE is unstable, then we can’t expect our discretization to be stable</li>
+<li>But if an ODE is stable, we want our discretization to be stable as well</li>
+<li><span class="color1">Hence we first discuss ODE stability, independent of numerical discretization</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODE Stability</h2>
+<ul>
+<li>Consider an ODE $y' = f(t,y)$, and
+<ul>
+<li>let $y(t)$ be the solution for initial condition $y(0) = y_0$</li>
+<li>let $\hat y(t)$ be the solution for initial condition $\hat y(0) = \hat y_0$</li>
+</ul></li>
+<li>The ODE is <span class="color5">stable</span> if:<br />
+for every $\epsilon &gt; 0$, $\exists \delta &gt; 0$ such that
+\[
+\| \hat y_0 - y_0 \| \leq \delta \implies \| \hat y(t) - y(t) \| \leq \epsilon
+\]
+for all $t \geq 0$</li>
+<li><span class="color1">Small input perturbation leads to small perturbation in the solution</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODE Stability</h2>
+<ul>
+<li>A stronger form of stability, <span class="color5">asymptotic stability</span>:<br />
+$\| \hat y(t) - y(t) \| \to 0$ as $t\to \infty$, perturbations decay over time</li>
+<li><span class="color1">These two definitions of stability are properties of the ODE,<br />
+independent of any numerical algorithm</span></li>
+<li>In ODEs (and PDEs), it is standard to use <span class="color5">stability</span> to refer to sensitivity<br />
+of both the mathematical problem and numerical approximations</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: ODE Stability</h2>
+<ul>
+<li>Stability of $y' = \lambda y$ for different values of $\lambda$
+<ul>
+<li><span class="color0">solution</span> $y= y_0 e^{\lambda t}$ for $y_0=1$</li>
+<li><span class="color1">perturbed solution</span> $\hat{y}= \hat{y}_0 e^{\lambda t}$ for $\hat{y}_0=0.9$</li>
+<li><span class="color3">difference</span> $|\hat{y}-y|= |\hat{y}_0-y_0| e^{\lambda t}$</li>
+</ul></li>
+</ul>
+<div class="row" style="margin-top:-20px;">
+<div class="column3">
+<img src="media/lambdastab_m1.svg" width="100%"><br />
+
+<div style="margin-top:-35px;margin-left:50px;">
+$\lambda = -1$<br />
+asymptotically stable
+</div>
+</div>
+<div class="column3">
+<img src="media/lambdastab_0.svg" width="100%"><br />
+
+<div style="margin-top:-35px;margin-left:50px;">
+$\lambda = 0$<br />
+stable
+</div>
+</div>
+<div class="column3">
+<img src="media/lambdastab_1.svg" width="100%"><br />
+
+<div style="margin-top:-35px;margin-left:50px;">
+$\lambda = 1$<br />
+unstable
+</div>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>ODE Stability</h2>
+<ul>
+<li>More generally, we can allow $\lambda$ to be a complex number: $\lambda = a + ib$</li>
+<li>Then $y(t) = y_0e^{(a + ib) t} = y_0e^{at}e^{ibt} = y_0 e^{at}(\cos(bt) + i\sin(bt))$</li>
+<li>The key issue for stability is now the sign of $a = \mathop{\mathrm{Re}}(\lambda)$
+<ul>
+<li>$\mathop{\mathrm{Re}}(\lambda) &lt; 0 \implies$ asymptotically stable</li>
+<li>$\mathop{\mathrm{Re}}(\lambda) = 0 \implies$ stable</li>
+<li>$\mathop{\mathrm{Re}}(\lambda) &gt; 0 \implies$ unstable</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODE Stability</h2>
+<ul>
+<li>Understanding the stability of a scalar equation $y' = \lambda y$<br />
+can extend to the case $y' = Ay$, where $y \in \mathbb{R}^n, A \in \mathbb{R}^{n\times n}$</li>
+<li>Suppose that $A$ is diagonalizable, so that we have<br />
+the eigenvalue decomposition $A = V \Lambda V^{-1}$, where
+<ul>
+<li>$\Lambda = \mathop{\mathrm{diag}}(\lambda_1, \lambda_2,\ldots,\lambda_n)$, where the $\lambda_j$ are eigenvalues</li>
+<li>$V$ is matrix with eigenvectors as columns, $v_1, v_2,\ldots,v_n$</li>
+</ul></li>
+<li>Then,
+\[
+y' = Ay = V\Lambda V^{-1}y \implies V^{-1} y' =  \Lambda V^{-1}y \implies \htmlClass{color5}{ z' = \Lambda z}
+\]
+where <span class="color5">$z = V^{-1}y$</span> and <span class="color5">$z_0 = V^{-1}y_0$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODE Stability</h2>
+<ul>
+<li>Hence we have $n$ <span class="color1">decoupled</span> ODEs for $z$,<br />
+and the stability of $z_i$ is determined by $\lambda_i$ for each $i$</li>
+<li>Since $z$ and $y$ are related by the matrix $V$,<br />
+then if all $z_i$ are stable then all $y_i$ will also be stable</li>
+<li>If Re$(\lambda_i) \leq 0$ for $i=1,\ldots,n$ then $y' = Ay$ is a <span class="color5">stable ODE</span></li>
+<li>Next we consider stability of numerical approximations to ODEs</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODE Stability</h2>
+<ul>
+<li>Numerical approximation to an ODE is <span class="color5">stable</span> if:<br />
+for every $\epsilon &gt; 0$, $\exists \delta &gt; 0$ such that
+\[
+\| \hat y_0 - y_0 \| \leq \delta \implies \| \hat y_k - y_k \| \leq \epsilon
+\]
+for all $k \geq 0$</li>
+<li><span class="color5">Key idea:</span> We want to develop numerical methods<br />
+that mimic the stability properties of the exact solution</li>
+<li>That is, if the ODE is unstable,<br />
+we should not expect the numerical approximation to be stable</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability</h2>
+<ul>
+<li>Since ODE stability is problem dependent,<br />
+we need a standard test problem</li>
+<li>The standard test problem is the simple scalar ODE
+\[
+y' = \lambda y
+\]
+</li>
+<li><span class="color1">Behavior of a discretization on this test problem<br />
+gives insight into behavior in general</span></li>
+<li>Ideally, to reproduce stability of the ODE $y' = \lambda y$,<br />
+we want our discretization to be stable for all Re$(\lambda) \leq 0$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability: Forward Euler</h2>
+<ul>
+<li>Consider forward Euler discretization of $y' = \lambda y$
+\[
+y_{k+1} = y_k + h\lambda y_k = (1+h\lambda)y_k \implies \htmlClass{color5}{ y_k = (1+h\lambda)^ky_0}
+\]
+</li>
+<li>Here $1+h\lambda$ is called the <span class="color1">amplification factor</span></li>
+<li>Stability means $|1 + h\lambda| \leq 1$</li>
+<li>Let $h\lambda = a + ib$, then $|1 + a + ib|^2 \leq 1^2 \implies (1+a)^2 + b^2 \leq 1$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability: Forward Euler</h2>
+<ul>
+<li>Therefore, forward Euler is stable for $h\lambda \in \mathbb{C}$<br />
+inside the circle of radius 1 centered at $(-1,0)$</li>
+<li>This is a subset of the left-half plane $\mathrm{Re}(h\lambda) \leq 0$
+<p><img data-src="media/stabregion_euler_forw_rel.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li>We say that the forward Euler method is <span class="color1">conditionally stable</span>:<br />
+if $\mathrm{Re}(\lambda) \leq 0$, we have to restrict $h$ to ensure stability</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability: Forward Euler</h2>
+<ul>
+<li>For example, given $\lambda&lt;0$, we require
+\[
+-2 \leq h\lambda \leq 0 \implies h \leq -2/\lambda
+\]
+</li>
+<li>Hence “larger negative $\lambda$” implies tighter restriction on $h$:
+\[
+\begin{aligned}
+\lambda = -10  &amp;\implies&amp; h \leq 0.2\\
+\lambda = -200 &amp;\implies&amp; h \leq 0.01\end{aligned}
+\]
+</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/euler_stab.py">[examples/unit3/euler_stab.py]</a>, forward Euler stability</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability: Backward Euler</h2>
+<ul>
+<li>In comparison, consider backward Euler for $y' = \lambda y$
+\[
+y_{k+1} = y_k + h\lambda y_{k+1} \implies \htmlClass{color5}{ y_k = \big(\tfrac{1}{1-h\lambda}\big)^ky_0}
+\]
+</li>
+<li>Here the <span class="color1">amplification factor</span> is $\frac{1}{1-h\lambda}$<br />
+and the stability condition is $\frac{1}{|1-h\lambda|} \leq 1$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability: Backward Euler</h2>
+<ul>
+<li>Let $h\lambda = a + ib$, then $1^2 \leq |1-(a+ib)|^2$, i.e. $(1-a)^2 + b^2 \geq 1$<br />
+
+<p><img data-src="media/stabregion_euler_back_rel.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li>If Re$(\lambda) \leq 0$, this is satisfied for any $h &gt; 0$</li>
+<li>We say that the backward Euler method is <span class="color1">unconditionally stable</span>:<br />
+if $\mathrm{Re}(\lambda) \leq 0$, no restriction on $h$ for stability</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability</h2>
+<ul>
+<li>Generally, <span class="color5">implicit methods have larger stability regions than explicit</span><br />
+and therefore allow us to take larger time steps</li>
+<li>But explicit methods require less work per step<br />
+since we do not need to solve for $y_{k+1}$</li>
+<li>Therefore there is a <span class="color5">tradeoff</span>:<br />
+the choice of method should depend on the problem</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability Regions</h2>
+<div class="row" style="margin-top:-10px;line-height:1em;">
+<div class="column3">
+<div style="margin-left:50px;">
+ODE<br />
+$y'=\lambda y$<br />
+$y(t) = y_0 e^{\lambda t}$<br />
+<span class="color1">$|e^{\lambda}| \leq 1$</span>
+</div>
+<img src="media/stabregion_euler_ode.svg" width="90%"><br />
+
+</div>
+<div class="column3">
+<div style="margin-left:50px;">
+forward Euler<br />
+$y_{k+1}=y_k+h\lambda y_k$<br />
+$y_k=y_0 (1+h\lambda)^k$<br />
+<span class="color1">$|1+h\lambda|\leq1$</span>
+</div>
+<img src="media/stabregion_euler_forw.svg" width="90%"><br />
+
+</div>
+<div class="column3">
+<div style="margin-left:50px;">
+backward Euler<br />
+$y_{k+1}=y_k+h\lambda y_{k+1}$<br />
+$y_k=y_0 / (1-h\lambda)^k$<br />
+<span class="color1">$|1 /(1-h\lambda)|\leq1$</span>
+</div>
+<img src="media/stabregion_euler_back.svg" width="90%"><br />
+
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Runge–Kutta Methods</h2>
+<ul>
+<li>Runge–Kutta (RK) methods are a popular class of one-step methods</li>
+<li>Aim to achieve <span class="color5">higher order accuracy</span> by combining evaluations of $f$<br />
+at several points in $[t_k,t_{k+1}]$</li>
+<li>RK methods all fit within a general framework,<br />
+which can be described in terms of <span class="color1">Butcher tableaus</span></li>
+<li>We will first consider two RK examples:<br />
+<span class="color5">two</span> evaluations of $f$ and <span class="color5">four</span> evaluations of $f$</li>
+<li>Extra reading: <a href="https://doi.org/10.1016/0168-9274(95)00108-5">Butcher, 1996. A history of Runge-Kutta methods</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge–Kutta Methods</h2>
+<ul>
+<li>A family of Runge–Kutta methods<br />
+with two intermediate evaluations is defined by
+\[
+\begin{aligned}
+  k_1 &amp;= f(t_k,y_k) \\
+  k_2 &amp;= f(t_k + \alpha h, y_k + \beta h k_1) \\
+  y_{k+1} &amp;= y_k + h (ak_1 + bk_2)
+\end{aligned}
+\]
+</li>
+<li>Forward Euler method is a member of this family,<br />
+with $a=1$ and $b=0$</li>
+<li>It can be shown that certain combinations of $a,b,\alpha,\beta$<br />
+yield a second-order method</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge–Kutta Methods</h2>
+<ul>
+<li><span class="color5">Second-order methods</span> with two stages
+<ul>
+<li>midpoint method ($\alpha = \beta = 1/2$, $a=0$, $b=1$)
+\[
+y_{k+1} = y_k + hf\big(t_k +  \tfrac{1}{2}h,\; y_k + \tfrac{1}{2}hf(t_k,y_k)\big)
+\]
+</li>
+<li>Heun’s method ($\alpha=\beta=1$, $a=b=1/2$)
+\[
+y_{k+1} = y_k + \tfrac{1}{2}h[f(t_k,y_k) + f(t_k+h,y_k+hf(t_k,y_k))]
+\]
+</li>
+<li>Ralston’s method ($\alpha=2/3$, $\beta=2/3$, $a=1/4$, $b=3/4$)
+\[
+y_{k+1} = y_k + \tfrac{1}{4}h[f(t_k,y_k) + 3f(t_k+\tfrac{2h}{3},y_k+\tfrac{2h}{3}f(t_k,y_k))]
+\]
+</li>
+</ul></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/rk_order2.py">[examples/unit3/rk_order2.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge–Kutta Methods</h2>
+<ul>
+<li>The <span class="color5">classical fourth-order</span> Runge-Kutta method RK4<br />
+(available in <code>scipy.integrate.solve_ivp</code>)<br />
+\[
+\begin{aligned}
+k_1 &amp;= f(t_k,y_k)\\
+k_2 &amp;= f(t_k + h/2,y_k + hk_1/2)\\
+k_3 &amp;= f(t_k + h/2, y_k + hk_2/2)\\
+k_4 &amp;= f(t_k + h, y_k + hk_3)\\
+y_{k+1} &amp;= y_k + \tfrac{1}{6}h(k_1 + 2k_2 + 2k_3 + k_4)
+\end{aligned}
+\]
+</li>
+<li>It can be shown that the truncation error of RK4 is $T_k = \mathcal{O}(h^4)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge–Kutta Methods: Stability</h2>
+<ul>
+<li>Stability regions of $p$-stage Runge–Kutta methods of order $p$<br />
+(do not depend on a particular method)</li>
+</ul>
+<p><img data-src="media/stabregion.svg" style="margin:auto; display: block;" height="350" /></p>
+</section>
+<section class="slide level2">
+<h2>Butcher tableau</h2>
+<ul>
+<li>Any explicit Runge–Kutta method with $s+1$ stages can be represented<br />
+using a triangular grid of coefficients called the <span class="color5">Butcher tableau</span>
+\[
+\small\begin{array}{c|ccccc}
+\alpha_0 &amp; &amp; &amp; &amp; &amp; \\
+\alpha_1 &amp; \beta_{1,0} &amp; &amp; &amp; &amp; \\
+\vdots &amp; \vdots&amp; &amp; &amp; &amp; \\
+\alpha_s &amp; \beta_{s,0} &amp; \beta_{s,1} &amp; \ldots &amp; \beta_{s,s-1} &amp; \\
+\hline
+&amp; \gamma_0 &amp; \gamma_1&amp; \ldots&amp; \gamma_{s-1}&amp; \gamma_s\\
+\end{array}
+\]
+</li>
+<li>The $i$-th intermediate step is
+\[
+k_i=\textstyle f(t_k+\alpha_ih,y_k+h\sum_{j=0}^{i-1} \beta_{i,j} k_j)
+\]
+</li>
+<li>The solution is updated as
+\[
+\textstyle y_{k+1} = y_k + h\sum_{j=0}^s \gamma_j k_j
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Richardson Extrapolation</h2>
+<ul>
+<li><span class="color5">Richardson extrapolation</span> is a general approach<br />
+to analyze error and improve accuracy</li>
+<li>Treats the approximation as a “black box”</li>
+<li>Assume that $Y(h)$ is an approximation to $y$ that depends<br />
+on a discretization parameter $h&gt;0$ and the error has the form
+\[
+
+Y(h) - y = Ch^p + \mathcal{O}(h^{p+1})
+
+\]
+</li>
+<li>Some parameters here may be known or unknown
+<ul>
+<li>exact solution $y$</li>
+<li>order of accuracy $p$</li>
+<li>factor of the leading error term $C$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Richardson Extrapolation</h2>
+<ul>
+<li>We can evaluate $Y(h)$ for various $h$ to eliminate the unknowns</li>
+<li>For example, if $p$ is known we can evaluate $Y(2h)$ and $Y(h)$
+\[
+\begin{align*}
+Y(2h) - y &amp;= C2^ph^p + \mathcal{O}(h^{p+1}) \\
+Y(h) - y &amp;= Ch^p + \mathcal{O}(h^{p+1})
+\end{align*}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Richardson Extrapolation</h2>
+<ul>
+<li>If we multiply the second equation by $2^p$
+\[
+\begin{align*}
+Y(2h)-y &amp;= C2^p h^p + \mathcal{O}(h^{p+1}) \\
+2^p(Y(h) - y) &amp;= C 2^p h^p + \mathcal{O}(h^{p+1})
+\end{align*}
+
+\]
+and eliminate $C2^p h^p$, we get a <span class="color5">higher-order approximation</span> to $y$
+\[
+
+y = \frac{1}{2^p - 1} \big[2^p Y(h) - Y(2h)\big] + \mathcal{O}(h^{p+1})
+
+\]
+</li>
+<li>The corresponding <span class="color5">error estimate</span> is
+\[
+
+Y(h) - y = \frac{1}{2^p - 1} \big[Y(2h)-Y(h)\big] + \mathcal{O}(h^{p+1})
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Error Estimation</h2>
+<ul>
+<li>How can we compute the solution error<br />
+without knowing the exact solution?</li>
+<li>Two approaches to estimate the error
+<ul>
+<li>Richardson extrapolation</li>
+<li>include an error estimate in the derivation of the method</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Error Estimation</h2>
+<ul>
+<li><span class="color5">First approach:</span> Richardson extrapolation</li>
+<li>Let $Y(h)$ be an approximation to $y(t)$<br />
+by a Runge–Kutta method of order $p$ with a time step $h$
+\[
+
+Y(h) - y(t) = Ch^p + \mathcal{O}(h^{p+1})
+
+\]
+</li>
+<li>Evaluate $Y(h)$ and $Y(h/2)$ to construct an approximation of order $p+1$
+\[
+
+y(t) = \frac{1}{2^p - 1}[2^pY(h/2)-Y(h)] + \mathcal{O}(h^{p+1})
+
+\]
+</li>
+<li>The corresponding error estimate is
+\[
+
+Y(h/2) - y(t) = \frac{1}{2^p - 1}[Y(h)-Y(h/2)] + \mathcal{O}(h^{p+1})
+
+\]
+</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/richardson.py">[examples/unit3/richardson.py]</a> and <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/richardson2.py">[examples/unit3/richardson2.py]</a><br />
+applying Richardson extrapolation to each step of forward Euler (i.e. $t=h$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Error Estimation</h2>
+<ul>
+<li><span class="color5">Second approach:</span> derive Butcher tableaus with<br />
+an additional higher-order formula for estimating error</li>
+<li>Fehlberg’s order 4(5) method RKF45
+<ul>
+<li>$y_{k+1}$ is order 4, $\hat{y}_{k+1}$ is order 5, $y_{k+1}-\hat{y}_{k+1}$ is an error estimate</li>
+</ul>
+<div style="font-size:0.6em;">
+<p>
+\[
+\def\arraystretch{1.25}
+\begin{array}{c|cccccc}
+0 &amp; &amp; &amp; &amp; &amp; \\
+\frac{1}{4} &amp; \frac{1}{4} &amp; &amp; &amp; &amp; &amp; \\
+\frac{3}{8} &amp; \frac{3}{32} &amp;\frac{9}{32}  &amp; &amp; &amp; &amp; \\
+\frac{12}{13} &amp; \frac{1932}{2197} &amp; -\frac{7200}{2197} &amp; \frac{7296}{2197} &amp;  &amp; &amp;\\
+1 &amp; \frac{439}{216} &amp; -8 &amp; \frac{3680}{513} &amp; -\frac{845}{4104} &amp; &amp;\\
+\frac{1}{2} &amp; \frac{-8}{27} &amp; 2 &amp; \frac{-3544}{2565} &amp; \frac{1859}{4104} &amp; \frac{-11}{40} &amp; \\
+\hline
+y_{k+1} &amp; \frac{25}{216} &amp; 0 &amp; \frac{1408}{2565} &amp; \frac{2197}{4104} &amp; -\frac{1}{5} &amp; 0 \\
+\hat{y}_{k+1} &amp; \frac{16}{135} &amp; 0 &amp; \frac{6656}{12825} &amp; \frac{28561}{56430} &amp; -\frac{9}{50} &amp; \frac{2}{55}
+\end{array}
+\]
+</p>
+</div></li>
+<li><a href="https://ntrs.nasa.gov/citations/19690021375">Fehlberg, 1969. Low-order classical Runge-Kutta formulas with stepsize control and their application to some heat transfer problems. NASA</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Higher-Order Methods</h2>
+<ul>
+<li>Fehlberg’s order 7(8) method RKF78
+<div style="font-size:0.4em;">
+<p>
+\[
+\def\arraystretch{1.25}
+\begin{array}{c|ccccccccccccc}\textstyle
+  0 &amp;   &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; \\
+  \frac 2{27} &amp; \frac 2{27}  &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; \\
+  \frac 19 &amp; \frac 1{36} &amp; \frac 1{12} &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; \\
+  \frac 16 &amp; \frac 1{24} &amp; 0 &amp; \frac 18 &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; \\
+  \frac 5{12} &amp; \frac 5{12}  &amp; 0 &amp; -\frac{25}{16} &amp; \frac{25}{16} &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; \\
+  \frac 12 &amp; \frac 1{20} &amp; 0 &amp; 0 &amp; \frac 14 &amp; \frac 15 &amp; &amp; &amp; &amp; &amp; &amp; &amp; &amp; \\
+  \frac 56 &amp; -\frac{25}{108} &amp; 0 &amp; 0 &amp; \frac{125}{108} &amp; -\frac{65}{27} &amp; \frac{125}{54} &amp; &amp; &amp; &amp; &amp; &amp; &amp; \\
+  \frac 16 &amp; \frac{31}{300} &amp; 0 &amp; 0 &amp; 0 &amp; \frac{61}{225} &amp; -\frac 29 &amp; \frac{13}{900} &amp; &amp; &amp; &amp; &amp; &amp; \\
+  \frac 23 &amp; 2 &amp; 0 &amp; 0 &amp; -\frac{53}6 &amp; \frac{704}{45} &amp; -\frac{107}9 &amp; \frac{67}{90} &amp; 3 &amp; &amp; &amp; &amp; &amp; \\
+  \frac 13 &amp; -\frac{91}{108} &amp; 0 &amp; 0 &amp; \frac{23}{108} &amp; -\frac{976}{135} &amp; \frac{311}{54} &amp; -\frac{19}{60} &amp; \frac{17}6 &amp; -\frac 1{12} &amp; &amp; &amp; &amp; \\
+  1 &amp; \frac{2383}{4100} &amp; 0 &amp; 0 &amp; -\frac{341}{164} &amp; \frac{4496}{1025} &amp; -\frac{301}{82} &amp; \frac{2133}{4100} &amp; \frac{45}{82} &amp; \frac{45}{164} &amp; \frac{18}{41} &amp; &amp; &amp; \\
+  0 &amp; \frac 3{205} &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; -\frac 6{41} &amp; -\frac 3{205} &amp; -\frac 3{41} &amp; \frac 3{41} &amp; \frac 6{41} &amp; 0 &amp; &amp; \\
+  1 &amp; -\frac{1777}{4100} &amp; 0 &amp; 0 &amp; -\frac{341}{164} &amp; \frac{4496}{1025} &amp; -\frac{289}{82} &amp; \frac{2193}{4100} &amp; \frac{51}{82} &amp; \frac{33}{164} &amp; \frac{12}{41} &amp; 0 &amp; 1 &amp; \\
+  \hline
+  y_{k+1} &amp; \frac{41}{840} &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \frac{34}{105} &amp; \frac 9{35} &amp; \frac 9{35} &amp; \frac 9{280} &amp; \frac 9{280} &amp; \frac{41}{840} &amp; 0 &amp; 0 \\
+  \hat{y}_{k+1} &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \frac{34}{105} &amp; \frac 9{35} &amp; \frac 9{35} &amp; \frac 9{280} &amp; \frac 9{280} &amp; 0 &amp; \frac{41}{840} &amp; \frac{41}{840}
+\end{array}
+\]
+</p>
+</div></li>
+<li>See implementation in <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/fehlberg.py">[examples/unit3/fehlberg.py]</a></li>
+<li><a href="https://ntrs.nasa.gov/citations/19680027281">Fehlberg, 1968. Classical fifth-, sixth-, seventh-, and eighth-order<br />
+Runge-Kutta formulas with stepsize control. NASA</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Higher-Order Methods: Stability</h2>
+<ul>
+<li>Stability region of Fehlberg’s order 7 method (13 stages)<br />
+compared to order $p$ Runge–Kutta methods</li>
+</ul>
+<p><img data-src="media/stabregion_fehlberg.svg" style="margin:auto; display: block;" height="350" /></p>
+</section>
+<section class="slide level2">
+<h2>Stiff systems</h2>
+<ul>
+<li>A system of linear ODEs
+\[
+y' = Ay
+\]
+is called <span class="color5">stiff</span> if the eigenvalues of $A$ <span class="color5">differ greatly in magnitude</span></li>
+<li>Recall that if $A = V \Lambda V^{-1}$ with a diagonal matrix of eigenvalues $\Lambda$,<br />
+then substitution $y=Vz$ reduces the system to $z'=\Lambda z$.<br />
+Therefore, eigenvalues determine the timescales</li>
+<li>If the differences in eigenvalues are large,<br />
+we need to resolve multiple timescales simultaneously</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stiff systems</h2>
+<ul>
+<li>Suppose we are interested only in the slow components of the solution<br />
+and can ignore the fast components</li>
+<li>However, an explicit method will need to resolve the fast components<br />
+to avoid instability</li>
+<li>Therefore, it may be beneficial to use an implicit method for stiff systems</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stiff systems</h2>
+<ul>
+<li>From a practical point of view, an ODE is considered stiff<br />
+if there is a <span class="color1">significant benefit in using an implicit method instead of explicit</span></li>
+<li>In particular, the time step required for stability is much smaller<br />
+than what is required for accuracy</li>
+<li>Consider $y' = Ay$, $y_0 = [1, 0]^T$ where
+\[
+A =
+\left[
+\begin{array}{cc}
+998 &amp; 1998\\
+-999 &amp; -1999
+\end{array}
+\right]
+\]
+which has $\lambda_1 = -1$, $\lambda_2 = -1000$ and exact solution
+\[
+y(t) =
+\left[
+\begin{array}{cc}
+2e^{-t} - e^{-1000t}\\
+-e^{-t} + e^{-1000t}
+\end{array}
+\right]
+\]
+</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/stiff.py">[examples/unit3/stiff.py]</a> and <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/stiff2.py">[examples/unit3/stiff2.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multistep Methods</h2>
+<ul>
+<li>To obtain a high-order approximation<br />
+one-step methods use multiple function evaluations</li>
+<li>Can we reuse data from earlier time steps instead?</li>
+<li>This is the idea of <span class="color5">multistep methods</span>
+\[
+y_{k+1} = \sum_{i=1}^m \alpha_i y_{k+1-i} + h \sum_{i=0}^m\beta_if(t_{k+1-i},y_{k+1-i})
+\]
+</li>
+<li>If $\beta_0 = 0$ then the method is explicit</li>
+<li><span class="color1">Interpolate the solution and integrate the interpolant</span><br />
+to derive the parameters</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multistep Methods</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/adams.py">[examples/unit3/adams.py]</a>, second-order Adams–Bashforth method</li>
+<li><span class="color5">Question:</span> Multistep methods require data from<br />
+several earlier time steps, so how do we initialize?</li>
+<li><span class="color5">Answer:</span> The standard approach is to use a one-step method<br />
+and then move to multistep after collecting enough data</li>
+<li>Advantages of one-step methods over multistep
+<ul>
+<li>one-step methods are “self-starting”, only need the initial condition</li>
+<li>easier to adapt the time step size</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Boundary Value Problems for ODEs</h2>
+</section>
+<section class="slide level2">
+<h2>Boundary Value Problems for ODEs</h2>
+<ul>
+<li>Consider a second-order linear ODE
+\[
+
+-\alpha u''(x) + \beta u'(x) + \gamma u(x) = f(x)
+
+\]
+for $x \in [a,b]$ with given parameters $\alpha, \beta, \gamma \in \mathbb{R}$<br />
+and function $f : \mathbb{R}\to \mathbb{R}$</li>
+<li>The terms in this ODE have standard names
+<ul>
+<li><span class="color5">diffusion</span> term $-\alpha u''(x)$</li>
+<li><span class="color5">advection</span> term $\beta u'(x)$</li>
+<li><span class="color5">reaction</span> term $\gamma u(x)$</li>
+<li><span class="color5">source</span> term $f(x)$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Boundary Value Problems for ODEs</h2>
+<ul>
+<li>A <span class="color5">boundary value problem</span> (BVP) for a second-order linear ODE<br />
+consists of
+\[
+
+-\alpha u''(x) + \beta u'(x) + \gamma u(x) = f(x)
+
+\]
+and <span class="color5">boundary conditions</span> (BCs) at $x=a$ and $x=b$</li>
+<li>Standard types of boundary conditions
+<ul>
+<li><span class="color5">Dirichlet</span> condition: $u(a) = c_1$</li>
+<li><span class="color5">Neumann</span> condition: $u'(a) = c_1$</li>
+<li><span class="color5">Robin</span> (or “mixed”) condition: $u'(a) + c_2u(a) = c_3$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Shooting Method</h2>
+<ul>
+<li>The <span class="color5">shooting method</span> solves the boundary value problem<br />
+iteratively by solving an initial value problem at each iteration</li>
+<li>To form a correct IVP starting from $x=a$ for a second-order equation,<br />
+we need two conditions at $x=a$
+<ul>
+<li>one condition is part of the BVP</li>
+<li>another condition is imposed with an unknown parameter</li>
+</ul></li>
+<li>For example, with two Dirichlet conditions $u(a)=c_1$ and $u(b)=c_2$,<br />
+we can additionally specify $u'(a)=g$</li>
+<li>Solve the IVP, and somehow update $g$ to improve the error $|u(b) - c_2|$</li>
+<li>Not widely used as it relies on nonlinear optimization<br />
+and does not generalize to PDEs</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Shooting Method: Example</h2>
+<ul>
+<li>Steady-state diffusion-reaction equation ($\alpha=1, \gamma=-5$)
+\[
+
+-\alpha u''(x) + \gamma u(x) = 0,\quad x\in[0,1]
+
+\]
+</li>
+<li>Dirichlet conditions: $u(0)=0$ and $u(1)=0.5$<br />
+and extra Neumann condition: $u(0)=g$</li>
+<li>Iteration: $g_\text{new} = g + \eta(0.5 - u(1))$ with $\eta=2$
+<p><img data-src="media/shooting.svg" style="margin:auto; display: block;" height="200" /></p></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/shooting.py">[examples/unit3/shooting.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: BVP</h2>
+<ul>
+<li><span class="color5">A more general approach is to formulate a coupled system<br />
+of equations for the BVP based on a finite difference approximation</span></li>
+<li>Suppose we have a grid
+\[
+x_i = a + ih, \;\;i=0,1,\ldots,n-1
+\]
+where $h = (b-a)/(n-1)$</li>
+<li>Then our approximation to $u(x)$ is represented by a vector $U \in \mathbb{R}^{n}$,<br />
+where $U_i \approx u(x_i)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: BVP</h2>
+<ul>
+<li>Recall the ODE
+\[
+-\alpha u''(x) + \beta u'(x) + \gamma u(x) = f(x), \quad x \in [a,b]
+
+\]
+</li>
+<li>Let’s develop an approximation for each term in the ODE</li>
+<li>For the reaction term $\gamma u$, we have the pointwise approximation <span class="color5">
+\[
+\gamma U_i \approx \gamma u(x_i)
+\]
+</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: BVP</h2>
+<ul>
+<li>Similarly, for the derivatives
+<ul>
+<li>Let $D_2 \in \mathbb{R}^{n\times n}$ be the differentiation matrix for the second derivative</li>
+<li>Let $D_1 \in \mathbb{R}^{n\times n}$ be the differentiation matrix for the first derivative</li>
+</ul></li>
+<li>Then <span class="color5">$-\alpha (D_2 U)_i \approx -\alpha u''(x_i)$</span> and <span class="color5">$\beta (D_1 U)_i \approx \beta u'(x_i)$</span></li>
+<li>Hence, we obtain $(AU)_i \approx -\alpha u''(x_i) + \beta u'(x_i) + \gamma u(x_i)$, where $A \in \mathbb{R}^{n\times n}$ is
+\[
+\htmlClass{color5}{  A = -\alpha D_2 + \beta D_1 + \gamma{\rm I}}
+
+\]
+</li>
+<li>Similarly, we represent the right hand side by sampling $f$ at the grid points,<br />
+so we introduce $F \in \mathbb{R}^{n}$, where $F_i = f(x_i)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: BVP</h2>
+<ul>
+<li>Therefore, we obtain the linear system for $U \in \mathbb{R}^{n}$<br />
+\[
+\htmlClass{color1}{ A U = F}
+
+\]
+</li>
+<li>We have converted a linear <span class="color5">differential equation</span><br />
+into a linear <span class="color5">algebraic equation</span></li>
+<li>Similarly, we can convert a nonlinear differential<br />
+equation into a nonlinear algebraic system</li>
+<li>Now we <span class="color5">need to account for the boundary conditions</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: BVP</h2>
+<ul>
+<li><span class="color5">Dirichlet boundary conditions</span><br />
+we need to impose $U_0 = c_1$, $U_{n-1} = c_2$</li>
+<li>Since we fix $U_0$ and $U_{n-1}$, they are no longer variables:<br />
+<span class="color1">we can eliminate them from our linear system</span></li>
+<li>However, instead of removing rows and columns from $A$,<br />
+it is more convenient to
+<ul>
+<li>“zero out” first row of $A$, then set $A(0,0) = 1$ and $F_0 = c_1$</li>
+<li>“zero out” last row of $A$, then set $A(n-1,n-1) = 1$ and $F_{n-1} = c_2$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>ODEs: BVP</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/ode_bvp.py">[examples/unit3/ode_bvp.py]</a></li>
+<li>Convergence study:
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">$h$</th>
+<th style="text-align: center;">error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">$2.0\times 10^{-2}$</td>
+<td style="text-align: center;">$5.07\times 10^{-3}$</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">$1.0\times 10^{-2}$</td>
+<td style="text-align: center;">$1.26\times 10^{-3}$</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">$5.0\times 10^{-3}$</td>
+<td style="text-align: center;">$3.17\times 10^{-4}$</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">$2.5\times 10^{-3}$</td>
+<td style="text-align: center;">$7.92\times 10^{-5}$</td>
+</tr>
+</tbody>
+</table></li>
+<li>$O(h^2)$, as expected due to second-order differentiation matrices</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Method of Manufactured Solutions</h2>
+<ul>
+<li>The <span class="color5">method of manufactured solutions</span><br />
+is a technique for testing the implementation
+<ol type="1">
+<li>choose a solution $u$ that satisfies the boundary conditions</li>
+<li>substitute into the ODE to get a right-hand side $f$</li>
+<li>compute the ODE approximation with $f$ from step 2</li>
+<li>verify that you get the expected convergence rate<br />
+for the approximation to $u$</li>
+</ol></li>
+<li>For example, consider $x \in [0,1]$ and set <span class="color5">$u(x) = e^x\sin(2\pi x)$</span>
+\[
+\begin{aligned}
+f(x) &amp;= -\alpha u''(x) + \beta u'(x) + \gamma u(x)\\
+    &amp;= -\alpha e^x\left[4\pi \cos(2\pi x) + (1-4\pi^2)\sin(2\pi x)\right] +\\
+    &amp;+ \beta e^x\left[\sin(2\pi x) + 2\pi\cos(2\pi x)\right] + \gamma e^x\sin(2\pi x)\end{aligned}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Derivatives in BCs</h2>
+<ul>
+<li><span class="color5">Question</span>: How would we impose the Robin boundary condition<br />
+$u'(b) + c_2u(b) = c_3$, and preserve the $O(h^2)$ convergence rate?</li>
+<li><span class="color5">Option 1</span>: Introduce a <span class="color5">ghost node</span> at $x_n = b + h$,<br />
+this node is involved in both the BC and the $(n-1)$-th matrix row</li>
+<li>Employ central difference approx. to $u'(b)$ to get approx. B.C.:
+\[
+\frac{U_{n} - U_{n-2}}{2h} + c_2 U_{n-1} = c_3,
+
+\]
+or equivalently
+\[
+U_{n} = U_{n-2} - 2hc_2 U_{n-1} + 2hc_3
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Derivatives in BCs</h2>
+<ul>
+<li>The $(n-1)$-th equation is
+\[
+-\alpha \frac{U_{n-2} - 2U_{n-1} + U_{n}}{h^2} + \beta \frac{U_{n} - U_{n-2}}{2h} + \gamma U_{n-1}  = F_{n-1}
+
+\]
+</li>
+<li>We can substitute our expression for $U_{n}$ into the above equation,<br />
+and hence eliminate $U_{n}$
+\[
+\htmlClass{color1}{ \left(-\frac{2\alpha c_3}{h} +
+\beta c_3\right)} - \frac{2\alpha}{h^2}U_{n-2} + \left(\frac{2
+\alpha}{h^2}(1+hc_2) - \beta c_2 + \gamma\right)U_{n-1} = F_{n-1}
+
+\]
+</li>
+<li>Set $F_{n-1} \leftarrow F_{n-1} - \htmlClass{color1}{ \left(-\frac{2\alpha c_3}{h} + \beta c_3\right)}$, we get $n\times n$ system $AU = F$</li>
+<li><span class="color5">Option 2</span>: Use a one-sided finite-difference formula for $u'(b)$ in the Robin BC</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Partial Differential Equations</h2>
+</section>
+<section class="slide level2">
+<h2>Partial Differential Equations</h2>
+<ul>
+<li>As discussed in the introduction, it is a natural extension to consider Partial Differential Equations (PDEs)</li>
+<li>There are three main classes of PDEs:
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">equation type</th>
+<th style="text-align: left;">prototypical example</th>
+<th style="text-align: left;">equation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="color1">hyperbolic</span></td>
+<td style="text-align: left;">wave equation</td>
+<td style="text-align: left;">$u_{tt} -u_{xx} = 0$</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="color1">parabolic</span></td>
+<td style="text-align: left;">heat equation</td>
+<td style="text-align: left;">$u_t - u_{xx} = f$</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="color1">elliptic</span></td>
+<td style="text-align: left;">Poisson equation</td>
+<td style="text-align: left;">$u_{xx} + u_{yy} = f$</td>
+</tr>
+</tbody>
+</table></li>
+<li><span class="color5">Question</span>: Where do these names come from?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Partial Differential Equations</h2>
+<ul>
+<li><span class="color5">Answer</span>: The names are related to <span class="color1">conic sections</span></li>
+<li>General second-order PDEs have the form
+<p>
+\[
+au_{xx} + bu_{xy} + c u_{yy} + du_x + e u_y + f u + g = 0
+
+\]
+</p></li>
+<li>This looks like the quadratic function
+\[
+q(x,y) = ax^2 + bxy + cy^2 + dx + ey
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDEs: Hyperbolic</h2>
+<ul>
+<li><span class="color5">Wave equation</span>: $u_{tt} - u_{xx} = 0$</li>
+<li>Corresponding quadratic function is $q(x,t) = t^2 - x^2$</li>
+<li>$q(x,t) = c$ gives a <span class="color5">hyperbola</span>, e.g. for $c=0,2,4,6$, we have</li>
+</ul>
+<p><img data-src="media/conic_hyper.svg" style="margin:auto; display: block;" height="200" /></p>
+</section>
+<section class="slide level2">
+<h2>PDEs: Parabolic</h2>
+<ul>
+<li><span class="color5">Heat equation</span>: $u_{t} - u_{xx} = 0$</li>
+<li>Corresponding quadratic function is $q(x,t) = t - x^2$</li>
+<li>$q(x,t) = c$ gives a <span class="color5">parabola</span>, e.g. for $c=0,2,4,6$, we have</li>
+</ul>
+<p><img data-src="media/conic_para.svg" style="margin:auto; display: block;" height="200" /></p>
+</section>
+<section class="slide level2">
+<h2>PDEs: Elliptic</h2>
+<ul>
+<li><span class="color5">Poisson equation</span>: $u_{xx} + u_{yy} = f$</li>
+<li>Corresponding quadratic function is $q(x,y) = x^2 + y^2$</li>
+<li>$q(x,y) = c$ gives an <span class="color5">ellipse</span>, e.g. for $c=0,2,4,6$, we have</li>
+</ul>
+<p><img data-src="media/conic_ell.svg" style="margin:auto; display: block;" height="200" /></p>
+</section>
+<section class="slide level2">
+<h2>PDEs</h2>
+<ul>
+<li>In general, it is not so easy to classify PDEs using conic section naming</li>
+<li>Many problems don’t strictly fit into the classification scheme<br />
+(e.g. nonlinear, or higher order, or variable coefficient equations)</li>
+<li>Nevertheless, the names hyperbolic, parabolic, elliptic are the standard ways of describing PDEs, based on the criteria:
+<ul>
+<li><span class="color5">Hyperbolic</span>: time-dependent, conservative physical process,<br />
+no steady state</li>
+<li><span class="color5">Parabolic</span>: time-dependent, dissipative physical process,<br />
+evolves towards steady state</li>
+<li><span class="color5">Elliptic</span>: describes systems at equilibrium/steady-state</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs</h2>
+<ul>
+<li>We introduced the wave equation $u_{tt} - u_{xx} = 0$ above</li>
+<li>Note that the system of first order PDEs
+\[
+\begin{aligned}
+u_t + v_x &amp;= 0\\
+v_t + u_x &amp;= 0\end{aligned}
+
+\]
+is equivalent to the wave equation, since
+\[
+u_{tt} = (u_t)_t = (-v_x)_t = -(v_t)_x = -(-u_x)_x = u_{xx}
+
+\]
+</li>
+<li>This assumes that $u$, $v$ are smooth,<br />
+so we can switch the order of the partial derivatives</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs</h2>
+<ul>
+<li>Hence we will focus on the <span class="color5">linear advection equation</span>
+\[
+u_t + cu_x = 0
+\]
+with initial condition $u(x,0) = u_0(x)$, and $c \in \mathbb{R}$</li>
+<li>This equation is representative of hyperbolic PDEs in general</li>
+<li>This is a first order PDE and does not correspond to a conic section</li>
+<li>However, it is still considered <span class="color5">hyperbolic</span> since it is
+<ul>
+<li>time-dependent</li>
+<li>conservative</li>
+<li>not evolving toward steady state</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs</h2>
+<ul>
+<li>We can see that <span class="color1">$u(x,t) = u_0(x - ct)$</span> satisfies the PDE</li>
+<li>Let $z(x,t) = x - ct$, then from the chain rule we have
+\[
+\begin{aligned}
+\frac{\partial}{\partial t}u_0(x - ct) + c\frac{\partial}{\partial x}u_0(x - ct)
+&amp;= \frac{\partial}{\partial t}u_0(z(x,t)) + c\frac{\partial}{\partial x}u_0(z(x,t))\\
+&amp;= u_0'(z)\frac{\partial z}{\partial t} + c u_0'(z)\frac{\partial z}{\partial x}\\
+&amp;= -c u_0'(z) + c u_0'(z)\\
+&amp;= 0\end{aligned}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs</h2>
+<ul>
+<li><span class="color5">This tells us that the equation transports (or advects)<br />
+the initial condition with “speed” $c$</span>
+<p>
+\[
+u_t + cu_x = 0
+\]
+</p></li>
+<li>For example, with $c=1$ and an initial condition $u_0(x) = e^{-(1-x)^2}$
+<p><img data-src="media/advection_exp.svg" style="margin:auto; display: block;" height="200" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Characteristics</h2>
+<ul>
+<li>We can understand the behavior of hyperbolic PDEs in more detail<br />
+by considering <span class="color5">characteristics</span></li>
+<li>Characteristics are paths $(X(t),t)$ in the $xt$-plane<br />
+on which the solution is constant</li>
+<li>For $u_t + cu_x = 0$ we have $X(t) = X_0 + ct$, since
+\[
+\begin{aligned}
+\frac{\text{d}}{\text{d}t}u(X(t),t) &amp;= u_t(X(t),t) + u_x(X(t),t)\frac{\text{d}X(t)}{\text{d}t}\\
+&amp;= u_t(X(t),t) + cu_x(X(t),t)\\
+&amp;= 0\end{aligned}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Characteristics</h2>
+<ul>
+<li>Hence $u(X(t),t) = u(X(0),0) = u_0(X_0)$,<br />
+i.e. the initial condition is transported along characteristics</li>
+<li>Characteristics have important implications for the direction of<br />
+flow of information, and for boundary conditions
+<div class="row">
+<div class="column">
+<img src="media/char_bc_pos.svg" height="200"><br />
+
+<div style="margin-top:-15px;">
+$c&gt;0$, must impose BC at $x=a$<br> <span class="color0">cannot impose BC at $x=b$</span>
+</div>
+</div>
+<div class="column">
+<img src="media/char_bc_neg.svg" height="200"><br />
+
+<div style="margin-top:-15px;margin-left:50px;">
+$c&lt;0$, must impose BC at $x=b$<br> <span class="color0">cannot impose BC at $x=a$</span>
+</div>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Characteristics</h2>
+<ul>
+<li>More generally, if we have a non-zero right-hand side in the PDE,<br />
+then the situation is a bit more complicated on each characteristic</li>
+<li>Consider $u_t + cu_x = f(t,x,u(t,x))$, and $X(t) = X_0 + ct$
+\[
+\begin{aligned}
+\frac{\text{d}}{\text{d}t}u(X(t),t) &amp;= u_t(X(t),t) + u_x(X(t),t)\frac{\text{d}X(t)}{\text{d}t}\\
+&amp;= u_t(X(t),t) + cu_x(X(t),t)\\
+&amp;= f(t,X(t),u(X(t),t))\end{aligned}
+
+\]
+</li>
+<li>In this case, the solution is no longer constant on $(X(t),t)$,<br />
+but we have reduced a PDE to a set of ODEs, so that
+\[
+\htmlClass{color5}{ u(X(t),t) = u_0(X_0) + \int_0^t f(t,X(t),u(X(t),t)\text{d}t}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Characteristics</h2>
+<ul>
+<li>We can also find characteristics for advection<br />
+with a <span class="color5">variable coefficient</span></li>
+<li><span class="color0">Exercise:</span> Verify that the characteristic curve for
+\[
+u_t + c(t,x)u_x = 0
+\]
+is given by
+\[
+X'(t) = c(X(t),t)
+\]
+</li>
+<li>In this case, we have to solve an ODE<br />
+to obtain the curve $(X(t),t)$ in the $xt$-plane</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Variable Speed in Space</h2>
+<ul>
+<li>Equation: $u_t+cu_x=0$ with $c(x,t) = x - 1$</li>
+<li>Characteristics satisfy $X'(t)=c(X(t), t)$<br />
+with solution $X(t) = 1 + (X_0 - 1)e^{t}$</li>
+<li>Characteristics “bend away” from $x=1$
+<p><img data-src="media/char_div.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Variable Speed in Time</h2>
+<ul>
+<li>Equation: $u_t+cu_x=0$ with $c(x,t) = t - 1$</li>
+<li>Characteristics satisfy $X'(t)=c(X(t), t)$<br />
+with solution $X(t) = X_0 + \tfrac{1}{2}t^2 - t$</li>
+<li>The same shape shifted along $x$
+<p><img data-src="media/char_div_2.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>We now consider how to solve
+\[
+u_t + cu_x = 0
+\]
+using a finite difference method</li>
+<li><span class="color5">Question</span>: Why finite differences? Why not just use characteristics?</li>
+<li><span class="color5">Answer</span>: Characteristics actually are a viable option for computational methods, and are used in practice</li>
+<li>However, <span class="color1">characteristic methods</span> can become very complicated in 2D or 3D, or for nonlinear problems</li>
+<li>Finite differences are a much more practical choice</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>We impose an initial condition and a boundary condition</li>
+<li>A finite difference approximation is performed on a grid in the $xt$-plane
+<p><img data-src="media/grid.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>The first step in developing a finite difference approximation<br />
+is to consider the <span class="color5">Courant–Friedrichs–Lewy (CFL) condition</span></li>
+<li>The CFL condition is a <span class="color1">necessary condition</span> for the convergence<br />
+of a finite difference approximation of a hyperbolic problem</li>
+<li>Suppose we discretize $u_t + cu_x = 0$ in space and time using the explicit scheme
+\[
+\frac{U_j^{n+1} - U_j^n}{\Delta t} + c \frac{U_j^{n} -
+U_{j-1}^n}{\Delta x} = 0
+
+\]
+</li>
+<li>Here $U_j^n \approx u(t_n,x_j)$, where $t_n = n\Delta t$, $x_j = j\Delta x$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>This can be rewritten as
+\[
+\begin{aligned} U_j^{n+1} &amp;= U_j^n - \frac{c\Delta
+t}{\Delta x} (U_j^n - U^n_{j-1})\\ &amp;= (1-\nu)U^n_j + \nu U^n_{j-1}\end{aligned}
+
+\]
+where
+\[
+\nu = \frac{c\Delta t}{\Delta x}
+\]
+</li>
+<li>We can see that $U_j^{n+1}$ depends only on $U_j^n$ and $U_{j-1}^n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>The set of grid nodes on which $U_j^{n+1}$ depends<br />
+is called the <span class="color5">domain of dependence</span> of $U_j^{n+1}$
+<p><img data-src="media/grid_cfl0.svg" style="margin:auto; display: block;" height="300" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>The domain of dependence of the exact solution $u(t_{n+1},x_j)$<br />
+is determined by the characteristics passing through $(t_{n+1},x_j)$</li>
+<li>The CFL condition states
+<blockquote>
+<p><span class="color5">For a convergent scheme, the domain of dependence of the PDE must lie within the domain of dependence of the numerical method</span></p>
+</blockquote></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>Domain of dependence of $U_j^n$: grid nodes •</li>
+<li>Domain of dependence of $u(t_{n+1}, x_j)$: solid line (characteristic)
+<p><img data-src="media/grid_cfl1.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li>In this case, the scheme satisfies the CFL condition</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>With a larger advection speed $c$,<br />
+the scheme does not satisfy the CFL condition
+<p><img data-src="media/grid_cfl2.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>With a negative advection speed ($c&lt;0$),<br />
+the scheme does not satisfy the CFL condition
+<p><img data-src="media/grid_cfl3.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li><span class="color5">Question:</span> What goes wrong if the CFL condition is violated?</li>
+<li><span class="color5">Answer:</span> The exact solution $u(x,t)$ depends on initial value $u_0(x_0)$,<br />
+which is <span class="color0">outside</span> the scheme’s domain of dependence</li>
+<li>Therefore, the numerical approximation to $u(x,t)$ is “insensitive”<br />
+to the value $u_0(x_0)$, which means that the method cannot be convergent</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>If $c &gt; 0$, then we require $\nu = \frac{c\Delta t}{\Delta x} \leq 1$<br />
+for the CFL condition to be satisfied
+<p><img data-src="media/grid_cfl4.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Numerical Approximation</h2>
+<ul>
+<li>Note that CFL is only a necessary condition for convergence</li>
+<li>However, CFL is straightforward to test and allows us<br />
+to <span class="color5">easily reject improper schemes or parameters</span></li>
+<li>For example, for $u_t + cu_x = 0$, the scheme with a backward difference
+\[
+\frac{U_j^{n+1} -
+U_j^n}{\Delta t} + c \frac{U_j^{n} - U_{j-1}^n}{\Delta x} = 0
+
+\]
+cannot be convergent if $c &lt; 0$</li>
+<li><span class="color5">Question:</span> How should we modify the scheme for $c &lt; 0$?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Upwind Method</h2>
+<ul>
+<li><span class="color5">Answer:</span> The method should account for the direction of “information flow”</li>
+<li>This motivates the <span class="color5">upwind scheme</span> for $u_t + cu_x = 0$
+\[
+U_j^{n+1} = \begin{cases} U_j^n - c \frac{\Delta t}{\Delta x} (U_j^n -
+U^n_{j-1}), \quad \text{if } c &gt; 0\\ U_j^n - c \frac{\Delta t}{\Delta x}
+(U_{j+1}^n - U^n_j), \quad \text{if } c &lt; 0 \end{cases}
+
+\]
+</li>
+<li>The upwind scheme satisfies CFL condition if $|\nu|= |c\Delta t / \Delta x| \leq 1$</li>
+<li>$\nu=c\Delta t / \Delta x$ is called the <span class="color5">CFL number</span> (or the Courant number)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Central Difference</h2>
+<ul>
+<li>Another method that seems appealing is the <span class="color5">central difference method</span>
+\[
+\frac{U_j^{n+1} - U_j^n}{\Delta t} + c \frac{U_{j+1}^{n} - U_{j-1}^n}{2 \Delta
+x} = 0
+
+\]
+<img data-src="media/grid_cfl5.svg" style="margin:auto; display: block;" height="250" /></li>
+<li>It satisfies CFL for $|\nu| = |c\Delta t / \Delta x| \leq 1$ both for $c&gt;0$ and $c&lt;0$</li>
+<li>However, we will see that this method is unstable</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Accuracy</h2>
+<ul>
+<li>Recall that truncation error is<br />
+<span class="color5">the residual of the numerical approximation<br />
+evaluated on the exact solution</span></li>
+<li>For the ($c&gt;0$) upwind method, the truncation error is:
+\[
+T^n_j = \frac{u(t^{n+1},x_j) - u(t^n,x_j)}{\Delta t} +
+c \frac{u(t^n,x_j) - u(t^n,x_{j-1})}{\Delta x}
+
+\]
+</li>
+<li>The <span class="color5">order of accuracy</span> is then the largest $p$ such that
+\[
+T^n_j = \mathcal{O}((\Delta x)^p + (\Delta t)^p)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Accuracy</h2>
+<ul>
+<li>For the upwind method, we have
+\[
+T_j^n =
+\frac{1}{2}\left[ \htmlClass{color5}{ \Delta t} u_{tt}(t^n,x_j) - c\htmlClass{color5}{
+\Delta x} u_{xx}(t^n,x_j)\right] + \text{h.o.t.} \quad  \htmlClass{color5}{ }
+
+\]
+</li>
+<li>Hence the upwind scheme is <span class="color1">first order accurate</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Accuracy</h2>
+<ul>
+<li>Just like with ODEs, truncation error is related to convergence<br />
+to the exact solution as $\Delta t, \Delta x \to 0$</li>
+<li>Note that to let $\Delta t, \Delta x \to 0$, we generally need to decide<br />
+on a relationship between $\Delta t$ and $\Delta x$</li>
+<li>For example, to let $\Delta t, \Delta x \to 0$ for the upwind scheme,<br />
+we would set <span class="color5">$\frac{c\Delta t}{\Delta x} = \nu \in (0,1]$</span>.<br />
+This ensures CFL is satisfied for all $\Delta x, \Delta t$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Accuracy</h2>
+<ul>
+<li>In general, convergence of a finite difference method for a PDE<br />
+is related to both its <span class="color5">truncation error</span> and its <span class="color5">stability</span></li>
+<li>Now we will consider how to analyze stability using<br />
+the <span class="color1">Fourier stability analysis</span> (also called von Neumann analysis)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Stability</h2>
+<ul>
+<li>Suppose that $U^n_j$ is periodic on a grid $x_1,x_2,\ldots, x_n$
+<p><img data-src="media/periodic_1.png" style="margin:auto; display: block;" height="220" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Stability</h2>
+<ul>
+<li>Then we can represent $U^n_j$ as a linear combination<br />
+of $\sin$ and $\cos$ functions, i.e. <span class="color1">Fourier modes</span>
+<p><img data-src="media/periodic_2.png" style="margin:auto; display: block;" height="220" /></p></li>
+<li>Equivalently, as a linear combination of <span class="color5">complex exponentials</span>,<br />
+since $e^{i kx} = \cos(kx) + i\sin(kx)$ so that
+\[
+\textstyle \sin(x) = \frac{1}{2i}(e^{ix} - e^{-ix}), \qquad \cos(x) = \frac{1}{2}(e^{ix} + e^{-ix})
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Stability</h2>
+<ul>
+<li>Let’s focus on <span class="color5">only one</span> of the Fourier modes</li>
+<li>In particular, we consider the <span class="color1">ansatz</span> $U^n_j(k) = \lambda(k)^n e^{i k x_j}$,<br />
+where $k$ is the wave number and $\lambda(k) \in \mathbb{C}$</li>
+<li><span class="color5">Key idea</span>: Suppose that $U^n_j(k)$ satisfies our<br />
+finite difference equation, then this will allow us to solve for $\lambda(k)$</li>
+<li>The value of $|\lambda(k)|$ indicates whether<br />
+the Fourier mode $e^{i k x_j}$ is <span class="color0">amplified</span> or <span class="color1">damped</span></li>
+<li>If $|\lambda(k)| \leq 1$ for all $k$ then the scheme<br />
+does not amplify any Fourier modes, therefore is <span class="color1">stable</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Stability</h2>
+<ul>
+<li>We now perform Fourier stability analysis for<br />
+the upwind scheme with $c&gt;0$ (recall that $\nu = \frac{c\Delta t}{\Delta x}$):
+\[
+U^{n+1}_j = U_j^n - \nu
+(U_j^n - U^n_{j-1})
+
+\]
+</li>
+<li>Substituting in $U^n_j(k) = \lambda(k)^n e^{i k (j\Delta x)}$ gives
+\[
+\begin{aligned} \lambda(k) e^{i k (j\Delta x)} &amp;= e^{i k (j\Delta
+x)} - \nu (e^{i k (j\Delta x)} - e^{i k ((j-1)\Delta x)})\\ &amp;= e^{i k (j\Delta
+x)} - \nu e^{i k (j\Delta x)}(1 - e^{-ik\Delta x)})\end{aligned}
+
+\]
+</li>
+<li>Then
+\[
+\lambda(k) = 1 - \nu (1 - e^{-ik\Delta x}) = 1 - \nu (1 - \cos(k\Delta x) +
+i\sin(k\Delta x))
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Stability</h2>
+<ul>
+<li>It follows that
+\[
+\begin{aligned} |\lambda(k)|^2 &amp;= [(1-\nu) + \nu
+\cos(k\Delta x)]^2 + [\nu \sin(k\Delta x)]^2\\ &amp;= (1-\nu)^2 + \nu^2 +
+2\nu(1-\nu)\cos(k\Delta x)\\ &amp;= 1 - 2\nu(1-\nu)(1-\cos(k\Delta
+x))\end{aligned}
+
+\]
+and from the identity $(1 - \cos(\theta)) = 2\sin^2(\frac{\theta}{2})$, we have
+\[
+\htmlClass{color5}{ |\lambda(k)|^2 = 1 -
+4\nu(1-\nu)\sin^2\left(\frac{1}{2}k\Delta x\right)}
+
+\]
+</li>
+<li>Due to the CFL condition, we first suppose that $0 \leq \nu \leq 1$</li>
+<li>Then $0 \leq 4\nu(1-\nu)\sin^2\left(\frac{1}{2}k\Delta x\right) \leq 1$, and therefore $|\lambda(k)| \leq 1$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Stability</h2>
+<ul>
+<li>In contrast, consider stability of the central difference scheme
+\[
+\frac{U_j^{n+1} - U_j^n}{\Delta t} + c \frac{U_{j+1}^{n} -
+U_{j-1}^n}{2\Delta x} = 0
+
+\]
+</li>
+<li>Recall that this also satisfies the CFL condition as long as $\left|\nu\right| \leq 1$</li>
+<li>But Fourier stability analysis yields
+\[
+\lambda(k) = 1 - \nu i \sin(k\Delta x)
+\implies |\lambda(k)|^2 = 1 + \nu^2\sin^2(k\Delta x)
+
+\]
+and hence <span class="color0">$|\lambda(k)| &gt; 1$</span> (unless $\sin(k\Delta x) = 0$), i.e. <span class="color0">unstable!</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Consistency</h2>
+<ul>
+<li>We say that a numerical scheme is <span class="color5">consistent</span> with a PDE<br />
+if its truncation error tends to zero as $\Delta x, \Delta t \to 0$</li>
+<li>For example, any first (or higher) order scheme is consistent</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lax Equivalence Theorem</h2>
+<ul>
+<li>Then a fundamental theorem about finite difference schemes<br />
+is the <span class="color5">Lax equivalence theorem</span>
+<blockquote>
+<p><span class="color1">For a consistent finite difference approximation to a linear evolutionary problem, the stability of the scheme is necessary and sufficient for convergence</span></p>
+</blockquote></li>
+<li>This theorem refers to linear evolutionary problems,<br />
+e.g. linear hyperbolic or parabolic PDEs</li>
+<li>Due to Peter Lax (born 1926, American mathematician)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lax Equivalence Theorem</h2>
+<ul>
+<li><span class="color1">We know how to check consistency</span>: Derive the truncation error</li>
+<li><span class="color1">We know how to check stability</span>: Fourier stability analysis</li>
+<li>Hence, from the Lax equivalence theorem,<br />
+we have a general approach for verifying convergence</li>
+<li>Also, as with ODEs, convergence rate is determined by truncation error</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lax Equivalence Theorem</h2>
+<ul>
+<li>Note that strictly speaking Fourier stability analysis<br />
+only applies for periodic problems</li>
+<li>However, its conclusions on periodic problems generally hold in other cases</li>
+<li><span class="color5">Fourier stability analysis is the standard tool for examining stability of finite-difference methods for PDEs</span></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/advection.py">[examples/unit3/advection.py]</a>, one-sided and central difference<br />
+schemes for the advection equation</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Semi-discretization</h2>
+<ul>
+<li>So far, we have developed full discretizations (both space and time)<br />
+of the advection equation, and considered accuracy and stability</li>
+<li>However, it can be helpful to consider <span class="color5">semi-discretizations</span>,<br />
+where we discretize only in space, or only in time</li>
+<li>For example, discretizing $u_t + c(t,x)u_x = 0$ in space using a backward difference formula gives
+\[
+\frac{\partial U_j(t)}{\partial t} + c_j(t)
+\frac{U_j(t) - U_{j-1}(t)}{\Delta x} = 0, \qquad j=1,\ldots,n
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Semi-discretization</h2>
+<ul>
+<li>This gives a system of <span class="color5">ODEs</span>, $U_t = f(t,U(t))$, where $U(t) \in \mathbb{R}^n$ and
+\[
+
+f_j(t,U(t)) = - c_j(t) \frac{U_j(t) - U_{j-1}(t)}{\Delta x}
+
+\]
+</li>
+<li><span class="color1">Forward Euler</span> applied to that system yields<br />
+the first-order upwind scheme
+\[
+
+\frac{U_j^{n+1} - U_j^{n}}{\Delta t} = f(t^n,U^n) = - c_j^n
+\frac{U_j^n - U_{j-1}^n}{\Delta x}
+
+\]
+</li>
+<li><span class="color1">Backward Euler</span> yields the implicit first-order upwind
+\[
+\frac{U_j^{n+1} - U_j^{n}}{\Delta t} =
+f(t^{n+1},U^{n+1}) = - c_j^{n+1} \frac{U_j^{n+1} - U_{j-1}^{n+1}}{\Delta x}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Hyperbolic PDEs: Method of Lines</h2>
+<ul>
+<li>We can also use a “black box” ODE solver (e.g. <code>scipy.integrate.odeint</code>)<br />
+to solve the system of ODEs</li>
+<li>This “black box” approach is called the <span class="color5">method of lines</span></li>
+<li>The name “lines” is because we solve each $U_j(t)$ for a fixed $x_j$,<br />
+i.e. a line in the $xt$-plane</li>
+<li>We let the ODE solver to choose step size $\Delta t$<br />
+to obtain a stable and accurate scheme</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Wave Equation</h2>
+<ul>
+<li>We now briefly return to the <span class="color5">wave equation</span>:
+\[
+u_{tt} - c^2 u_{xx} = 0
+\]
+</li>
+<li>In one spatial dimension, this models vibrations of a string</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Wave Equation</h2>
+<ul>
+<li>Many schemes have been proposed for the wave equation,<br />
+as well as other hyperbolic systems in general</li>
+<li>One good option is to use <span class="color1">central difference approximations</span><br />
+for both $u_{tt}$ and $u_{xx}$
+\[
+\frac{U^{n+1}_j - 2U^n_j + U^{n-1}_j}{\Delta
+  t^2} - c^2 \frac{U^n_{j+1} - 2U^n_{j} + U^n_{j-1}}{\Delta x^2} = 0
+
+\]
+</li>
+<li>Key points
+<ul>
+<li>truncation error analysis $\implies$ second-order accurate</li>
+<li>Fourier stability analysis $\implies$ stable for $0 \leq c\Delta t/\Delta x  \leq 1$</li>
+<li>two-step method in time, need a one-step method to “get started”</li>
+</ul></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/wave.py">[examples/unit3/wave.py]</a> and <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/wave_audio.py">[examples/unit3/wave_audio.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Wave Equation: Example <span style="font-size:0.7em;">🔊</span></h2>
+<div class="row">
+<div class="column" style="flex:60%;margin-right:-100px;">
+<ul>
+<li>Wave equation with forcing
+\[
+u_{tt} - u_{xx} = f
+\]
+<img data-src="media/wave_energy.svg" style="margin:auto; display: block;" height="250" /></li>
+<li>Energy $\int{u_t^2dx}$<br />
+</li>
+<li>Sound $\int{u_x^2dx}$ (change in arc length)</li>
+</ul>
+</div>
+<div class="column" style="flex:40%;margin-left:-100px;">
+<div>
+<ul>
+<li>Forcing $f = x \sin(\omega(t) t)$<br />
+$\omega(t)=at + b$</li>
+</ul>
+<video height="180" controls poster="media/wave_force.jpg">
+<source data-src="media/wave_force.webm" type="video/webm">
+</video>
+</div>
+<div>
+<video height="180" controls poster="media/wave_signal.jpg">
+<source data-src="media/wave_signal.webm" type="video/webm">
+</video>
+</div>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Heat Equation</h2>
+<ul>
+<li>The canonical parabolic equation is the <span class="color5">heat equation</span>
+\[
+u_t - \alpha u_{xx} = f(t,x)
+\]
+where $\alpha$ is the <span class="color5">thermal diffusivity</span></li>
+<li>By rescaling $x$ and $t$, we can assume $\alpha=1$</li>
+<li>To form an initial-boundary value problem, we impose
+<ul>
+<li>initial condition $u(0,x) = u_0(x)$</li>
+<li>boundary conditions on <span class="color5">both endpoints the domain</span></li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Heat Equation</h2>
+<ul>
+<li>A natural idea would be to discretize $u_{xx}$ with a central difference,<br />
+and employ forward Euler in time
+\[
+\frac{U^{n+1}_j - U^n_j}{\Delta t} -  \frac{U^n_{j-1}-2U^n_j + U^n_{j+1}}{\Delta x^2} = 0
+\]
+</li>
+<li>Or we could use backward Euler in time<br />
+\[
+\frac{U^{n+1}_j - U^n_j}{\Delta t} -  \frac{U^{n+1}_{j-1}-2U^{n+1}_j + U^{n+1}_{j+1}}{\Delta x^2} = 0
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Heat Equation</h2>
+<ul>
+<li>Or we could do the midpoint rule in time
+\[
+\frac{U^{n+1}_j - U^n_j}{\Delta t} - \frac{1}{2} \frac{U^{n+1}_{j-1}-2U^{n+1}_j + U^{n+1}_{j+1}}{\Delta x^2} - \frac{1}{2} \frac{U^{n}_{j-1}-2U^{n}_j + U^{n}_{j+1}}{\Delta x^2} = 0
+\]
+</li>
+<li>This is called the <span class="color5">Crank–Nicolson method</span></li>
+<li>Extra reading: <a href="https://doi.org/10.1017/S0305004100023197">Crank &amp; Nicolson, 1947. A practical method for numerical evaluation of solutions of partial differential equations of the heat-conduction type</a></li>
+</ul>
+<!--
+## Historical Note: Differential Analyzer
+
+* [Crank & Nicolson, 1947](https://doi.org/10.1017/S0305004100023197)
+-->
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method</h2>
+<ul>
+<li><span class="color5">The $\theta$-method</span> is a family of methods that includes all of the above<br />
+\[
+\frac{U^{n+1}_j - U^n_j}{\Delta t} - \theta \frac{U^{n+1}_{j-1}-2U^{n+1}_j + U^{n+1}_{j+1}}{\Delta x^2} -
+(1-\theta) \frac{U^{n}_{j-1}-2U^{n}_j + U^{n}_{j+1}}{\Delta x^2} = 0
+\]
+where $\theta \in [0,1]$ is a parameter
+<ul>
+<li>$\theta = 0 \implies$ forward Euler</li>
+<li>$\theta = \frac{1}{2} \implies$ Crank–Nicolson</li>
+<li>$\theta = 1 \implies$ backward Euler</li>
+</ul></li>
+<li>For the $\theta$-method, we can
+<ul>
+<li>perform Fourier stability analysis</li>
+<li>calculate the truncation error</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method: Stability</h2>
+<ul>
+<li>Fourier stability analysis. Set $U^n_j(k) = \lambda(k)^n e^{ik(j\Delta x)}$ to get
+\[
+\lambda(k) = \frac{1 - 4(1-\theta)\mu \sin^2\left(\frac{1}{2}k\Delta x\right)}{1 + 4\theta\mu\sin^2\left(\frac{1}{2}k\Delta x\right)}
+\]
+where <span class="color5">$\mu = \Delta t / \Delta x^2$</span></li>
+<li>In general, $\mu = \alpha\Delta t / \Delta x^2$ is dimensionless<br />
+(sometimes called the diffusion number, or diffusion CFL number)</li>
+<li>Here we cannot get $\lambda(k) &gt; 1$, hence <span class="color5">only concern is $\lambda(k) &lt; -1$</span></li>
+<li>Let’s find conditions for stability, i.e. we want $\lambda(k) \geq -1$
+\[
+1 - 4(1-\theta)\mu\sin^2\left(\frac{1}{2}k\Delta x\right) \geq -\left[1 + 4\theta\mu \sin^2\left(\frac{1}{2}k\Delta x\right) \right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method: Stability</h2>
+<ul>
+<li>Or equivalently
+\[
+4\mu(1-2\theta)\sin^2\left(\frac{1}{2}k\Delta x\right) \leq 2
+\]
+</li>
+<li>For $\theta \in [0.5,1]$ this inequality is always satisfied,<br />
+hence the $\theta$-method is <span class="color5">unconditionally stable</span> (i.e. stable independent of $\mu$)</li>
+<li>For $\theta \in [0,0.5)$, the “most unstable” Fourier mode is at $k = \pi/\Delta x$,<br />
+since this maximizes the factor $\sin^2\left(\frac{1}{2}k\Delta x\right)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method: Stability</h2>
+<ul>
+<li>Note that this corresponds to the <span class="color5">highest frequency mode</span><br />
+that can be represented on our grid, since with $k = \pi/\Delta x$ we have
+\[
+e^{ik(j\Delta x)} = e^{\pi i j} = (e^{\pi i})^j = (-1)^j
+\]
+</li>
+<li>The $k = \pi/\Delta x$ “sawtooth” mode <img data-src="media/sawtooth_mode.svg" style="margin:auto; display: block;" height="250" /></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method: Stability</h2>
+<ul>
+<li>This sawtooth mode is stable (and so all modes are stable) if
+\[
+4\mu(1-2\theta) \leq 2 \Longleftrightarrow \mu \leq \frac{1}{2(1-2\theta)}
+\]
+</li>
+<li>Therefore, the $\theta$-method is <span class="color5">conditionally stable</span> for $\theta \in [0,0.5)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method: Stability</h2>
+<ul>
+<li>The $\theta$-method is conditionally stable if $\theta\in[0, 0.5)$<br />
+and unconditionally stable if $\theta\in[0.5, 1]$</li>
+<li><span class="color1">Stability region</span> in the $\mu$-$\theta$ plane
+<p><img data-src="media/theta_stab.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method: Stability</h2>
+<ul>
+<li>Note that $\theta$ in $[0,0.5)$ leads to a severe stability restriction,<br />
+since $\Delta t$ is quadratic in $\Delta x$
+\[
+\textstyle \Delta t \leq \frac{(\Delta x)^2}{2(1-2\theta)}
+\]
+</li>
+<li>Recall that in the hyperbolic case, $\Delta t$ is linear in $\Delta x$
+\[
+\textstyle \Delta t \leq \frac{\Delta x}{c}
+\]
+</li>
+<li>This indicates that spacial discretization of the heat equation<br />
+results in a <span class="color5">stiff system of ODEs</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method: Accuracy</h2>
+<ul>
+<li>The truncation error analysis gives
+\[
+\begin{aligned}
+T^n_j &amp;= \frac{u^{n+1}_j - u^n_j}{\Delta t} - \theta \frac{u^{n+1}_{j-1}-2u^{n+1}_j +
+   u^{n+1}_{j+1}}{\Delta x^2} - (1-\theta) \frac{u^{n}_{j-1}-2u^{n}_j + u^{n}_{j+1}}{\Delta x^2}\\
+&amp;= [u_t - u_{xx}] + \big[\big(\tfrac{1}{2} - \theta\big)\Delta t u_{xxt} - \tfrac{1}{12}\Delta x^2u_{xxxx}\big]\\
+&amp;\qquad + \big[ \tfrac{1}{24}\Delta t^2 u_{ttt} - \tfrac{1}{8}\Delta t^2u_{xxtt}\big]\\
+&amp;\qquad + \big[\tfrac{1}{12}\big(\tfrac{1}{2} - \theta\big)\Delta t \Delta x^2 u_{xxxxt} - \tfrac{2}{6!}\Delta x^4 u_{xxxxxx}\big] + \cdots\end{aligned}
+\]
+</li>
+<li>The term $u_t - u_{xx}$ in $T^n_j$ vanishes since $u$ solves the PDE</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>$\theta$-Method: Accuracy</h2>
+<ul>
+<li>The method is <span class="color1">second order</span> if $\theta = 0.5$, and <span class="color5">first order</span> otherwise if $\theta\neq 0.5$</li>
+<li>The $\theta$-method is consistent (i.e. truncation error tends to zero)<br />
+and stable (conditionally stable for $\theta \in [0,0.5)$)</li>
+<li>Therefore, from the Lax equivalence theorem, the method is <span class="color5">convergent</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Heat Equation</h2>
+<ul>
+<li>Note that the heat equation describes a <span class="color5">diffusive process</span>,<br />
+so it tends to smooth out discontinuities</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/heat.py">[examples/unit3/heat.py]</a>,<br />
+forward Euler and Crank-Nicolson schemes for the heat equation
+<p><img data-src="media/heat_equation_smoothing.png" style="margin:auto; display: block;" height="200" /></p></li>
+<li>This is qualitatively different to hyperbolic equations,<br />
+e.g. the advection equation will just transport a discontinuity in $u_0$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>The canonical elliptic PDE is the <span class="color5">Poisson equation</span>
+\[
+u_{xx} + u_{yy} = f(x,y)
+\]
+for $(x,y)\in\Omega$ in the domain $\Omega \subset \mathbb{R}^2$</li>
+<li>This is generally written as $\nabla^2 u = f$ (or $\Delta u = f$)</li>
+<li>Options for boundary conditions on the domain boundary $\partial \Omega$
+<ul>
+<li>Dirichlet, given value $u$</li>
+<li>Neumann, given normal derivative $\frac{\partial u}{\partial n}$</li>
+<li>Robin (mixed), given linear combination of both</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>We will consider how to use a finite difference scheme<br />
+to approximate this 2D Poisson equation</li>
+<li>First, introduce a uniform grid to discretize $\Omega$
+<p><img data-src="media/grid_xy.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>Assume equal grid spacing $h = \Delta x = \Delta y$</li>
+<li>Then
+<ul>
+<li>$x_i = ih$, $i=0,1,2\ldots,N_x-1$,<br />
+</li>
+<li>$y_j = jh$, $j=0,1,2,\ldots,N_y-1$,</li>
+<li>$U_{i,j} \approx u(x_i,y_j)$</li>
+</ul></li>
+<li>Use finite differences to approximate $u_{xx}$ and $u_{yy}$ on this grid</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>Each derivative is approximated as
+\[
+u_{xx}(x_i,y_j) = \frac{u(x_{i-1},y_j) - 2u(x_i,y_j) + u(x_{i+1},y_j)}{h^2} + O(h^2)
+\]
+\[
+u_{yy}(x_i,y_j) = \frac{u(x_{i},y_{j-1}) - 2u(x_i,y_j) + u(x_{i},y_{j+1})}{h^2} + O(h^2)
+\]
+</li>
+<li>The Laplacian is approximated as
+\[
+u_{xx}(x_i,y_j) + u_{yy}(x_i,y_j)=\hspace{7cm}
+\]
+\[
+\quad\frac{u(x_{i},y_{j-1}) + u(x_{i-1},y_j)-
+  4u(x_i,y_j) + u(x_{i+1},y_j) + u(x_{i},y_{j+1})}{h^2} + O(h^2)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>Using the grid values, the approximation to the Laplacian is
+\[
+u_{xx} + u_{yy} \approx
+    \frac{U_{i,j-1} + U_{i-1,j} - 4U_{i,j} + U_{i+1,j} + U_{i,j+1}}{h^2}
+\]
+</li>
+<li>This corresponds to a 5-point stencil <img data-src="media/fd_stencils_2d.png" style="margin:auto; display: block;" height="120" /></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>We represent the numerical solution as a vector $U\in \mathbb{R}^{N_x N_y}$</li>
+<li>We want to construct a differentiation matrix $D \in \mathbb{R}^{N_x N_y\times N_x N_y}$<br />
+that approximates the Laplacian</li>
+<li><span class="color5">Question:</span> How many non-zero diagonals will $D$ have?</li>
+<li>To construct $D$, we need to relate the entries of<br />
+the one-dimensional vector $U$ to the two-dimensional grid values $U_{i,j}$<br />
+(i.e. flatten the grid values)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>For instance, let’s enumerate the nodes from 0 to $N_xN_y-1$<br />
+starting from the bottom row $j=0$ (i.e. <span class="color5">row-major order</span>)
+<p><img data-src="media/grid_xy_flat.svg" style="margin:auto; display: block;" height="200" /></p></li>
+<li>Let $G$ denote the mapping from the 2D indexing to the 1D indexing</li>
+<li>From the above schematic we have
+\[
+G(i,j) = jN_x + i \quad \text{and therefore} \quad U_{G(i,j)} = U_{i,j}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>Let’s focus on node $(i,j)$, this corresponds to entry $G(i,j)$ of $U$</li>
+<li>Due to the 5-point stencil, row $G(i,j)$ of $D$<br />
+will only have non-zeros in five columns with indices
+\[
+\begin{aligned}
+G(i,j-1) &amp;= G(i,j)-N_x\\
+G(i-1,j) &amp;= G(i,j)-1\\
+G(i,j) &amp;= G(i,j)\\
+G(i+1,j) &amp;= G(i,j)+1\\
+G(i,j+1) &amp;= G(i,j)+N_x
+\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>The discretization of the equations above<br />
+applies in inner nodes, i.e. nodes with indices<br />
+\[
+i&gt;0,\quad i&lt;N_x-1,\quad j&gt;0,\quad \text{and} \quad j&lt;N_y-1
+\]
+</li>
+<li>Impose zero Dirichlet conditions
+\[
+U_{i,j}=0
+\]
+on the boundaries, i.e. nodes with indices<br />
+\[
+i=0,\quad i=N_x-1,\quad j=0,\quad \text{or}\quad j=N_y-1
+\]
+</li>
+<li>Other cases (e.g. Neumann conditions) will need to be discretized<br />
+accordingly on each boundary</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>For example, in the case $N_x = N_y = 6$,<br />
+matrix $D$ has the following sparsity pattern
+<p><img data-src="media/poisson_spy.svg" style="margin:auto; display: block;" height="220" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Elliptic PDEs</h2>
+<ul>
+<li>Poisson equation $\nabla^2 u = -10$<br />
+for $(x,y) \in \Omega = [0,1]^2$ with $u = 0$ on $\partial \Omega$
+<p><img data-src="media/poisson.svg" style="margin:auto; display: block;" height="200" /></p></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/poisson.py">[examples/unit3/poisson.py]</a>, solved using <code>scipy.sparse</code></li>
+</ul>
+</section>
+    </div>
+  </div>
+
+  <script src="..//dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="..//plugin/notes/notes.js"></script>
+  <script src="..//plugin/math/math.js"></script>
+  <!--<script src="..//plugin/search/search.js"></script>-->
+  <script src="..//plugin/highlight/highlight.js"></script>
+
+  <script>
+    Reveal.initialize({
+      // Layout.
+      center: true,
+      width: 960,
+      height: 540,
+
+      transition: 'none',
+      transitionSpeed: 'fast',
+      backgroundTransition: 'none',
+
+      // Navigation.
+      controls: true,
+      controlsLayout: 'bottom-right',
+      controlsBackArrows: 'visible',
+      history: false,
+      hash: true,
+      mouseWheel: false,
+      controlsTutorial: false,
+      slideNumber: 'c',
+      progress: false,
+      // TODO: change to true.
+      hashOneBasedIndex: false,
+      pause: false, // No blackout on `;`.
+
+      katex: {
+        trust: true,
+      },
+      plugins: [RevealHighlight, RevealNotes, RevealMath.KaTeX]
+    });
+    Reveal.configure({ pdfSeparateFragments: false });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/copy-tex.min.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" crossorigin="anonymous"></script>
+
+    </body>
+</html>

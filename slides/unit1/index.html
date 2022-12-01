@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>AM205 Unit 1. Data Fitting</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, minimal-ui">
+  <link rel="stylesheet" href="..//dist/reset.css">
+  <link rel="stylesheet" href="..//dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
+  <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
+</head>
+<body>
+
+  <style>
+.katex{
+  font-size:1em;
+}
+  </style>
+
+  <div class="reveal">
+    <div class="slides">
+
+<section class="slide level2">
+
+<section>
+<h1>
+Applied Mathematics 205
+</h1>
+<h2>
+Unit 1. Data Fitting
+</h2>
+<br> Lecturer: Petr Karnakov <br> <br> September 7, 2022
+</section>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li><span class="color5">Data fitting</span>: Construct a continuous function that represents discrete data.<br />
+Fundamental topic in Scientific Computing</li>
+<li>We will study two types of data fitting
+<ul>
+<li><span class="color5">interpolation</span>: fit the data points exactly</li>
+<li><span class="color5">least-squares</span>: minimize error in the fit<br />
+(e.g. useful when there is experimental error)</li>
+</ul></li>
+<li>Data fitting helps us to
+<ul>
+<li><span class="color1">interpret data</span>: deduce hidden parameters, understand trends</li>
+<li><span class="color1">process data</span>: reconstructed function can be differentiated, integrated, etc</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>Suppose we are given the following data points</li>
+</ul>
+<p><img data-src="media/data.svg" style="margin:auto; display: block;" height="250" /></p>
+<ul>
+<li>Such data could represent
+<ul>
+<li>time series data (stock price, sales figures)</li>
+<li>laboratory measurements (pressure, temperature)</li>
+<li>astronomical observations (star light intensity)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>We often need values between the data points</li>
+<li>Easiest thing to do: “connect the dots” (piecewise linear interpolation)</li>
+</ul>
+<p><img data-src="media/data_piecewise_linear.svg" style="margin:auto; display: block;" height="250" /></p>
+<p><span class="color5">Question:</span> What if we want a smoother approximation?</p>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>We have 11 data points, we can use a degree 10 polynomial
+<p>
+\[
+\begin{aligned}
+y &amp;= 2.98 +16.90x -219.77x^{2} +1198.07x^{3} -3518.54x^{4}+6194.09x^{5} \\
+&amp;-6846.49x^{6} +4787.40x^{7} -2053.91x^{8} +492.90x^{9} -50.61x^{10}
+\end{aligned}
+\]
+</p>
+<p><img data-src="media/data_poly.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li>However, a degree 10 interpolant doesn’t seem to capture<br />
+the underlying pattern, has bumps and changes rapidly</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>Let’s try linear regression:<br />
+minimize the error in a linear approximation of the data</li>
+<li>Best linear fit: $y = 2.94 +0.25x$
+<p><img data-src="media/data_fit1.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li><span class="color0">Clearly not a good fit!</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>We can use <span class="color5">least-squares fitting</span><br />
+to generalize linear regression to higher-order polynomials</li>
+<li>Best quadratic fit: $y = 3.22 -0.68x +0.47x^{2}$
+<p><img data-src="media/data_fit2.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li><span class="color0">Still not so good …</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>Best cubic fit: $y = 2.97 +1.32x -2.16x^{2} +0.88x^{3}$
+<p><img data-src="media/data_fit3.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li><span class="color1">Looks good!</span> A “cubic model” captures this data well</li>
+<li>In real-world problems it can be challenging<br />
+to find the “right” model for experimental data</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>Data fitting is often performed<br />
+with multi-dimensional data<br />
+</li>
+<li>2D example: points $(x,y)$ with feature $z$
+<img data-src="media/fit_2d.svg" class="r-stretch" style="margin:auto; display: block;" height="250" /></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/fit_2d.py">[examples/unit1/fit_2d.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Summary</h2>
+<ul>
+<li><span class="color5">Interpolation</span> is a fundamental tool in Scientific Computing, provides simple representation of discrete data
+<ul>
+<li>Common to differentiate, integrate, optimize an interpolant</li>
+</ul></li>
+<li><span class="color5">Least squares</span> fitting is typically more useful for experimental data
+<ul>
+<li>Removes noise using a lower-order model</li>
+</ul></li>
+<li>Data-fitting calculations are often performed with <span class="color0">big</span> datasets
+<ul>
+<li>Efficient and stable algorithms are very important</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Polynomial Interpolation</h2>
+<ul>
+<li>Let $\mathbb P_n$ denote the set of all polynomials of degree $n$ on $\mathbb{R}$</li>
+<li>Polynomial $p(\cdot;b) \in \mathbb P_n$ has the form
+\[
+p(x;b) = b_0 + b_1 x + b_2 x^2 + \ldots + b_n x^n
+\]
+with coefficients $b = [b_0, b_1, \ldots, b_n]^T \in \mathbb{R}^{n+1}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Polynomial Interpolation</h2>
+<ul>
+<li>Suppose we have data
+\[
+\mathcal{S} = \{(x_0,y_0), (x_1,y_1), \ldots, (x_n,y_n) \}
+\]
+where $x_0, x_1, \ldots, x_n$ are called <span class="color1">interpolation points</span></li>
+<li>Goal: <span class="color5">Find a polynomial that passes through every data point in $\mathcal{S}$</span></li>
+<li>Therefore, we must have $p(x_i;b) = y_i$ for each $i=0,\ldots,n$<br />
+$\implies$ $n+1$ equations</li>
+<li>For uniqueness, we should look for a polynomial with $n+1$ parameters<br />
+$\implies$ look for $p \in \mathbb P_n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Polynomial Interpolation</h2>
+<ul>
+<li>This leads to the following system of $n+1$ equations with $n+1$ unknowns
+<p>
+\[
+\begin{aligned}
+b_0 + b_1 x_0 + b_2 x_0^2 + \ldots + b_n x_0^n &amp;=&amp; y_0 \\
+b_0 + b_1 x_1 + b_2 x_1^2 + \ldots + b_n x_1^n &amp;=&amp; y_1 \\
+&amp; \vdots &amp;  \\
+b_0 + b_1 x_n + b_2 x_n^2 + \ldots + b_n x_n^n &amp;=&amp; y_n\end{aligned}
+\]
+</p></li>
+<li>The system is linear with respect to unknown coefficients $b_0,\ldots,b_n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Vandermonde Matrix</h2>
+<ul>
+<li>The same system in matrix form
+\[
+V b = y
+\]
+with
+<ul>
+<li>unknown coefficients $b = [b_0, b_1, \ldots, b_n]^T \in \mathbb{R}^{n+1}$</li>
+<li>given values $y = [y_0, y_1, \ldots, y_n]^T \in \mathbb{R}^{n+1}$</li>
+<li>matrix $V \in \mathbb{R}^{(n+1)\times (n+1)}$ called the <span class="color5">Vandermonde matrix</span>
+\[
+\left[
+\begin{array}{ccccc}
+1 &amp; x_0 &amp; x_0^2 &amp; \cdots &amp; x_0^n\\
+1 &amp; x_1 &amp; x_1^2 &amp; \cdots &amp; x_1^n\\
+\vdots  &amp;    \vdots &amp;   \vdots    &amp; \ddots &amp;  \vdots    \\
+1 &amp; x_n &amp; x_n^2 &amp; \cdots &amp; x_n^n\\
+\end{array}
+\right]
+\]
+</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Existence and Uniqueness</h2>
+<ul>
+<li>Let’s prove that if the $n+1$ interpolation points are <span class="color1">distinct</span>,<br />
+then $Vb = y$ has a <span class="color1">unique solution</span></li>
+<li>We know from linear algebra that for a square matrix $A$:<br />
+if <span class="color5">$Az = 0 \implies z = 0$</span>, then <span class="color5">$Ab = y$ has a unique solution</span></li>
+<li>If $Vb = 0$, then $p(\cdot;b) \in \mathbb P_n$ has $n+1$ distinct roots</li>
+<li>Therefore we must have $p(\cdot;b) = 0$, or equivalently $b=0$</li>
+<li>Hence $Vb = 0 \implies b = 0$<br />
+so $Vb = y$ has a unique solution for any $y\in \mathbb{R}^{n+1}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Vandermonde Matrix</h2>
+<ul>
+<li>This tells us that we can find the polynomial interpolant<br />
+by solving the Vandermonde system $Vb = y$</li>
+<li>However, this may be a bad idea since $V$ is <span class="color0">ill-conditioned</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Monomial Interpolation</h2>
+<ul>
+<li>The problem is that Vandermonde matrix corresponds<br />
+to interpolation using the <span class="color5">monomial basis</span></li>
+<li>Monomial basis for $\mathbb P_n$ is $\{1, x, x^2, \ldots, x^n\}$</li>
+<li>As $n$ increases, basis functions become increasingly indistinguishable,<br />
+columns are more “linearly dependent”, the matrix is <span class="color5">ill-conditioned</span></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/vander_cond.py">[examples/unit1/vander_cond.py]</a>,<br />
+condition number of Vandermonde matrix
+<p><img data-src="media/monomials.svg" style="margin:auto; display: block;" height="200" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Monomial Basis</h2>
+<ul>
+<li><span class="color5">Question:</span> What is the practical consequence of this ill-conditioning?</li>
+<li><span class="color5">Answer:</span>
+<ul>
+<li>We want to solve $Vb = y$</li>
+<li>Finite precision arithmetic gives an approximation $\hat b$</li>
+<li>Residual $\|V\hat b - y\|$ will be small but $\|b - \hat b\|$ can still be large!<br />
+(will be discussed in Unit 2)</li>
+<li>Similarly, small perturbation in $b$ can give large perturbation in $V b$</li>
+<li>Large perturbations in $Vb$ can yield large $\|Vb - y\|$,<br />
+hence a “perturbed interpolant” becomes a poor fit to the data</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Monomial Basis</h2>
+<ul>
+<li>These sensitivities are directly analogous<br />
+to what happens with an ill-conditioned basis in $\mathbb{R}^n$</li>
+<li>Consider a basis $v_1,v_2$ of $\mathbb{R}^2$
+\[
+v_1 = [1,0]^T, \qquad v_2 = [1,0.0001]^T
+\]
+</li>
+<li>Let’s express two close vectors
+\[
+y = [1,0]^T, \qquad \tilde y = [1,0.0005]^T
+\]
+in terms of this basis i.e. $y=b_1 v_1 + b_2 v_2$ and $\tilde y=\tilde b_1 v_1 + \tilde b_2 v_2$</li>
+<li>By solving a $2\times2$ linear system in each case, we get
+\[
+b = [1,0]^T, \qquad \tilde b = [-4,5]^T
+\]
+</li>
+<li>The answer $b$ is <span class="color0">highly sensitive</span> to perturbations in $y$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Monomial Basis</h2>
+<ul>
+<li>The same happens with interpolation using a monomial basis</li>
+<li>The answer (coefficients of polynomial)<br />
+is highly sensitive to perturbations in the data</li>
+<li>If we perturb $b$ slightly, we can get a large perturbation in $Vb$<br />
+so the resulting polynomial no longer fits the data well</li>
+<li>Example of interpolation using Vandermonde matrix<br />
+<a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/vander_interp.py">[examples/unit1/vander_interp.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Interpolation</h2>
+<ul>
+<li>We would like to avoid these kinds of sensitivities to perturbations …<br />
+<span class="color0">How can we do better?</span></li>
+<li>Try to construct a basis such that<br />
+the interpolation matrix is the <span class="color5">identity matrix</span></li>
+<li>This gives a condition number of 1, and we also<br />
+avoid solving a linear system with a dense $(n+1)\times(n+1)$ matrix</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lagrange Interpolation</h2>
+<ul>
+<li><span class="color5">Key idea:</span> Construct basis $\{ L_k \in \mathbb P_n, k=0,\ldots,n\}$ such that
+\[
+L_k(x_i) =
+\left\{
+\begin{array}{c}
+0, \quad i \neq k\\
+1, \quad i = k
+\end{array}
+\right.
+\]
+</li>
+<li>The polynomials that achieve this are called <span class="color1">Lagrange polynomials</span></li>
+<li>Lagrange polynomials are given by:
+\[
+L_k(x) = \prod_{j=0, j\neq k}^n \frac{x - x_j}{x_k - x_j}
+\]
+</li>
+<li>Then the interpolant can be expressed as
+\[
+p(x) = \sum_{k=0}^n y_k L_k(x)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lagrange Interpolation</h2>
+<ul>
+<li>Example: two Lagrange polynomials of degree 5<br />
+constructed on points $x\in \{-1, -0.6, -0.2, 0.2, 0.6, 1\}$
+<p><img data-src="media/lagrange_two.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lagrange Interpolation</h2>
+<ul>
+<li>Now we can use Lagrange polynomials to interpolate discrete data
+<p><img data-src="media/data_poly.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li>We have solved the problem of interpolating discrete data!</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Algorithmic Complexity</h2>
+<ul>
+<li><span class="color0">Exercise 1:</span> How does the cost of evaluating a polynomial at one point $x$ scale with $n$?
+\[
+p(x) = b_0 + b_1 x + b_2 x^2 + \ldots + b_n x^n
+\]
+</li>
+<li><span class="color0">Exercise 2:</span> How does the cost of evaluating a Lagrange interpolant at one point $x$ scale with $n$?
+\[
+p(x) = \sum_{k=0}^n y_k \prod_{j=0, j\neq k}^n \frac{x - x_j}{x_k - x_j}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Interpolation for Function Approximation</h2>
+<ul>
+<li>We now turn to a different question:<br />
+<span class="color1">Can we use interpolation to accurately approximate continuous functions?</span></li>
+<li>Suppose the interpolation data come from samples of a continuous function $f$ on $[a,b] \subset \mathbb R$</li>
+<li>Then we’d like the interpolant to be “close to” $f$ on $[a,b]$</li>
+<li>The error in this type of approximation can be quantified from the following theorem due to Cauchy
+\[
+f(x) - p_n(x) = \frac{f^{(n+1)}(\theta)}{(n+1)!} (x - x_0) \ldots (x - x_n)
+\]
+for some $\theta(x) \in (a,b)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Polynomial Interpolation Error</h2>
+<ul>
+<li><span class="color5">Here we prove this result in the case $n=1$</span></li>
+<li>Let $p_1 \in \mathbb P_1$ interpolate $f \in C^2[a,b]$ at $\{x_0,x_1\}$</li>
+<li>For some $\lambda \in \mathbb R$, let
+\[
+q(x) = p_1(x) + \lambda(x-x_0)(x-x_1),
+\]
+here $q$ is quadratic and interpolates $f$ at $\{x_0,x_1\}$</li>
+<li>Fix an arbitrary point $\hat x \in (x_0, x_1)$ and require $q(\hat x) = f(\hat x)$ to get
+\[
+\lambda = \frac{f(\hat x) - p_1(\hat x)}{(\hat x - x_0)(\hat x - x_1)}
+\]
+</li>
+<li><span class="color1">Goal</span>: Get an expression for $\lambda$, and eventually for $f(\hat x) - p_1(\hat x)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Polynomial Interpolation Error</h2>
+<ul>
+<li>Denote the error $e(x) = f(x) - q(x)$
+<ul>
+<li>$e(x)$ has 3 roots in $[x_0, x_1]$, i.e. $e(x_0)=e(\hat x)=e(x_1)=0$</li>
+<li>Therefore, $e'(x)$ has 2 roots in $(x_0, x_1)$ (by Rolle’s theorem)</li>
+<li>Therefore, $e''(x)$ has 1 root in $(x_0, x_1)$ (by Rolle’s theorem)</li>
+</ul></li>
+<li>Let $\theta(\hat x) \in (x_0, x_1)$ be such that $e''(\theta) = 0$<br />
+</li>
+<li>Then
+\[
+\begin{aligned}
+0 &amp;= e''(\theta) = f''(\theta) - q''(\theta) \\
+&amp;= f''(\theta) - p_1''(\theta) - \lambda \frac{{\rm d}^2}{{\rm d}\theta^2}(\theta-x_0)(\theta-x_1)\\
+&amp;= f''(\theta) - 2\lambda\end{aligned}
+\]
+</li>
+<li>Hence $\lambda = \frac{1}{2}f''(\theta)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Polynomial Interpolation Error</h2>
+<ul>
+<li>Finally, we get
+\[
+\htmlClass{color2}{ f(\hat x) - p_1(\hat x)} = \lambda (\hat x - x_0)(\hat x - x_1) = \htmlClass{color2}{ \frac{1}{2}f''(\theta)(\hat x - x_0)(\hat x - x_1)}
+\]
+for any $\hat x \in (x_0,x_1)$</li>
+<li><span class="color0">This argument can be generalized to $n &gt; 1$ to give</span>
+\[
+f(x) - p_n(x) = \frac{f^{(n+1)}(\theta)}{(n+1)!} (x - x_0) \ldots (x - x_n)
+\]
+for some $\theta(x) \in (a,b)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Polynomial Interpolation Error</h2>
+<ul>
+<li>For any $x \in [a,b]$, this theorem gives us the error bound
+\[
+|f(x) - p_n(x)| \leq \frac{M_{n+1}}{(n+1)!} \max_{x \in [a,b]}|(x - x_0) \ldots (x - x_n)|
+\]
+where $M_{n+1} = \max\limits_{\theta \in [a,b]} |f^{n+1}(\theta)|$</li>
+<li>As $n$ increases,<br />
+if <span class="color5">$(n+1)!$</span> grows faster than <span class="color5">$M_{n+1} \max\limits_{x \in [a,b]}|(x - x_0) \ldots (x - x_n)|$</span><br />
+then $p_n$ converges to $f$</li>
+<li><span class="color0">Unfortunately, this is not always the case!</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge’s Phenomenon</h2>
+<ul>
+<li>A famous pathological example of the difficulty of interpolation<br />
+at <span class="color0">equally spaced points</span> is <span class="color5">Runge’s Phenomenon</span></li>
+<li>Consider Runge’s function <span class="color0">$f(x) = 1/(1+25x^2)$</span> for $x \in [-1,1]$<br />
+<img src="media/runge_deg4.svg" width=210><img src="media/runge_deg5.svg" width=210><img src="media/runge_deg12.svg" width=210> <img src="media/runge_deg13.svg" width=210></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge’s Phenomenon</h2>
+<ul>
+<li>Reason: derivatives grow fast</li>
+<li>$f(x) = 1/(1+25x^2)$</li>
+<li>$f'(x) = -50x/(1+25x^2)^2$</li>
+<li>$f''(x) = (3750 x^2 - 50)/(((15625 x^2 + 1875) x^2 + 75) x^2 + 1)$</li>
+</ul>
+<p><img data-src="media/runge.svg" style="margin:auto; display: block;" height="250" /></p>
+</section>
+<section class="slide level2">
+<h2>Runge’s Phenomenon</h2>
+<ul>
+<li>Note that $p_n$ is an interpolant, so it fits the evenly spaced samples exactly</li>
+<li>But we are now also interested in the maximum error<br />
+between $f$ and its polynomial interpolant $p_n$</li>
+<li>That is, we want $\max\limits_{x \in [-1,1]} | f(x) - p_n(x) |$ to be small!</li>
+<li>This is called the “infinity norm” or the “max norm”
+\[
+\| f - p_n \|_\infty = \max_{x \in [-1,1]} | f(x) - p_n(x) |
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Runge’s Phenomenon</h2>
+<ul>
+<li>Note that Runge’s function <span class="color0">$f(x) = 1/(1+25x^2)$</span> is smooth<br />
+but <span class="color0">interpolating Runge’s function at evenly spaced points<br />
+leads to exponential growth of the infinity norm error!</span></li>
+<li>We would like to construct an interpolant of $f$<br />
+that avoids this kind of pathological behavior</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Minimizing Interpolation Error</h2>
+<ul>
+<li>To do this, we recall our error equation
+\[
+f(x) - p_n(x) = \frac{f^{n+1}(\theta)}{(n+1)!} (x - x_0) \ldots (x - x_n)
+\]
+</li>
+<li>We focus our attention on the polynomial $(x - x_0) \ldots (x - x_n)$,<br />
+since we can choose the interpolation points</li>
+<li>Intuitively, we should choose $x_0,\ldots,x_n$<br />
+such that $\|(x - x_0) \ldots (x - x_n)\|_\infty$ is as small as possible</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Chebyshev Polynomials</h2>
+<ul>
+<li>Chebyshev polynomials are defined for $x\in[-1,1]$ by<br />
+\[
+
+\htmlClass{color2}{
+T_n(x) = \cos(n \arccos x), n = 0,1,2,\ldots
+}
+
+\]
+</li>
+<li>Or, equivalently, through the recurrence relation<br />
+\[
+\begin{aligned}
+T_0(x) &amp;= 1,\\
+T_1(x) &amp;= x,\\
+T_{n+1}(x) &amp;= 2xT_n(x) - T_{n-1}(x), \quad n=1,2,3,\ldots
+\end{aligned}
+\]
+</li>
+<li><span class="color5">Result from Approximation Theory:</span><br />
+The minimal value
+\[
+\min_{x_0,\ldots,x_n}\|(x - x_0) \ldots (x - x_n)\|_\infty =  \frac{1}{2^{n}}
+\]
+is achieved by the polynomial $T_{n+1}(x)/2^{n}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Chebyshev Polynomials</h2>
+<ul>
+<li>To set $(x - x_0)\ldots(x - x_n) = T_{n+1}(x)/2^{n}$,<br />
+we choose interpolation points to be the roots of $T_{n+1}$</li>
+<li>Chebyshev polynomials “equi-oscillate” (alternate) between $-1$ and $1$,<br />
+so they minimize the infinity norm
+<p><img data-src="media/cheb.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li><span class="color0">Exercise</span>: Show that the roots of $T_n$<br />
+are given by $x_j = \cos( (2j-1)\pi/2n)$, $j=1,\ldots,n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Interpolation at Chebyshev Points</h2>
+<ul>
+<li>Revisit Runge’s function. Chebyshev interpolation is more accurate<br />
+<img src="media/runge_cheb_deg4.svg" width=210><img src="media/runge_cheb_deg5.svg" width=210><img src="media/runge_cheb_deg12.svg" width=210> <img src="media/runge_cheb_deg13.svg" width=210></li>
+<li>To interpolate on an arbitrary interval $[a,b]$,<br />
+<span class="color5">linearly map</span> Chebyshev points from $[-1,1]$ to $[a,b]$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Interpolation at Chebyshev Points</h2>
+<ul>
+<li>Note that convergence rates depend on smoothness of $f$</li>
+<li>In general, smoother $f$ $\implies$ faster convergence</li>
+<li>Convergence of Chebyshev interpolation of<br />
+Runge’s function (smooth) and $|x|$ (not smooth) <img data-src="media/cheb_conv.svg" style="margin:auto; display: block;" height="250" /></li>
+<li>Example of interpolation at Chebyshev points<br />
+<a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/cheb_interp.py">[examples/unit1/cheb_interp.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Another View on Interpolation Accuracy</h2>
+<ul>
+<li>We have seen that the interpolation points we choose have an enormous effect on how well our interpolant approximates $f$</li>
+<li>The choice of Chebyshev interpolation points was motivated by our interpolation error formula for $f(x) - p_n(x)$</li>
+<li>But this formula depends on $f$ — we would prefer to have a measure of interpolation accuracy that is independent of $f$</li>
+<li>This would provide a more general way to compare the quality of interpolation points … This is provided by the <span class="color5">Lebesgue constant</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li>Let $\mathcal X$ denote a set of interpolation points, $\mathcal X = \{x_0, x_1,\ldots,x_n\} \subset [a,b]$</li>
+<li>A fundamental property of $\mathcal X$ is its <span class="color5">Lebesgue constant</span>, ${\rm \Lambda}_n(\mathcal X)$,
+\[
+{\rm \Lambda}_n(\mathcal X) = \max_{x \in [a,b]} \sum_{k=0}^n |L_k(x)|
+\]
+</li>
+<li>The $L_k \in \mathbb P_n$ are the Lagrange basis polynomials associated with $\mathcal X$,<br />
+hence ${\rm \Lambda}_n$ is also a function of $\mathcal X$</li>
+<li>${\rm \Lambda}_n(\mathcal X) \geq 1$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li>Think of polynomial interpolation as a map, $\mathcal I_n$, where $\mathcal I_n : C[a,b] \to \mathbb P_n[a,b]$</li>
+<li>$\mathcal I_n(f)$ is the degree $n$ polynomial interpolant of $f \in C[a,b]$ at the interpolation points $\mathcal X$</li>
+<li><span class="color0">Exercise</span>: Convince yourself that $\mathcal I_n$ is linear<br />
+(e.g. use the Lagrange interpolation formula)</li>
+<li>The reason that the Lebesgue constant is interesting is because it bounds the “operator norm” of $\mathcal I_n$:
+\[
+\sup_{f \in C[a,b]} \frac{\|\mathcal I_n(f)\|_\infty}{\|f\|_\infty} \leq {\rm \Lambda}_n(\mathcal X)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<div style="font-size:0.9em;">
+<ul>
+<li><span class="color0">Proof</span>
+\[
+\begin{aligned}
+\|\mathcal I_n(f)\|_\infty
+&amp;= \| \sum_{k=0}^n f(x_k) L_k \|_\infty =  \max_{x \in [a,b]} \left| \sum_{k=0}^n f(x_k)L_k(x) \right| \\
+&amp;\leq \max_{x \in [a,b]} \sum_{k=0}^n |f(x_k)||L_k(x)| \\
+&amp;\leq \left( \max_{k=0,1,\ldots,n}|f(x_k)| \right) \max_{x \in [a,b]} \sum_{k=0}^n |L_k(x)| \\
+&amp;\leq \| f \|_\infty  \, \max_{x \in [a,b]} \sum_{k=0}^n |L_k(x)| \\
+&amp;= \| f \|_\infty {\rm \Lambda}_n(\mathcal X)\end{aligned}
+\]
+</li>
+<li>Hence $\frac{\|\mathcal I_n(f)\|_\infty}{\| f \|_\infty} \leq {\rm \Lambda}_n(\mathcal X)$, so $\sup_{f \in C[a,b]} \frac{\|\mathcal I_n(f)\|_\infty}{\|f\|_\infty} \leq {\rm \Lambda}_n(\mathcal X)$</li>
+</ul>
+</div>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li>The Lebesgue constant allows us to bound interpolation error in terms of the <span class="color1">smallest possible error from $\mathbb P_n$</span></li>
+<li>Let $p_n^* \in \mathbb P_n$ denote the <span class="color5">best infinity-norm approximation to $f$</span>
+\[
+\|f - p_n^*\|_\infty \leq \|f - w\|_\infty
+\]
+for all $w \in \mathbb P_n$</li>
+<li>Some facts about $p_n^*$
+<ul>
+<li>$\|p_n^* - f\|_\infty \to 0$ as $n \to \infty$ for <span class="color5">any continuous $f$!</span><br />
+(Weierstrass approximation theorem)</li>
+<li>$p_n^* \in \mathbb P_n$ is unique<br />
+(follows from the equi-oscillation theorem)</li>
+<li>In general, $p_n^*$ is unknown</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li>Then, we can relate interpolation error to $\|f - p_n^*\|_\infty$
+\[
+\begin{aligned}
+\htmlClass{color2}{ \|f - \mathcal I_n(f)\|_\infty} &amp;\leq \|f - p_n^*\|_\infty + \|p_n^* - \mathcal I_n(f)\|_\infty\\
+&amp;= \|f - p_n^*\|_\infty + \|\mathcal I_n(p_n^*) - \mathcal I_n(f)\|_\infty\\
+&amp;= \|f - p_n^*\|_\infty + \|\mathcal I_n(p_n^* - f)\|_\infty    \\
+&amp;= \|f - p_n^*\|_\infty + \frac{\|\mathcal I_n(p_n^* - f)\|_\infty}{ \|p_n^* - f\|_\infty} \|f - p_n^*\|_\infty   \\
+&amp;\leq \|f - p_n^*\|_\infty + {\rm \Lambda}_n(\mathcal X) \|f - p_n^*\|_\infty \\
+&amp;= \htmlClass{color2}{ (1 + {\rm \Lambda}_n(\mathcal X))\|f - p_n^*\|_\infty}
+\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li>Small Lebesgue constant means that our interpolation<br />
+<span class="color5">cannot be much worse</span> than the best possible polynomial approximation!</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/lebesgue_const.py">[examples/unit1/lebesgue_const.py]</a></li>
+<li>Now let’s compare Lebesgue constants for<br />
+equispaced ($\mathcal X_{\rm equi}$) and Chebyshev points ($\mathcal X_{\rm cheb}$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li>Plot of $\sum_{k=0}^{10} |L_k(x)|$ for $\mathcal X_{\rm equi}$ and $\mathcal X_{\rm cheb}$ (11 pts in $[-1,1]$)
+<div class="row">
+<div class="column">
+<img data-src="media/lebesgue_equi_10.svg" style="margin:auto; display: block;" height="250" /> <!--FIXME Scroll bars appear without div-->
+<div style="height:2em;">
+${\rm \Lambda}_{10}(\mathcal X_{\rm equi}) \approx 29.9$
+</div>
+</div>
+<div class="column">
+<img data-src="media/lebesgue_cheb_10.svg" style="margin:auto; display: block;" height="250" />
+<div style="height:2em;">
+${\rm \Lambda}_{10}(\mathcal X_{\rm cheb}) \approx 2.49$
+</div>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li>Plot of $\sum_{k=0}^{20} |L_k(x)|$ for $\mathcal X_{\rm equi}$ and $\mathcal X_{\rm cheb}$ (21 pts in $[-1,1]$)
+<div class="row">
+<div class="column">
+<img data-src="media/lebesgue_equi_20.svg" style="margin:auto; display: block;" height="250" />
+<div style="height:2em;">
+${\rm \Lambda}_{20}(\mathcal X_{\rm equi}) \approx 10\,987$
+</div>
+</div>
+<div class="column">
+<img data-src="media/lebesgue_cheb_20.svg" style="margin:auto; display: block;" height="250" />
+<div style="height:2em;">
+${\rm \Lambda}_{20}(\mathcal X_{\rm cheb}) \approx 2.9$
+</div>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li>Plot of $\sum_{k=0}^{30} |L_k(x)|$ for $\mathcal X_{\rm equi}$ and $\mathcal X_{\rm cheb}$ (31 pts in $[-1,1]$)
+<div class="row">
+<div class="column">
+<img data-src="media/lebesgue_equi_30.svg" style="margin:auto; display: block;" height="250" />
+<div style="height:2em;">
+${\rm \Lambda}_{30}(\mathcal X_{\rm equi}) \approx 6\,600\,000$
+</div>
+</div>
+<div class="column">
+<img data-src="media/lebesgue_cheb_30.svg" style="margin:auto; display: block;" height="250" />
+<div style="height:2em;">
+${\rm \Lambda}_{30}(\mathcal X_{\rm cheb}) \approx 3.15$
+</div>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Lebesgue Constant</h2>
+<ul>
+<li><span class="color5">The explosive growth of ${\rm \Lambda}_n(\mathcal X_{\rm equi})$<br />
+is an explanation for Runge’s phenomenon</span></li>
+<li>Asymptotic results as $n \to \infty$
+\[
+\begin{aligned}
+{\rm \Lambda}_n(\mathcal X_{\rm equi}) &amp;\sim \frac{2^n}{e\,n \log n}\hspace{4.7em} \htmlClass{color0}{\text{exponential growth}} \\
+{\rm \Lambda}_n(\mathcal X_{\rm cheb}) &amp;&lt; \frac{2}{\pi} \log(n+1) + 1\hspace{1.3em} \htmlClass{color1}{\text{logarithmic growth}}
+\end{aligned}
+\]
+</li>
+<li>Open mathematical problem: <span class="color5">Construct $\mathcal X$ that minimizes ${\rm \Lambda}_n(\mathcal X)$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Summary</h2>
+<ul>
+<li>Compare and contrast the two key topics considered so far</li>
+<li><span class="color5">Polynomial interpolation for fitting discrete data</span>
+<ul>
+<li>we get “zero error” regardless of the interpolation points,<br />
+i.e. we’re guaranteed to fit the discrete data</li>
+<li>Lagrange polynomial basis should be instead of the monomial basis as the number of points increases (diagonal system, well-conditioned)</li>
+</ul></li>
+<li><span class="color5">Polynomial interpolation for approximating continuous functions</span>
+<ul>
+<li>for a given set of interpolating points, uses same methodology as for discrete data</li>
+<li>but now interpolation points play a crucial role in determining the magnitude of the error $\|f-\mathcal I_n(f)\|_\infty$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Piecewise Polynomial Interpolation</h2>
+</section>
+<section class="slide level2">
+<h2>Piecewise Polynomial Interpolation</h2>
+<ul>
+<li>How to avoid explosive growth of error for non-smooth functions?</li>
+<li>Idea: <span class="color5">Decompose domain into subdomains and<br />
+apply polynomial interpolation on each subdomain</span></li>
+<li>Example: piecewise linear interpolation</li>
+</ul>
+<p><img data-src="media/data_piecewise_linear.svg" style="margin:auto; display: block;" height="250" /></p>
+</section>
+<section class="slide level2">
+<h2>Splines</h2>
+<ul>
+<li><span class="color1">Splines</span> are a popular type of piecewise polynomial interpolant</li>
+<li>Interpolation points are now called <span class="color5">knots</span></li>
+<li>Splines have smoothness constraints to “glue” adjacent polynomials</li>
+<li>Commonly used in computer graphics, font rendering, CAD software
+<ul>
+<li>Bezier splines</li>
+<li>non-uniform rational basis spline (NURBS)</li>
+<li>…</li>
+</ul></li>
+<li>The name “spline” comes from<br />
+“a flexible piece of wood or metal used in drawing curves”</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Splines</h2>
+<ul>
+<li>We focus on a popular type of spline: <span class="color1">cubic spline</span></li>
+<li>Piecewise cubic with continuous second derivatives</li>
+<li>Example: <span class="color1">cubic spline</span> interpolation of <span class="color0">Runge’s function</span></li>
+</ul>
+<div class="center">
+<p><img data-src="media/runge_spline.svg" style="margin:auto; display: block;" height="250" /></p>
+</div>
+</section>
+<section class="slide level2">
+<h2>Cubic Splines</h2>
+<ul>
+<li>Suppose we have $n+1$ data points: $(x_0,y_0), (x_1,y_1), \ldots, (x_n,y_n)$</li>
+<li>A cubic interpolating spline is a function $s(x)$ that
+<ul>
+<li>is a cubic polynomial on each of $n$ intervals $[x_{i-1},x_i]$ <span class="color0">($4n$ parameters)</span></li>
+<li>passes through the data points <span class="color1">($2n$ conditions)</span>
+\[
+s(x_i) = y_i,\quad i=0,\ldots,n
+\]
+</li>
+<li>has continuous first derivative <span class="color1">($n-1$ conditions)</span>
+\[
+s_-'(x_i) = s_+'(x_i),\quad i=1,\ldots,n-1
+\]
+</li>
+<li>has continuous second derivative <span class="color1">($n-1$ conditions)</span>
+\[
+s_-''(x_i) = s_+''(x_i),\quad i=1,\ldots,n-1
+\]
+</li>
+</ul></li>
+<li>We have <span class="color1">$4n - 2$ equations</span> for <span class="color0">$4n$ unknowns</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Cubic Splines</h2>
+<ul>
+<li><span class="color5">We are missing two conditions!</span></li>
+<li>Many options to define them
+<ul>
+<li>natural cubic spline
+\[
+s''(x_0) = s''(x_n) = 0
+\]
+</li>
+<li>clamped
+\[
+s'(x_0) = s'(x_n) = 0
+\]
+</li>
+<li>“not-a-knot spline”
+\[
+s_-'''(x_1) = s_+'''(x_1)\quad\text{and}\quad s_-'''(x_{n-1}) = s_+'''(x_{n-1})
+\]
+</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constructing a Cubic Spline</h2>
+<ul>
+<li>Denote $\Delta x_i=x_i-x_{i-1}$ and $\Delta y_i=y_i-y_{i-1}$</li>
+<li>Look for polynomials $p_i\in\mathbb{P}_3$, $\;\;i=1,\ldots,n$ in the form
+\[
+p_i(x)=
+  \htmlClass{color3}{t y_{i} + \left(1 - t\right)  y_{i-1}} +
+  \htmlClass{color5}{t \left(1 - t\right) \left(\alpha t + \beta \left(1 - t\right)\right)}
+\]
+with unknown $\alpha$ and $\beta$, where $t=\frac{x-x_{i-1}}{\Delta x_i}$</li>
+<li>Automatically satisfies interpolation conditions <span class="color3">
+\[
+p_i(x_{i-1})=y_{i-1}\qquad p_i(x_{i})=y_i
+\]
+</span></li>
+<li>Conditions on derivatives to make the first derivative continuous <span class="color5">
+\[
+p'_i(x_{i-1})=k_{i-1}\qquad p'_i(x_{i})=k_i
+\]
+</span>
+\[
+
+  \implies \alpha=y_{i} - y_{i-1} - \Delta{x}_i k_{i}
+  \qquad
+  \beta=y_{i-1} - y_{i} + \Delta{x}_i k_{i-1}
+
+\]
+</li>
+<li>New unknown parameters: $k_0,\ldots,k_n$ <span class="color0">($n+1$ parameters)</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constructing a Cubic Spline</h2>
+<ul>
+<li>Expressions for second derivatives
+<p>
+\[
+p_i''(x_{i-1})=\frac{- 4 k_{i-1} - 2 k_{i}}{\Delta{x}_i} + \frac{6 \Delta{y}_i}{\Delta{x}_i^{2}}
+\]
+\[
+p_i''(x_i)=\frac{2 k_{i-1} + 4 k_{i}}{\Delta{x}_i} - \frac{6 \Delta{y}_i}{\Delta{x}_i^{2}}
+\]
+</p></li>
+<li>Conditions on second derivatives: $p_i''(x_i) = p_{i+1}''(x_i)\quad i=1,\ldots,n - 1$
+<p>
+\[
+
+\frac{1}{\Delta{x}_i} k_{i-1} +
+\left(\frac{2}{\Delta{x}_i} + \frac{2}{\Delta{x}_{i+1}}\right) k_{i}+
+\frac{1}{\Delta{x}_{i+1}} k_{i+1}
+=\left(\frac{3 \Delta{y}_i}{\Delta{x}_i^{2}} + \frac{3 \Delta{y}_{i+1}}{\Delta{x}_{i+1}^{2}}\right)
+\]
+<span class="color1">($n-1$ conditions)</span></p></li>
+<li><span class="color1">Two more</span> conditions from boundaries (natural, clamped, etc)</li>
+<li>Tridiagonal linear system of $n+1$ equations for $n+1$ unknowns $k_i$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving a Tridiagonal System</h2>
+<ul>
+<li>Tridiagonal matrix algorithm (TDMA),<br />
+also known as the Thomas algorithm</li>
+<li>Simplified form of Gaussian elimination to solve<br />
+a tridiagonal system of $n+1$ equations for $n+1$ unknowns $u_i$
+\[
+\begin{aligned}
+                  b_0  u_0  + c_0  u_1      &amp;= d_0 \\
+    a_i  u_{i-1} + b_i  u_i  + c_i  u_{i+1} &amp;= d_i, \quad i=1,\ldots,n-1 \\
+    a_n  u_{n-1} + b_n  u_n                 &amp;= d_n \\
+\end{aligned}
+\]
+</li>
+<li>TDMA has complexity $\mathcal{O}(n)$ while Gaussian elimination has $\mathcal{O}(n^3)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving a Tridiagonal System</h2>
+<ul>
+<li><span class="color5">Forward pass:</span> for $i=1,2,\ldots,n$
+\[
+\begin{aligned}
+  w &amp;= a_i / b_{i - 1} \\
+  b_i &amp;\gets b_i - w c_{i - 1} \\
+  d_i &amp;\gets d_i - w d_{i - 1}
+\end{aligned}
+\]
+</li>
+<li><span class="color5">Backward pass:</span>
+<p>
+\[
+\begin{aligned}
+  u_n &amp;= d_n / b_n \\
+  u_i &amp;= (d_i - c_i u_{i + 1}) / b_i \quad \text{for}\;i=n-1,\ldots,0
+\end{aligned}
+\]
+</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example of Spline Interpolation</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/spline_tdma.py">[examples/unit1/spline_tdma.py]</a></li>
+<li>Spline looks smooth and does not have bumps or rapid changes
+<div class="row">
+<div class="column">
+<img data-src="media/data_poly.svg" style="margin:auto; display: block;" height="250" /> degree 10 polynomial
+</div>
+<div class="column">
+<img data-src="media/data_spline.svg" style="margin:auto; display: block;" height="250" /> cubic spline
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Move One Point</h2>
+<ul>
+<li>How does the interpolant change after moving one data point?</li>
+<li><span class="color0">original data</span>, <span class="color1">perturbed data</span>, <span class="color2">normalized change $\Delta$</span> (a.u.)</li>
+<li>Look at the normalized change $\Delta=(\tilde f-f) / \|(\tilde f-f)\|_\infty$
+<ul>
+<li>degree 10 polynomial: $\Delta$ remains constant</li>
+<li>cubic spline: $\Delta$ changes in a nonlinear way</li>
+</ul></li>
+</ul>
+<div class="row">
+<div class="column">
+<video height="230" loop data-autoplay> <source data-src="media/data_anim_poly.webm" type="video/webm"> </video>
+<div style="margin-top:-20px">
+degree 10 polynomial
+</div>
+</div>
+<div class="column">
+<video height="230" loop data-autoplay> <source data-src="media/data_anim_spline.webm" type="video/webm"> </video>
+<div style="margin-top:-20px">
+cubic spline
+</div>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Linear Least Squares</h2>
+<ul>
+<li>Recall that it can be advantageous to not fit data points exactly<br />
+(e.g. to remove noise), <span class="color0">we don’t want to “overfit”</span></li>
+<li>Suppose we want to fit a cubic polynomial to 11 data points
+<p><img data-src="media/data_fit3.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li><span class="color5">Question</span>: How do we do this?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Linear Least Squares</h2>
+<ul>
+<li>Suppose we have $m$ constraints and $n$ parameters with $m &gt; n$<br />
+(on previous slide, $m=11$ and $n=4$)</li>
+<li>This is an <span class="color0">overdetermined system</span> $Ab = y$,<br />
+where $A \in \mathbb R^{m\times n}$ (basis functions), $b \in \mathbb R^n$ (parameters), $y \in \mathbb R^m$ (data)
+\[
+\left[
+\begin{array}{c}
+~~~~~~~~~~\\
+\\
+\\
+A\\
+\\
+\\
+\\
+\\
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+~\\
+b\\
+\\
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+~\\
+\\
+\\
+y\\
+\\
+\\
+\\
+\\
+\end{array}
+\right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Linear Least Squares</h2>
+<ul>
+<li>In general, cannot be solved exactly;<br />
+instead our goal is to minimize the <span class="color5">residual</span>, $r(b) \in \mathbb R^m$
+\[
+r(b) = y - Ab
+\]
+</li>
+<li>A very effective approach for this is the method of least squares:<br />
+<span class="color1">Find parameter vector $b \in \mathbb R^n$ that minimizes $\|r(b)\|_2$</span></li>
+<li>The 2-norm is convenient since it gives us a differentiable function</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Normal Equations</h2>
+<ul>
+<li>Our goal is to minimize the objective function
+\[
+\phi(b) \coloneqq \|r(b)\|^2_2 = \sum_{i=1}^n r_i(b)^2
+\]
+</li>
+<li>In terms of $A$, $b$, and $y$
+\[
+\begin{aligned}
+\phi(b) &amp;= \|r\|_2^2 = r^T r = (y - Ab)^T (y-Ab)\\
+         &amp;= y^T y - y^T A b - b^T A^T y + b^T A^T A b\\
+         &amp;= y^T y - 2 b^T A^T y + b^T A^T A b
+\end{aligned}
+\]
+
+<p>where last line follows from $y^T A b = (y^T A b)^T$, since $y^T A b \in \mathbb R$</p></li>
+<li>The minimum must exist since $\phi\geq 0$,<br />
+but may be non-unique (e.g. $f(b_1,b_2) = b_1^2$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Normal Equations</h2>
+<ul>
+<li>To find minimum, set the derivative to zero ($\nabla=\nabla_b$)
+\[
+
+  \nabla\phi(b) = 0
+
+\]
+</li>
+<li>Derivative
+\[
+
+\nabla\phi(b)= -2 \nabla(b^T A^T y) + \nabla(b^T A^T A b)
+
+\]
+</li>
+<li>Rule for the first term
+\[
+
+\frac{\partial}{\partial b_k} b^T c
+=
+\frac{\partial}{\partial b_k} \sum_{i=1}^n b_i c_i = c_k
+
+\]
+<span class="color5">
+\[
+\implies \nabla(b^T c) = c
+\]
+</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Normal Equations</h2>
+<ul>
+<li>Rule for the second term ($M=(m_{i,j})$)
+\[
+\begin{split}
+\frac{\partial}{\partial b_k} b^T M b
+=
+\frac{\partial}{\partial b_k} \sum_{i,j=1}^n m_{i,j} b_i b_j
+=
+\sum_{i,j=1}^n m_{i,j} \frac{\partial}{\partial b_k}(b_i b_j) =\\
+=
+\sum_{i,j=1}^n m_{i,j} (\delta_{i,k} b_j + b_i\delta_{j,k})
+=
+\sum_{j=1}^n m_{k,j} b_j
++
+\sum_{i=1}^n m_{i,k} b_i
+=
+(M b)_k + (M^T b)_k
+\end{split}
+\]
+
+<p><span class="color5">
+\[
+\implies \nabla(b^T M b) = M b + M^T b
+\]
+</span></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Normal Equations</h2>
+<ul>
+<li>Putting it all together, we obtain <span class="color5">
+\[
+\nabla \phi(b) = -2 A^Ty + 2 A^T A b
+\]
+</span></li>
+<li>We set $\nabla \phi(b) = 0$, which is $-2 A^Ty + 2 A^T A b = 0$</li>
+<li>Finally, the linear least squares problem is equivalent to
+<p><span class="color5">
+\[
+A^T A b = A^Ty
+\]
+</span></p></li>
+<li>This square $n\times n$ system is known as the <span class="color5">normal equations</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Normal Equations</h2>
+<ul>
+<li><span class="color1">For $A \in \mathbb R^{m\times n}$ with $m &gt; n$,<br />
+$A^T A$ is singular if and only if<br />
+$A$ is rank-deficient (columns are linearly dependent)</span><br />
+</li>
+<li><span class="color0">Proof</span>
+<ul>
+<li>$(\Rightarrow)$ Suppose $A^T A$ is singular. $\exists z \neq 0$ such that $A^T A z = 0$.<br />
+Hence $z^T A^T A z = \|Az\|_2^2 = 0$, so that $Az = 0$.<br />
+Therefore $A$ is rank-deficient.</li>
+<li>$(\Leftarrow)$ Suppose $A$ is rank-deficient. $\exists z \neq 0$ such that $A z = 0$.<br />
+Hence $A^T Az = 0$, so that $A^T A$ is singular.</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Normal Equations</h2>
+<ul>
+<li>Hence if $A$ has full rank (i.e. $\mathrm{rank}(A) = n$)<br />
+we can solve the normal equations to find the <span class="color5">unique minimizer</span> $b$</li>
+<li>However, in general it is a <span class="color0">bad idea</span> to solve the normal equations directly,<br />
+because of condition-squaring (e.g. $\kappa(A^TA)=\kappa(A)^2$ for square matrices)</li>
+<li>We will consider more efficient methods later<br />
+(e.g. singular value decomposition)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Least-Squares Polynomial Fit</h2>
+<ul>
+<li>Find a least-squares fit for degree 11 polynomial<br />
+to 50 samples of $y = \cos(4x)$ for $x \in [0,1]$</li>
+<li>Let’s express the best-fit polynomial using the monomial basis
+\[
+p(x;b) = \sum_{k=0}^{11} b_k x^k
+\]
+</li>
+<li>The $i$th condition we’d like to satisfy is
+\[
+p(x_i;b) = \cos(4x_i)
+\]
+$\implies$ over-determined system with a $50\times 12$ Vandermonde matrix</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Least-Squares Polynomial Fit</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/lstsq.py">[examples/unit1/lstsq.py]</a></li>
+<li>Both methods give small residuals
+<p>
+\[
+\|r(b_\text{lstsq})\|_2= \|y - A b_\text{lstsq}\|_2 = 8.00\times 10^{-9}
+\]
+</p>
+<p>
+\[
+\|r(b_\text{normal})\|_2 = \|y - A b_\text{normal}\|_2 = 1.09\times 10^{-8}
+\]
+</p>
+<p><img data-src="media/lstsq.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Non-Polynomial Fitting</h2>
+<ul>
+<li>Least-squares fitting can be used with arbitrary basis functions</li>
+<li>We just need a model that <span class="color1">linearly depends on the parameters</span></li>
+<li><span class="color5">Example:</span> Approximate $f(x)=e^{-x}\cos{4x}$ using exponentials<br />
+\[
+f_n(x;b) = \sum_{k=-n}^n b_k e^{kx}
+\]
+</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/nonpoly_fit.py">[examples/unit1/nonpoly_fit.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Non-Polynomial Fitting</h2>
+<p>
+\[
+f_n(x;b) = b_{-n} e^{-nx}+b_{-n+1} e^{(-n+1)x}+ \ldots+ b_0+ \ldots+ b_{n} e^{nx}
+\]
+</p>
+<div class="row">
+<div class="column3">
+<img src="media/nonpoly_fit_n1.svg" width=300><br />
+$n=1$<br />
+$\|r(b)\|_2 = 2.22$
+</div>
+<div class="column3">
+<img src="media/nonpoly_fit_n2.svg" width=300><br />
+$n=2$<br />
+$\|r(b)\|_2 = 0.89$
+</div>
+<div class="column3">
+<img src="media/nonpoly_fit_n3.svg" width=300><br />
+$n=3$<br />
+$\|r(b)\|_2 = 0.2$
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Non-Polynomial Fitting</h2>
+<ul>
+<li><span class="color5">Why use non-polynomial basis functions?</span>
+<ul>
+<li>recover properties of data<br />
+(e.g. sine waves for periodic data)</li>
+<li>control smoothness<br />
+(e.g. splines correspond to a piecewise-polynomial basis)</li>
+<li>control asymptotic behavior<br />
+(e.g. require that functions do not grow fast at infinity)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Equivariance</h2>
+<ul>
+<li>A procedure is called <span class="color5">equivariant</span> to a transformation<br />
+if applying the transformation to input (e.g. dataset) produces<br />
+the same result as applying the transformation to output (e.g. fitted model)</li>
+<li>For example, consider a transformation $T(x)$ and find two models
+<ul>
+<li>$f(\cdot\;;b)$ that fits data $(x_i,y_i)$</li>
+<li>$f(\cdot\;;\tilde{b})$ that fits data $(T x_i,y_i)$</li>
+</ul></li>
+<li>The fitting is equivariant to $T$ if
+\[
+f(x;b) = f(Tx;\tilde{b})
+\]
+</li>
+<li><span class="color5">Does this hold for linear least squares?</span> Depends on the basis</li>
+<li>(in common speech, used interchangeably with “invariance”<br />
+but that actually stands for quantities not affected by transformations)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Equivariance to Translation</h2>
+<p>
+\[
+T(x) = x + \lambda
+\]
+</p>
+<div class="row">
+<div class="column">
+<video width="400" loop data-autoplay> <source data-src="media/invar_anim_trans_poly.webm" type="video/webm"> </video>
+<div style="margin-top:-10px">
+$1,\;\;x,\;\;x^2,\;\;x^3$ <br> <span class="color1">equivariant to translation</span>
+</div>
+</div>
+<div class="column">
+<video width="400" loop data-autoplay> <source data-src="media/invar_anim_trans_exp.webm" type="video/webm"> </video>
+<div style="margin-top:-10px">
+$e^{-2x},\;\;e^{-x},\;\;1,\;\;e^{x}$ <br> <span class="color1">equivariant to translation</span>
+</div>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Example: Equivariance to Scaling</h2>
+<p>
+\[
+T(x) = \lambda x
+\]
+</p>
+<div class="row">
+<div class="column">
+<video width="400" loop data-autoplay> <source data-src="media/invar_anim_scal_poly.webm" type="video/webm"> </video>
+<div style="margin-top:-10px">
+$1,\;\;x,\;\;x^2,\;\;x^3$ <br> <span class="color1">equivariant to scaling</span>
+</div>
+</div>
+<div class="column">
+<video width="400" loop data-autoplay> <source data-src="media/invar_anim_scal_exp.webm" type="video/webm"> </video>
+<div style="margin-top:-10px">
+$e^{-2x},\;\;e^{-x},\;\;1,\;\;e^{x}$ <br> <span class="color5">not equivariant to scaling</span>
+</div>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Pseudoinverse</h2>
+<ul>
+<li>Recall that from the normal equations we have:
+\[
+A^T A b = A^T y
+\]
+</li>
+<li>This motivates the idea of the “pseudoinverse” for $A \in \mathbb R^{m\times n}$:
+\[
+\htmlClass{color1}{  A^+ = (A^T A)^{-1} A^T  \in \mathbb R^{n\times m} }
+\]
+</li>
+<li><span class="color5">Key point</span>: $A^+$ generalizes $A^{-1}$, i.e. if $A \in \mathbb R^{n\times n}$ is invertible, then $A^+ = A^{-1}$</li>
+<li><span class="color5">Proof:</span> $A^+ = (A^T A)^{-1} A^T = A^{-1} (A^T)^{-1} A^T = A^{-1}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Pseudoinverse</h2>
+<ul>
+<li>Also:
+<ul>
+<li>Even when $A$ is not invertible we still have $A^+ A = I$</li>
+<li>In general $A A^+ \neq I$ (hence this is called a “left inverse”)</li>
+</ul></li>
+<li>And it follows from our definition that $b = A^+ y$,<br />
+i.e. $A^+ \in \mathbb R^{n\times m}$ gives the least-squares solution</li>
+<li>Note that we define the pseudoinverse differently in different contexts</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>So far we have focused on overdetermined systems<br />
+(more equations than parameters)</li>
+<li>But least-squares also applies to <span class="color0">underdetermined</span> systems:<br />
+$Ab = y$ with $A \in \mathbb R^{m\times n}$, $m &lt; n$
+<p>
+\[
+\left[
+\begin{array}{c}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\
+~~~~~~~~~~~~~~~A~~~~~~~~~~~~~~~~\\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+~\\
+\\
+\\
+b\\
+\\
+\\
+\\
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+~\\
+y\\
+\\
+\end{array}
+\right]
+\]
+</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>For $\phi(b) = \|r(b)\|_2^2 = \|y - Ab\|_2^2$, we can apply the same argument as before (i.e. set $\nabla \phi = 0$) to again obtain
+\[
+A^T A b = A^T y
+\]
+</li>
+<li>But in this case $A^T A \in \mathbb R^{n\times n}$ has rank at most $m$ (where $m &lt; n$), <span class="color5">why?</span></li>
+<li><span class="color0">Therefore $A^T A$ must be singular!</span></li>
+<li>Typical case: There are infinitely many vectors $b$ that give $r(b) = 0$,<br />
+we want to be able to select one of them</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>First idea, pose a <span class="color1">constrained optimization</span><br />
+problem to find the feasible $b$ with minimum 2-norm:
+<table>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">minimize</td>
+<td style="text-align: left;">$b^T b$</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">subject to</td>
+<td style="text-align: left;">$Ab = y$</td>
+</tr>
+</tbody>
+</table></li>
+<li>This can be treated using Lagrange multipliers <span class="color5">(discussed later in Unit 4)</span></li>
+<li>Idea is that the constraint restricts us to an $(n-m)$-dimensional<br />
+hyperplane of $\mathbb R^n$ on which $b^T b$ has a unique minimum</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>We will show later that the Lagrange multiplier approach<br />
+for the above problem gives:
+\[
+b = A^T(AA^T)^{-1} y
+\]
+</li>
+<li>Therefore, in the underdetermined case the pseudoinverse is defined as
+\[
+A^+ = A^T(AA^T)^{-1} \in \mathbb R^{n\times m}
+\]
+</li>
+<li>Note that now $A A^+ = I$, but $A^+A \neq I$ in general<br />
+(i.e. this is a “right inverse”)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>Here we consider an alternative approach<br />
+for solving the underconstrained case</li>
+<li><span class="color1">Let’s modify $\phi$ so that there is a unique minimum!</span></li>
+<li>For example, let
+\[
+\phi(b) = \|r(b)\|_2^2 + \htmlClass{color2}{ \| S b\|_2^2}
+\]
+where <span class="color5">$S \in \mathbb R^{n\times n}$</span> is a scaling matrix</li>
+<li>This is called regularization: we make the problem well-posed<br />
+(“more regular”) by modifying the objective function</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>Calculating $\nabla \phi = 0$ in the same way as before leads to the system
+\[
+(A^T A + S^T S) b = A^T y
+\]
+</li>
+<li>We need to choose $S$ in some way to ensure $(A^T A + S^T S)$ is invertible</li>
+<li>Can be proved that if $S^TS$ is positive definite<br />
+then $(A^T A + S^T S)$ is invertible</li>
+<li>Simplest positive definite regularizer:
+\[
+S = \mu {\rm I} \in \mathbb R^{n\times n}
+\]
+for $\mu&gt;0$, $\mu\in\mathbb{R}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/under_lstsq.py">[examples/unit1/under_lstsq.py]</a></li>
+<li>Find least-squares fit for degree 11 polynomial<br />
+to 5 samples of $y = \cos(4x)$ for $x \in [0,1]$</li>
+<li>12 parameters, 5 constraints $\implies$ $A \in \mathbb R^{5\times 12}$</li>
+<li>We express the polynomial using the monomial basis:<br />
+$A$ is a submatrix of a Vandermonde matrix</li>
+<li>Let’s see what happens when we regularize the problem<br />
+with some different choices of $S$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>Find least-squares fit for degree 11 polynomial<br />
+to 5 samples of $y = \cos(4x)$ for $x \in [0,1]$</li>
+<li>Try $S = 0.001 {\rm I}$ (i.e. $\mu = 0.001$)
+<div class="row">
+<div class="column">
+<img data-src="media/underlstsq_1.svg" style="margin:auto; display: block;" height="250" />
+</div>
+<div class="column">
+\[
+\|r(b)\|_2 = 1.07\times 10^{-4}
+\]
+\[
+\mathop{\mathrm{cond}}(A^T A + S^T S) = 1.54\times 10^7
+\]
+
+</div>
+</div></li>
+<li><span class="color5">Fit is good since regularization term is small<br />
+but condition number is still large</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>Find least-squares fit for degree 11 polynomial<br />
+to 5 samples of $y = \cos(4x)$ for $x \in [0,1]$</li>
+<li>Try $S = 0.5 {\rm I}$ (i.e. $\mu = 0.5$)
+<div class="row">
+<div class="column">
+<img data-src="media/underlstsq_2.svg" style="margin:auto; display: block;" height="250" />
+</div>
+<div class="column">
+\[
+\|r(b)\|_2 = 6.60\times 10^{-1}
+\]
+\[
+\mathop{\mathrm{cond}}(A^T A + S^T S) = 62.3
+\]
+
+</div>
+</div></li>
+<li><span class="color5">Regularization term now dominates: small condition number<br />
+and small $\|b\|_2$, but poor fit to the data!</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>Find least-squares fit for degree 11 polynomial<br />
+to 5 samples of $y = \cos(4x)$ for $x \in [0,1]$</li>
+<li>Try $S = {\tt diag}(0.1,0.1,0.1,10,10\ldots,10)$
+<div class="row">
+<div class="column">
+<img data-src="media/underlstsq_3.svg" style="margin:auto; display: block;" height="250" />
+</div>
+<div class="column">
+\[
+\|r(b)\|_2 = 4.78\times 10^{-1}
+\]
+\[
+\mathop{\mathrm{cond}}(A^T A + S^T S) = 5.90\times 10^3
+\]
+
+</div>
+</div></li>
+<li><span class="color5">We strongly penalize $b_3, b_4, \ldots, b_{11}$,<br />
+hence the fit is close to parabolic</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Underdetermined Least Squares</h2>
+<ul>
+<li>Find least-squares fit for degree 11 polynomial<br />
+to 5 samples of $y = \cos(4x)$ for $x \in [0,1]$</li>
+<li>Use <code>numpy.lstsq</code>
+<div class="row">
+<div class="column">
+<img data-src="media/underlstsq_4.svg" style="margin:auto; display: block;" height="250" />
+</div>
+<div class="column">
+\[
+\|r(b)\|_2 = 4.56\times 10^{-15}
+\]
+
+</div>
+</div></li>
+<li><span class="color5">Python routine uses Lagrange multipliers,<br />
+hence satisfies the constraints to machine precision</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares</h2>
+<ul>
+<li>So far we have looked at finding a “best fit” solution<br />
+to a <span class="color5">linear</span> system (linear least-squares)</li>
+<li>A more difficult situation is when we consider<br />
+least-squares for <span class="color5">nonlinear</span> systems</li>
+<li><span class="color0">Key point:</span> Linear least-squares fitting of model $f(x;b)$<br />
+refers to <span class="color5">linearity in the parameters $b$</span>,<br />
+while the model can be a nonlinear function of $x$<br />
+(e.g. a polynomial $f(x;b) = b_0 +\ldots+b_n x^n$<br />
+is linear in $b$ but nonlinear in $x$)</li>
+<li>In <span class="color5">nonlinear least squares</span>, we fit models<br />
+that are nonlinear in the parameters</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares: Motivation</h2>
+<ul>
+<li>Consider a linear least-squares fit of $f(x)=\sqrt{|x-0.25|}$
+<div class="rowf">
+<div class="columnf">
+<img src="media/nonpoly_fit_abs_basis.svg" width=300><br />
+basis: <span class="color1">$1$</span>, <span class="color5">$|x+0.5|$</span>, <span class="color3">$|x-0.5|$</span>
+</div>
+<div class="columnf">
+<img src="media/nonpoly_fit_abs_fit.svg" width=300><br />
+
+<div style="width:400px;margin-left:20px;">
+<span class="color0">$0.07 + 0.28\,|x+0.5|+0.71\,|x-0.5|$</span>
+</div>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares: Motivation</h2>
+<ul>
+<li>We can improve the accuracy using “adaptive” basis functions,<br />
+but now the model is nonlinear in $\lambda$
+<div class="rowf">
+<div class="columnf">
+<img src="media/nonpoly_fit_abs_basis_nonlin.svg" width=300>
+<div>
+basis: <span class="color1">$1$</span>, <span class="color5">$|x+0.5|$</span>, <span class="color3">$|x-\lambda|$</span>
+</div>
+</div>
+<div class="columnf">
+<img src="media/nonpoly_fit_abs_fit_nonlin.svg" width=300>
+<div style="width:400px;text-align:center;margin-left:20px;">
+<span class="color0">$-0.3 - 0.03\,|x+0.5|+0.78\,|x-\lambda|$</span><br />
+$\lambda=0.23$
+</div>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares: Example</h2>
+<ul>
+<li><span class="color1">Example</span>: Suppose we have a radio transmitter<br />
+at $\hat b = (\hat{b}_1,\hat{b}_2)$ somewhere in $[0,1]^2$ ($\times$)</li>
+<li>Suppose that we have 10 receivers at locations<br />
+$(x^1_1,x^1_2), (x^2_1,x^2_2), \ldots, (x^{10}_1,x^{10}_2) \in [0,1]^2$ (<span class="color0">$\bullet$</span>)</li>
+<li>Receiver $i$ returns the distance $y_i$ to the transmitter,<br />
+but there is some error/noise $(\epsilon)$
+<p><img data-src="media/nonlin_lstsq_1.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares: Example</h2>
+<ul>
+<li>Let $b$ be a <span class="color5">candidate</span> location for the transmitter</li>
+<li>The distance from $b$ to $(x^i_1,x^i_2)$ is
+\[
+d_i(b) = \sqrt{ (b_1 - x^i_1)^2 + (b_2 - x^i_2)^2 }
+\]
+</li>
+<li>We want to choose $b$ to match the data as well as possible,<br />
+hence minimize the residual $r(b) \in \mathbb R^{10}$ where $\htmlClass{color1}{ r_i(b) = y_i - d_i(b) }$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares: Example</h2>
+<ul>
+<li>In this case, $r_i(\alpha + \beta) \neq r_i(\alpha) + r_i(\beta)$,<br />
+<span class="color0">hence nonlinear least-squares!</span></li>
+<li>Define the objective function <span class="color5">
+\[
+\phi(b) = \frac{1}{2}\|r(b)\|_2^2
+\]
+</span> where $r(b) \in \mathbb R^{10}$ is the residual vector</li>
+<li>The $\frac{1}{2}$ factor has no effect on the minimizing $b$,<br />
+but leads to slightly cleaner formulas later on</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares</h2>
+<ul>
+<li>As in the linear case, we seek to minimize $\phi$<br />
+by finding $b$ such that $\nabla \phi = 0$</li>
+<li>We have $\phi(b) = \frac{1}{2}\sum_{j=1}^m (r_j(b))^2$</li>
+<li>Hence for the $i$-component of the gradient vector, we have
+\[
+\frac{\partial\phi}{\partial b_i} = \frac{\partial}{\partial b_i} \frac{1}{2}\sum_{j=1}^m r_j^2 = \sum_{j=1}^m r_j \frac{\partial r_j}{\partial b_i}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares</h2>
+<ul>
+<li>This is equivalent to <span class="color1">$\nabla \phi = J_r(b)^T r(b)$</span><br />
+where $J_r(b) \in \mathbb R^{m\times n}$ is the <span class="color5">Jacobian matrix</span> of the residual
+<p>
+\[
+\left\{ J_r(b) \right\}_{ij} = \frac{\partial r_i(b)}{\partial b_j}
+\]
+</p></li>
+<li><span class="color0">Exercise</span>: Show that $J_r(b)^T r(b) = 0$ reduces<br />
+to the normal equations when the residual is linear</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares</h2>
+<ul>
+<li>Hence we seek $b \in \mathbb R^n$ such that:
+\[
+J_r(b)^T r(b) = 0
+\]
+</li>
+<li>This has $n$ equations, $n$ unknowns</li>
+<li>In general, this is a <span class="color5">nonlinear</span> system that we have to solve iteratively</li>
+<li>A common situation is that linear systems can be solved in “one shot”,<br />
+while nonlinear generally requires iteration</li>
+<li>We will briefly introduce Newton’s method for solving this system<br />
+and defer detailed discussion until Unit 4</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares</h2>
+<ul>
+<li>Recall Newton’s method for a function of one variable:<br />
+find $x \in \mathbb R$ such that $f(x) = 0$</li>
+<li>Let $x_k$ be our current guess, and $x_k + \Delta x = x$, then Taylor expansion gives
+\[
+0 = f(x_k + \Delta x) = f(x_k) + \Delta x f'(x_k) + O((\Delta x)^2)
+\]
+</li>
+<li>It follows that $f'(x_k)\Delta x \approx -f(x_k)$<br />
+(approx. since we neglect the higher order terms)</li>
+<li>This motivates Newton’s method:
+\[
+f'(x_k)\Delta x_k = -f(x_k)
+\]
+where $x_{k+1} = x_k + \Delta x_k$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares</h2>
+<ul>
+<li><span class="color1">This argument generalizes directly to functions of several variables</span></li>
+<li>For example, suppose $F : \mathbb R^n \to \mathbb R^n$, then find $x$ s.t. $F(x) = 0$ by <span class="color5">
+\[
+J_F(x_k) \Delta x_k = -F(x_k)
+\]
+</span> where $J_F$ is the Jacobian of $F$, $\Delta x_k \in \mathbb R^n$, $x_{k+1} = x_k + \Delta x_k$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares</h2>
+<ul>
+<li>In the case of nonlinear least squares,<br />
+to find a stationary point of $\phi$ we need to find $b$ such that
+\[
+J_r(b)^T r(b) = 0
+\]
+</li>
+<li>That is, we want to solve $F(b) = 0$ for <span class="color5">$F(b) = J_r(b)^T r(b)$</span></li>
+<li>We apply Newton’s Method, hence need to find the Jacobian $J_F$<br />
+of the function $F : \mathbb R^n \to \mathbb R^n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares</h2>
+<ul>
+<li>Consider $\frac{\partial F_i}{\partial b_j}$ (this will be the $ij$ entry of $J_F$):</li>
+</ul>
+<p>
+\[
+\begin{aligned}
+\frac{\partial F_i}{\partial b_j} &amp;= \frac{\partial }{\partial b_j} \left(J_r(b)^T r(b)\right)_{i} \\
+&amp;= \frac{\partial}{\partial b_j}\sum_{k=1}^m \frac{\partial r_k}{\partial b_i} r_k \\
+&amp;= \sum_{k=1}^m\frac{\partial r_k}{\partial b_i} \frac{\partial r_k}{\partial b_j} + \sum_{k=1}^m \frac{\partial^2 r_k}{\partial b_i\partial b_j} r_k\end{aligned}
+\]
+</p>
+</section>
+<section class="slide level2">
+<h2>Gauss–Newton Method</h2>
+<ul>
+<li>It is generally difficult to deal with the second derivatives in the previous formula (numerical sensitivity, cost, complex derivation)</li>
+<li><span class="color0">Key observation</span>: As we approach a good fit to the data,<br />
+the residual values $r_k(b)$, $1 \leq k \leq m$, should be small</li>
+<li><span class="color1">Hence we omit the term $\sum_{k=1}^mr_k \frac{\partial^2 r_k}{\partial b_i\partial b_j}$.</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss–Newton Method</h2>
+<ul>
+<li>Note that $\sum_{k=1}^m\frac{\partial r_k}{\partial b_j} \frac{\partial r_k}{\partial b_i} = (J_r(b)^T J_r(b))_{ij}$,<br />
+so that when the residual is small $J_F(b) \approx J_r(b)^T J_r(b)$</li>
+<li>Then putting all the pieces together, we obtain the iteration <span class="color1">
+\[
+J_r(b_k)^T J_r(b_k) \Delta b_k = - J_r(b_k)^T r(b_k)
+\]
+</span> where $b_{k+1} = b_k + \Delta b_k$</li>
+<li>This is known as the <span class="color5">Gauss–Newton Algorithm</span><br />
+for nonlinear least squares</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss–Newton Method</h2>
+<ul>
+<li>This looks similar to Normal Equations at each iteration,<br />
+except now the matrix $J_r(b_k)$ comes from linearizing the residual</li>
+<li>Gauss–Newton is equivalent to solving the <span class="color5">linear least squares</span><br />
+problem at each iteration
+\[
+J_r(b_k) \Delta b_k = -r(b_k)
+\]
+</li>
+<li>This is a common approach:<br />
+<span class="color5">replace a nonlinear problem with a sequence of linearized problems</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Computing the Jacobian</h2>
+<ul>
+<li>To use Gauss–Newton in practice, we need to be able to compute the Jacobian matrix $J_r(b_k)$ for any $b_k \in \mathbb R^n$</li>
+<li>We can do this “by hand”,<br />
+e.g. in our transmitter/receiver problem we would have:
+\[
+[J_r(b)]_{ij} = - \frac{\partial}{\partial b_j} \sqrt{ (b_1 - x^i_1)^2 + (b_2 - x^i_2)^2 }
+\]
+</li>
+<li>Differentiating by hand is feasible in this case,<br />
+but it can become impractical if $r(b)$ is more complicated</li>
+<li>Or perhaps our mapping $b \to y$ is a “black box”</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Computing the Jacobian</h2>
+<ul>
+<li>Alternative approaches
+<ul>
+<li><span class="color1">Finite difference approximation</span><br />
+\[
+[J_r(b_k)]_{ij} \approx \frac{r_i(b_k+e_j h) - r_i(b_k)}{h}
+\]
+(requires only function evaluations, but prone to rounding errors)</li>
+<li><span class="color1">Symbolic computations</span><br />
+Rule-based computation of derivatives (e.g. SymPy in Python)</li>
+<li><span class="color1">Automatic differentiation</span><br />
+Carry information about derivatives through every operation<br />
+(e.g. use TensorFlow or PyTorch)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss–Newton Method</h2>
+<ul>
+<li>We derived the Gauss–Newton algorithm method in a natural way:
+<ul>
+<li>apply Newton’s method to solve $\nabla\phi = 0$</li>
+<li>neglect the second derivative terms that arise</li>
+</ul></li>
+<li>However, Gauss–Newton is not widely used in<br />
+practice since it doesn’t always converge reliably</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Levenberg–Marquardt Method</h2>
+<ul>
+<li>A more robust variation of Gauss–Newton is<br />
+the <span class="color5">Levenberg–Marquardt Algorithm</span>, which uses the update
+\[
+[J^T(b_k) J(b_k) + \mu_k \mathop{\mathrm{diag}}(S^T S)] \Delta b = - J(b_k)^T r(b_k)
+\]
+where $S = {\rm I}$ or $S = J(b_k)$, and some heuristics to choose $\mu_k$</li>
+<li><span class="color1">This looks like our “regularized” underdetermined linear least squares formulation!</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Levenberg–Marquardt Method</h2>
+<ul>
+<li><span class="color5">Key point</span>: The regularization term $\mu_k \mathop{\mathrm{diag}}(S^T S)$<br />
+improves the reliability of the algorithm in practice</li>
+<li>Levenberg–Marquardt is available SciPy</li>
+<li>We need to pass the residual to the routine,<br />
+and we can also pass the Jacobian matrix or ask to use finite-differences</li>
+<li>Now let’s solve our transmitter/receiver problem</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares: Example</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit1/nonlin_lstsq.py">[examples/unit1/nonlin_lstsq.py]</a>
+<p><img data-src="media/nonlin_lstsq_2.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Least Squares: Example</h2>
+<ul>
+<li>Levenberg–Marquardt minimizes $\phi(b)$
+<p><img data-src="media/nonlin_lstsq_3.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li>The minimized objective is even lower than for the true location<br />
+(because of the noise)
+<p>
+\[
+\phi(\htmlClass{color4}{ \times}) = 0.0044 &lt; 0.0089 = \phi(\times)
+\]
+</p>
+<p>$\htmlClass{color4}{ \times}$ is our best-fit to the data, $\times$ is the true transmitter location</p></li>
+</ul>
+</section>
+    </div>
+  </div>
+
+  <script src="..//dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="..//plugin/notes/notes.js"></script>
+  <script src="..//plugin/math/math.js"></script>
+  <!--<script src="..//plugin/search/search.js"></script>-->
+  <script src="..//plugin/highlight/highlight.js"></script>
+
+  <script>
+    Reveal.initialize({
+      // Layout.
+      center: true,
+      width: 960,
+      height: 540,
+
+      transition: 'none',
+      transitionSpeed: 'fast',
+      backgroundTransition: 'none',
+
+      // Navigation.
+      controls: true,
+      controlsLayout: 'bottom-right',
+      controlsBackArrows: 'visible',
+      history: false,
+      hash: true,
+      mouseWheel: false,
+      controlsTutorial: false,
+      slideNumber: 'c',
+      progress: false,
+      // TODO: change to true.
+      hashOneBasedIndex: false,
+      pause: false, // No blackout on `;`.
+
+      katex: {
+        trust: true,
+      },
+      plugins: [RevealHighlight, RevealNotes, RevealMath.KaTeX]
+    });
+    Reveal.configure({ pdfSeparateFragments: false });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/copy-tex.min.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" crossorigin="anonymous"></script>
+
+    </body>
+</html>

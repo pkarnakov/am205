@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>AM205 Unit 4. Optimization</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, minimal-ui">
+  <link rel="stylesheet" href="..//dist/reset.css">
+  <link rel="stylesheet" href="..//dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
+  <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
+</head>
+<body>
+
+  <style>
+.katex{
+  font-size:1em;
+}
+  </style>
+
+  <div class="reveal">
+    <div class="slides">
+
+<section class="slide level2">
+
+<section>
+<h1>
+Applied Mathematics 205
+</h1>
+<h2>
+Unit 4. Optimization
+</h2>
+<br> Lecturer: Petr Karnakov <br> <br> November 2, 2022
+</section>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>This unit will cover nonlinear equations and optimization</li>
+<li>So far we have mostly focused on <span class="color5">linear</span> problems
+<ul>
+<li>linear least squares (linear combination of basis functions)</li>
+<li>linear physical laws (idealized behavior, small deformations)</li>
+<li>discretizations of linear PDEs (wave equation, heat equation)</li>
+</ul></li>
+<li>However, important applications lead to <span class="color5">nonlinear</span> problems
+<ul>
+<li>nonlinear least squares (nonlinear dependency on parameters)</li>
+<li>nonlinear physical models (realistic materials, large deformations)</li>
+<li>discretizations of nonlinear PDEs (Navier-Stokes)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Nonlinear Equations</h2>
+<ul>
+<li>Some familiar problems can be reduced to nonlinear equations</li>
+<li>For example, computing the points and weights of <span class="color5">Gauss quadrature</span>
+\[
+\int_{-1}^1 f(x)\text{d}x \approx \sum_{k=0}^n w_k f(x_k)
+\]
+with $2n+2$ unknown parameters $x_0,\ldots,x_n$ and $w_0,\ldots,w_n$</li>
+<li>Require that quadrature is <span class="color5">exact on monomials of degree up to $2n+1$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Nonlinear Equations</h2>
+<ul>
+<li>For $n=1$, this leads to a system of nonlinear equations
+\[
+\begin{aligned}
+w_0 + w_1 &amp;= \int_{-1}^1 1 \text{d}x = 2\\
+w_0x_0 + w_1 x_1&amp;= \int_{-1}^1 x \text{d}x =  0\\
+w_0x_0^2 + w_1x_1^2 &amp;= \int_{-1}^1 x^2 \text{d}x = 2/3\\
+w_0x_0^3 + w_1x_1^3 &amp;= \int_{-1}^1 x^3 \text{d}x =  0\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Nonlinear Equations</h2>
+<ul>
+<li>A general system of $m$ equations for $n$ unknowns
+\[
+F(x) = 0
+\]
+where $F : \mathbb{R}^n \to \mathbb{R}^m$</li>
+<li>We will focus on the case $m=n$,<br />
+i.e. <span class="color5">equal number of equations and unknowns</span></li>
+<li>Cases $m\neq n$ can be formulated as nonlinear least squares</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Nonlinear Equations</h2>
+<ul>
+<li>One class of nonlinear equations is <span class="color5">polynomial equations</span>,<br />
+i.e. $F(x)$ is a polynomial</li>
+<li>The simplest case is a quadratic equation
+\[
+ax^2 + bx + c = 0
+\]
+</li>
+<li>A closed-form solution is given by
+\[
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Nonlinear Equations</h2>
+<ul>
+<li>There are also closed-form solutions for polynomial equations<br />
+of degree three and four, due to Ferrari and Cardano (~1540)</li>
+<li>However, the Abel–Ruffini theorem states that equations<br />
+of degree <span class="color5">five or higher have no general solution in radicals</span></li>
+<li>Therefore, they have to be solved numerically with an iterative algorithm</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Nonlinear Equations</h2>
+<ul>
+<li>There are many iterative methods for nonlinear equations</li>
+<li>One is the <span class="color5">bisection method</span> for a scalar equation<br />
+\[
+f(x) = 0
+\]
+where $f \in C[a,b]$</li>
+<li>Assume $f(a)f(b)&lt;0$ and bisect the interval<br />
+depending on the sign of $f(\frac{a+b}{2})$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Nonlinear Equations</h2>
+<div class="row">
+<div class="column">
+<pre><code class="language-python">def f(x):
+    return x * x - 4 * np.sin(x)
+
+# Initial interval, assume f(a)*f(b)<0.
+a = 1
+b = 3
+tol = 1e-3
+
+# Bisection search.
+while b - a > tol:
+    print('a={:.5f} b={:.5f} f(a)={:.5f} f(b)={:.5f}'
+          .format(a, b, f(a), f(b)))
+    c = 0.5 * (b + a)
+    if f(a) * f(c) < 0:
+        b = c
+    else:
+        a = c
+</code></pre>
+<p><a href="https://github.com/pkarnakov/am205/tree/main/examples/unit4/bisection.py">[examples/unit4/bisection.py]</a></p>
+</div>
+<div class="column">
+<pre><code class="language-python">a=1.00000 b=3.00000 f(a)=-2.36588 f(b)=8.43552
+a=1.00000 b=2.00000 f(a)=-2.36588 f(b)=0.36281
+a=1.50000 b=2.00000 f(a)=-1.73998 f(b)=0.36281
+a=1.75000 b=2.00000 f(a)=-0.87344 f(b)=0.36281
+a=1.87500 b=2.00000 f(a)=-0.30072 f(b)=0.36281
+a=1.87500 b=1.93750 f(a)=-0.30072 f(b)=0.01985
+a=1.90625 b=1.93750 f(a)=-0.14326 f(b)=0.01985
+a=1.92188 b=1.93750 f(a)=-0.06241 f(b)=0.01985
+a=1.92969 b=1.93750 f(a)=-0.02145 f(b)=0.01985
+a=1.93359 b=1.93750 f(a)=-0.00085 f(b)=0.01985
+a=1.93359 b=1.93555 f(a)=-0.00085 f(b)=0.00949
+</code></pre>
+<img data-src="media/bisection.svg" style="margin:auto; display: block;" height="230" />
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Motivation: Nonlinear Equations</h2>
+<ul>
+<li>Bisection is a robust method in 1D,<br />
+but it needs an initial guess $f(a)f(b)&lt;0$<br />
+and does not generalize to higher dimensions</li>
+<li>We will consider alternative methods
+<ul>
+<li>fixed-point iteration</li>
+<li>Newton’s method</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>A related topic is <span class="color5">optimization</span></li>
+<li>Has important applications in science and engineering</li>
+<li>Examples
+<ul>
+<li>find the shape of a racing car that maximizes downforce</li>
+<li>design a bridge to minimize its weight</li>
+<li>find the path of an airplane that minimizes fuel consumption</li>
+</ul></li>
+<li>Solving nonlinear equations can be viewed<br />
+as optimization of the residuals</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>Optimization can be <span class="color5">constrained</span>,<br />
+i.e. parameters have to satisfy equations or inequalities</li>
+<li>Examples
+<ul>
+<li>find the shape of a racing car that maximizes downforce,<br />
+<span class="color5">subject to a constant drag</span></li>
+<li>design a bridge to minimize its weight,<br />
+<span class="color5">subject to a constant critical load</span></li>
+<li>find the path of an airplane that minimizes fuel consumption,<br />
+<span class="color5">but avoids certain territories</span></li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>All these problems can be formulated as <span class="color5">constrained minimization</span>
+<div style="text-align:center;">
+<div class="algo" style="padding:5px;">
+<p>Given an <span class="color5">objective function</span> $f : \mathbb{R}^n \to \mathbb{R}$ and a set $S \subset \mathbb{R}^n$,<br />
+find $x^\ast \in S$ such that $f(x^\ast) \leq f(x)$ $\forall x \in S$</p>
+</div>
+</div></li>
+<li>Here $S$ is the <span class="color5">feasible set</span> which describes the <span class="color5">constraints</span>,<br />
+usually defined by equations or inequalities</li>
+<li>If $S = \mathbb{R}^n$, then the minimization is <span class="color5">unconstrained</span></li>
+<li>Maximization of $f$ is equivalent to minimization of $-f$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>The standard way to write an optimization problem is
+\[
+\min_{x} f(x) \text{ subject to } g(x) = 0 \text{ and } h(x) \leq 0
+\]
+with
+<ul>
+<li>objective function $f : \mathbb{R}^n \to \mathbb{R}$</li>
+<li>equality constraints $g : \mathbb{R}^n \to \mathbb{R}^m$</li>
+<li>inequality constraints $h : \mathbb{R}^n \to \mathbb{R}^p$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>For example, consider a cylinder with radius $x_1$ and height $x_2$</li>
+<li>Minimize the <span class="color5">surface area</span> of a cylinder subject to a constraint on its <span class="color5">volume</span>
+<p>
+\[
+\min_x f(x_1,x_2) = 2\pi x_1(x_1 + x_2)
+\]
+\[
+\text{ subject to } g(x_1,x_2) = \pi x_1^2 x_2 - V = 0
+\]
+</p></li>
+<li>We will return to this example later</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>If $f$, $g$ and $h$ are all <span class="color5">affine</span> (i.e. $f(x) = Ax + b$, linear plus constant),<br />
+then the optimization problem is called a <span class="color5">linear programming</span></li>
+<li>Here the term “program” is a synonym for “plan”,<br />
+has nothing to do with computer software</li>
+<li>The feasible set is a polyhedron and the minimum is found on its vertex
+<p><img data-src="media/linear_prog.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>If the objective function or any of the constraints are nonlinear<br />
+then we have a <span class="color5">nonlinear optimization</span> problem or <span class="color5">nonlinear programming</span></li>
+<li>We will consider several different approaches to nonlinear optimization</li>
+<li>Optimization routines typically use <span class="color5">local information</span><br />
+about a function to iteratively approach its <span class="color5">local minimum</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>In some cases an optimizer can find a <span class="color5">global minimum</span></li>
+<li>Extra conditions on the function (e.g. convexity) can help</li>
+</ul>
+<p><img data-src="media/global_one.svg" style="margin:auto; display: block;" height="300" /></p>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>But in general, global optimization is difficult</li>
+<li>The optimizer can get “stuck” in local minimum</li>
+</ul>
+<p><img data-src="media/global_many.svg" style="margin:auto; display: block;" height="300" /></p>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>This can get even harder in higher dimensions</li>
+</ul>
+<p><img data-src="media/R2_optimization.png" style="margin:auto; display: block;" height="300" /></p>
+</section>
+<section class="slide level2">
+<h2>Motivation: Optimization</h2>
+<ul>
+<li>We will focus on methods for finding <span class="color5">local minima</span></li>
+<li><span class="color5">Global optimization</span> is important, but not possible in general<br />
+without extra conditions on the objective function</li>
+<li>Global optimization usually relies on heuristics
+<ul>
+<li>try several different initial guesses (<span class="color5">multistart</span> methods)</li>
+<li>simulated annealing (add decaying noise)</li>
+<li>genetic methods (use a hierarchy of samples)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Nonlinear Equations</h2>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>Consider iteration
+\[
+x_{k+1} = g(x_k)
+\]
+</li>
+<li>For example, recall Heron’s method for finding $\sqrt{a}$ from HW0
+\[
+x_{k+1} = \frac{1}{2}\left( x_k + \frac{a}{x_k}\right)
+\]
+</li>
+<li>Denote $g_\text{heron}(x) = \frac{1}{2}\left( x + a/x\right)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>Suppose $\alpha\in\mathbb{R}$ is such that $g(\alpha) = \alpha$, then we call $\alpha$ a <span class="color5">fixed point</span> of $g$</li>
+<li>For example, we see that $\sqrt{a}$ is a fixed point of $g_\text{heron}$ since
+\[
+g_\text{heron}(\sqrt{a}) = \frac{1}{2}\left( \sqrt{a} + a/\sqrt{a}\right) = \sqrt{a}
+\]
+</li>
+<li>A fixed-point iteration terminates once a fixed point is reached,<br />
+since if $g(x_k) = x_k$ then we get $x_{k+1} = x_k$</li>
+<li>Also, if $x_{k+1} = g(x_k)$ converges as $k\to\infty$, it must converge to a fixed point</li>
+<li>Let $\alpha = \lim_{k\to\infty}x_k$, then
+\[
+\alpha = \lim_{k\to \infty}x_{k+1} = \lim_{k\to \infty}g(x_k) = g\Big( \lim_{k\to \infty}x_{k} \Big) = g(\alpha)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>Therefore, for example, <span class="color5">if Heron’s method converges</span>, it converges to $\sqrt{a}$</li>
+<li>There are sufficient conditions for convergence of a fixed-point iteration</li>
+<li>Recall that $g$ satisfies a <span class="color5">Lipschitz condition</span> in an interval $[a,b]$ if
+\[
+|g(x) - g(y)| \leq L |x-y|, \quad \forall x,y \in [a,b]
+\]
+for some $L&gt;0$</li>
+<li>If $L&lt;1$, then $g$ is called a <span class="color5">contraction</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li><span class="color5">Theorem:</span> Suppose that $g$ is a contraction on $[\alpha - \delta, \alpha + \delta]$<br />
+and $\alpha$ is a fixed point of $g$ (i.e. $g(\alpha) = \alpha$), where $\alpha\in\mathbb{R}$ and $\delta&gt;0$<br />
+Then the fixed point iteration converges to $\alpha$ for any $x_0 \in [\alpha - \delta, \alpha + \delta]$</li>
+<li><span class="color5">Proof:</span> Take $L&lt;1$ from the Lipschitz condition. Then
+\[
+|x_k - \alpha | = |g(x_{k-1}) - g(\alpha)| \leq L|x_{k-1} - \alpha|,  
+\]
+which implies
+\[
+|x_k - \alpha | \leq L^k|x_0 - \alpha|  
+\]
+and, since $L&lt;1$, $|x_k - \alpha | \to 0$ as $k \to \infty$</li>
+<li>This also shows that each iteration reduces the error by factor $L$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>Recall that if $g\in C^1[a,b]$, we can obtain a Lipschitz constant from $g'$
+\[
+\htmlClass{color5}{ L = \max\limits_{\theta\in[a,b]} |g'(\theta)|}
+\]
+</li>
+<li>We now use this result to show that if $|g'(\alpha)| &lt; 1$,<br />
+then there is a neighborhood of $\alpha$ on which $g$ is a contraction</li>
+<li>This tells us that we can verify convergence of a fixed point iteration<br />
+by checking the gradient of $g$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>By continuity of $|g'|$, for any $\epsilon &gt; 0$, there is $\delta &gt; 0$<br />
+such that for any $x \in (\alpha-\delta,\alpha+\delta)$ we have $\big|\, |g'(x)| - |g'(\alpha)| \, \big| \leq \epsilon$</li>
+<li>Therefore
+\[
+\max\limits_{x\in(\alpha-\delta,\alpha+\delta)}|g'(x)| \leq |g'(\alpha)| + \epsilon
+\]
+</li>
+<li>Suppose $|g'(\alpha)| &lt; 1$ and set $\epsilon = \frac{1}{2}(1-|g'(\alpha)|)$,<br />
+then there is an interval $(\alpha-\delta,\alpha+\delta)$,<br />
+on which $g$ is Lipschitz with $L = \frac{1}{2}(1+|g'(\alpha)|)$</li>
+<li>Since $L &lt; 1$, then <span class="color5">$g$ is a contraction in a neighborhood of $\alpha$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>Furthermore, as $k\to \infty$,
+\[
+\frac{|x_{k+1} - \alpha |}{|x_k - \alpha|} = \frac{|g(x_{k}) - g(\alpha) |}{|x_k - \alpha|} \to |g'(\alpha)|,
+\]
+</li>
+<li>Therefore, asymptotically, after each iteration<br />
+the error <span class="color5">decreases by a factor of $|g'(\alpha)|$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>We say that an iteration converges <span class="color5">linearly</span> if, for some $\mu \in (0,1)$,
+\[
+\lim_{k\to\infty}\frac{|x_{k+1} - \alpha |}{|x_k - \alpha|} = \mu
+\]
+</li>
+<li>An iteration converges <span class="color5">superlinearly</span> if
+\[
+\lim_{k\to\infty}\frac{|x_{k+1} - \alpha |}{|x_k - \alpha|} = 0
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>We can use these ideas to construct practical<br />
+fixed-point iterations for solving $f(x) = 0$</li>
+<li>For example, suppose $f(x) = e^x - x - 2$
+<p><img data-src="media/fixed.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<li>From the plot, there is a root at $x \approx 1.15$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>Equation $f(x) = 0$ is equivalent to $x = \log(x+2)$,<br />
+so we seek a fixed point of the iteration
+\[
+x_{k+1} = \log(x_k+2)
+\]
+</li>
+<li>Here $g(x) = \log(x+2)$, and $g'(x) = 1/(x+2) &lt; 1$ for all $x &gt; -1$,<br />
+therefore fixed point iteration will converge for $x_0 &gt; -1$</li>
+<li>We should get linear convergence with a factor about
+\[
+g'(1.15) = 1/(1.15+2) \approx 0.32
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>An alternative fixed-point iteration is to set
+\[
+x_{k+1} = e^{x_k} - 2, \quad k=0,1,2,\ldots
+\]
+</li>
+<li>Therefore $g(x) = e^x - 2$, and $g'(x) = e^x$</li>
+<li>Hence $|g'(\alpha)| &gt; 1$, so we can’t guarantee convergence</li>
+<li><span class="color0">In fact, the iteration diverges</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit4/fixed_point.py">[examples/unit4/fixed_point.py]</a>,<br />
+comparison of the two fixed-point iterations</li>
+</ul>
+<p><img data-src="media/fixed_log.svg" style="margin:auto; display: block;" height="300" /></p>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>Constructing fixed-point iterations is not straightforward</li>
+<li>Need to rewrite $f(x) = 0$ in a form $x = g(x)$ <span class="color5">with certain properties on $g$</span></li>
+<li>To obtain a more generally applicable iterative method,<br />
+consider the following fixed-point iteration
+\[
+\htmlClass{color5}{ x_{k+1} = x_k - \lambda(x_k)f(x_k)}
+\]
+corresponding to $g(x) = x - \lambda(x)f(x)$, for some function $\lambda$</li>
+<li>A fixed point $\alpha$ of $g$ yields a solution to <span class="color5">$f(\alpha) = 0$</span><br />
+(except possibly when $\lambda(\alpha) = 0$), which is what we want</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>Recall that the asymptotic convergence rate is dictated by $|g'(\alpha)|$,<br />
+so we want to have $|g'(\alpha)| = 0$ to get <span class="color1">superlinear convergence</span></li>
+<li>Suppose (as stated above) that $f(\alpha) = 0$, then
+\[
+g'(\alpha) = 1 - \lambda'(\alpha)f(\alpha) - \lambda(\alpha)f'(\alpha) = 1 - \lambda(\alpha)f'(\alpha)
+\]
+</li>
+<li>To satisfy $g'(\alpha) = 0$, we choose $\lambda(x) = 1/f'(x)$ to obtain
+\[
+x_{k+1} = x_k - \frac{f(x_k)}{f'(x_k)}
+\]
+known as <span class="color5">Newton’s method</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>Based on fixed-point iteration theory,<br />
+Newton’s method is convergent since $|g'(\alpha)| = 0 &lt; 1$</li>
+<li>However, we need a different argument to understand<br />
+the superlinear convergence rate properly</li>
+<li>To do this, we use a Taylor expansion for $f(\alpha)$ about $x_k$
+\[
+0 = f(\alpha) = f(x_k) + (\alpha - x_k)f'(x_k) + \frac{(\alpha-x_k)^2}{2}f''(\theta_k)
+\]
+for some $\theta_k \in (\alpha,x_k)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>Dividing through by $f'(x_k)$ gives
+\[
+\left(x_k - \frac{f(x_k)}{f'(x_k)}\right) - \alpha  = \frac{f''(\theta_k)}{2f'(x_k)}(x_k - \alpha)^2
+\]
+or
+\[
+x_{k+1} - \alpha = \frac{f''(\theta_k)}{2f'(x_k)}(x_k - \alpha)^2
+\]
+</li>
+<li>Therefore, asymptotically,<br />
+<span class="color5">the error at iteration $k+1$ is the square of the error at iteration $k$</span></li>
+<li>This is referred to as <span class="color1">quadratic convergence</span>, which is very rapid</li>
+<li>We need to be <span class="color5">sufficiently close</span> to $\alpha$ to get quadratic convergence<br />
+(the result relied on Taylor expansion near $\alpha$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Secant Method</h2>
+<ul>
+<li>An alternative to Newton’s method is to approximate $f'(x_k)$<br />
+using the finite difference
+\[
+f'(x_k) \approx \frac{f(x_k) - f(x_{k-1})}{x_k - x_{k-1}}
+\]
+</li>
+<li>Substituting this into the iteration leads to the <span class="color5">secant method</span>
+\[
+x_{k+1} = x_k - f(x_k)\left( \frac{x_k - x_{k-1}}{f(x_k) - f(x_{k-1})} \right),\quad  k=1,2,3,\ldots
+\]
+</li>
+<li>The main advantages of the secant methods are
+<ul>
+<li>does not require computing $f'(x)$</li>
+<li>requires only one extra evaluation of $f(x)$ per solution<br />
+(Newton’s method also requires $f'(x_k)$ each iteration)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Secant Method</h2>
+<ul>
+<li>As one may expect, the secant method converges faster than<br />
+a fixed-point iteration, but slower than Newton’s method</li>
+<li>In fact, it can be shown that for the secant method, we have
+\[
+\lim_{k\to\infty} \frac{|x_{k+1} - \alpha|}{|x_k - \alpha|^q} = \mu  
+\]
+where $\mu$ is a positive constant and $q \approx 1.6$</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit4/secant_vs_newton.py">[examples/unit4/secant_vs_newton.py]</a>,<br />
+Newton’s method versus secant method for $f(x) = e^x - x - 2$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Systems of Nonlinear Equations</h2>
+</section>
+<section class="slide level2">
+<h2>Systems of Nonlinear Equations</h2>
+<ul>
+<li>We now consider fixed-point iterations and Newton’s method<br />
+for systems of nonlinear equations</li>
+<li>We suppose that $F : \mathbb{R}^n \to \mathbb{R}^n$, $n &gt; 1$,<br />
+and we seek $\alpha \in \mathbb{R}^n$ such that $F(\alpha) = 0$</li>
+<li>In component form, this is equivalent to
+\[
+\begin{aligned}
+F_1(\alpha) &amp;= 0\\
+F_2(\alpha) &amp;= 0\\
+&amp;\dots&amp;\\
+F_n(\alpha) &amp;= 0\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>For a fixed-point iteration, we again rewrite $F(x) = 0$ as $x = G(x)$ to obtain
+\[
+x_{k+1} = G(x_k)
+\]
+</li>
+<li>The convergence proof is the same as in the scalar case,<br />
+if we replace $|\cdot|$ with $\|\cdot\|$,<br />
+i.e. if $\|G(x) - G(y)\| \leq L \|x-y\|$, then $\|x_{k} - \alpha\| \leq L^k\|x_0 - \alpha\|$</li>
+<li>As before, if $G$ is a contraction it will converge to a fixed point $\alpha$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration</h2>
+<ul>
+<li>Recall that we define the Jacobian matrix, $J_G \in \mathbb{R}^{n\times n}$, to be
+\[
+(J_G)_{ij} = \frac{\partial G_i}{\partial x_j}, \quad i,j=1,\ldots,n
+\]
+</li>
+<li>If <span class="color5">$\|J_G(\alpha)\|_\infty &lt; 1$</span>, then there is some neighborhood of $\alpha$<br />
+for which the fixed-point iteration converges to $\alpha$</li>
+<li>The proof of this is a natural extension of the corresponding scalar result</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration: Example</h2>
+<ul>
+<li>Once again, we can employ a fixed point iteration to solve $F(x) = 0$</li>
+<li>For example, consider
+\[
+\begin{aligned}
+x_1^2 + x_2^2 - 1 &amp;= 0\\
+5x_1^2 + 21x_2^2 - 9 &amp;= 0
+\end{aligned}
+\]
+</li>
+<li>This can be rearranged to $x_1 = \sqrt{1 - x_2^2}$, $x_2 = \sqrt{(9 - 5x_1^2)/21}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Fixed-Point Iteration: Example</h2>
+<ul>
+<li>Define
+\[
+\begin{aligned}
+G_1(x_1,x_2) &amp;= \sqrt{1 - x_2^2} \\
+G_2(x_1,x_2) &amp;= \sqrt{(9 - 5x_1^2)/21}
+\end{aligned}
+\]
+</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit4/fixed_point_2d.py">[examples/unit4/fixed_point_2d.py]</a>,<br />
+fixed-point iteration in two dimensions</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>As in the one-dimensional case, Newton’s method is generally<br />
+more useful than a standard fixed-point iteration</li>
+<li>The natural generalization of Newton’s method is
+\[
+x_{k+1} = x_k - {J_F(x_k)}^{-1} F(x_k)
+\]
+</li>
+<li>Note that to put Newton’s method in the standard form<br />
+for a linear system, we write
+\[
+\htmlClass{color5}{  {J_F(x_k)}\Delta x_{k+1} = -F(x_k)}
+\]
+where $\Delta x_{k+1}= x_{k+1} - x_k$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>Once again, if $x_0$ is sufficiently close to $\alpha$,<br />
+then Newton’s method <span class="color5">converges quadratically</span></li>
+<li>This result again relies on <span class="color5">Taylor’s theorem</span></li>
+<li>We first consider how to generalize Taylor’s theorem to $\mathbb{R}^n$</li>
+<li>First, we consider the case for $F : \mathbb{R}^n \to \mathbb{R}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multivariate Taylor Theorem</h2>
+<ul>
+<li>Let $\phi(s) = F(x+s\delta)$ and $\delta\in\mathbb{R}^n$. One-dimensional Taylor theorem yields
+\[
+\phi(1) = \phi(0) + \sum_{\ell=1}^k\frac{\phi^{(\ell)}(0)}{\ell!} + \frac{1}{(k+1)!}\phi^{(k+1)}(\eta), \quad \eta \in (0,1)
+\]
+\[
+\begin{aligned}
+\phi(0) &amp;= F(x)\\
+\phi(1) &amp;= F(x+\delta)\\
+\phi'(s) &amp;= \frac{\partial F(x+s\delta)}{\partial x_1}\delta_1 +\frac{\partial F(x+s\delta)}{\partial x_2}\delta_2 + \cdots + \frac{\partial F(x+s\delta)}{\partial x_n}\delta_n\\
+\phi''(s) &amp;= \frac{\partial^2 F(x+s\delta)}{\partial x_1^2}\delta_1^2 + \cdots + \frac{\partial^2 F(x+s\delta)}{\partial x_1x_n}\delta_1\delta_n + \cdots + \\
+&amp; +\frac{\partial^2 F(x+s\delta)}{\partial x_1\partial x_n}\delta_1\delta_n + \cdots + \frac{\partial^2 F(x+s\delta)}{\partial x_n^2}\delta_n^2 \end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multivariate Taylor Theorem</h2>
+<ul>
+<li>We have
+\[
+F(x+\delta) = F(x) + \sum_{\ell=1}^k\frac{U_\ell(x)}{\ell!} + E_k,  
+\]
+where
+\[
+U_\ell(x) = \left[\left(\frac{\partial}{\partial x_1}\delta_1 + \cdots + \frac{\partial}{\partial x_n}\delta_n\right)^\ell F \right](x), \quad \ell=1,2,\ldots,k,  
+\]
+and
+\[
+E_k = \frac{U_{k+1}(x+\eta\delta)}{(k+1)!}, \quad \eta \in (0,1)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multivariate Taylor Theorem</h2>
+<ul>
+<li>Let $A$ be an upper bound on the absolute values<br />
+of all derivatives of order $k+1$, then
+\[
+\begin{aligned}
+|E_k| &amp;\leq \frac{1}{(k+1)!} \Big| \Big[ \Big(\|\delta\|_\infty\frac{\partial}{\partial x_1} + \ldots + \|\delta\|_\infty\frac{\partial}{\partial x_n}\Big)^{k+1} F\Big] (x+\eta \delta) \Big| \\
+&amp;=  \frac{1}{(k+1)!}\|\delta\|_\infty^{k+1} \Big| \Big [ \Big(\frac{\partial}{\partial x_1} + \ldots + \frac{\partial}{\partial x_n} \Big)^{k+1} F \Big] (x+\eta \delta) \Big| \\
+&amp;\leq\frac{n^{k+1}}{(k+1)!} A \|\delta\|_\infty^{k+1}\end{aligned}
+\]
+where the last line follows from the fact that there are $n^{k+1}$ terms in the product (i.e. there are $n^{k+1}$ derivatives of order $k+1$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multivariate Taylor Theorem</h2>
+<ul>
+<li>We only need an expansion up to first order terms<br />
+for analysis of Newton’s method</li>
+<li>From our expression above,<br />
+we can write first order Taylor expansion as
+\[
+\begin{aligned}
+\htmlClass{color5}{ F(x+\delta) =  F(x) + \nabla F(x)^T \delta + E_1}
+\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multivariate Taylor Theorem</h2>
+<ul>
+<li>For $F : \mathbb{R}^n \to \mathbb{R}^n$, Taylor expansion follows by developing<br />
+a Taylor expansion for each $F_i$
+\[
+F_i(x+\delta) =  F_i(x) + \nabla F_i(x)^T \delta + E_{i,1}  
+\]
+so that for $F : \mathbb{R}^n \to \mathbb{R}^n$ we have
+\[
+\htmlClass{color5}{ F(x+\delta) = F(x) + J_F(x)\delta + E_F}  
+\]
+where $\|E_F\|_\infty = \max\limits_{1\leq i\leq n} |E_{i,1}| \leq \frac{1}{2}n^2 \left(\max\limits_{1 \leq i,j,\ell \leq n} \left|\frac{\partial^2 F_i}{\partial x_j\partial x_\ell}\right|\right) \|\delta\|_\infty^2$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>Now return to Newton’s method</li>
+<li>We have
+\[
+0 = F(\alpha) = F(x_k) + J_F(x_k)\left[\alpha -  x_k\right] + E_F
+\]
+so that
+\[
+x_k - \alpha = [J_F(x_k)]^{-1}F(x_k) +  [J_F(x_k)]^{-1}E_F
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>Also, the Newton iteration itself can be rewritten as
+\[
+J_F(x_k)\left[ x_{k+1} - \alpha\right] = J_F(x_k)\left[ x_{k} - \alpha \right] - F(x_k)
+\]
+</li>
+<li>We obtain
+\[
+x_{k+1} - \alpha = [J_F(x_k)]^{-1} E_F,  
+\]
+which implies quadratic convergence <span class="color5">
+\[
+\|x_{k+1} - \alpha\|_\infty \leq C \|x_k - \alpha\|_\infty^2
+\]
+</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method: Example</h2>
+<ul>
+<li>Recall the conditions of the two-point Gauss quadrature rule
+\[
+\begin{aligned}
+F_1(x_1,x_2,w_1,w_2) &amp;=  w_1 + w_2 - 2 = 0\\
+F_2(x_1,x_2,w_1,w_2) &amp;= w_1x_1 + w_2 x_2 = 0\\
+F_3(x_1,x_2,w_1,w_2) &amp;= w_1x_1^2 + w_2x_2^2 - 2/3 = 0\\
+F_4(x_1,x_2,w_1,w_2) &amp;= w_1x_1^3 + w_2x_2^3 =  0\end{aligned}
+\]
+</li>
+<li>They constitute a nonlinear system of 4 equations for 4 unknowns</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method: Example</h2>
+<ul>
+<li>We can solve this using Newton’s method</li>
+<li>To do this, we require the Jacobian of this system:
+\[
+J_F(x_1,x_2,w_1,w_2) = \left[
+\begin{array}{cccc}
+0 &amp; 0 &amp; 1 &amp; 1\\
+w_1 &amp; w_2 &amp; x_1 &amp; x_2\\
+2w_1x_1 &amp; 2w_2x_2 &amp; x_1^2 &amp; x_2^2 \\
+3w_1x_1^2 &amp; 3w_2x_2^2 &amp; x_1^3 &amp; x_2^3
+\end{array}
+\right]
+\]
+</li>
+<li>Alternatively, use <code>scipy.optimize.fsolve()</code> that implements Powell’s hybrid method (combination of Newton and gradient descent) by calling <a href="https://www.math.utah.edu/software/minpack/minpack/hybrd.html">HYBRD</a> or <a href="https://www.math.utah.edu/software/minpack/minpack/hybrj.html">HYBRJ</a> from Fortran library <a href="https://www.math.utah.edu/software/minpack.html">MINPACK</a></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit4/nonlin_gauss_quad.py">[examples/unit4/nonlin_gauss_quad.py]</a>,<br />
+two-point Gauss quadrature found from a nonlinear system</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method: Example</h2>
+<ul>
+<li>Using either approach with an initial guess $[-1,1,1,1]$,<br />
+we get the solution
+\[
+\begin{align*}
+x_1 &amp;= -0.577350269189626 &amp;\approx -1/\sqrt{3} \\
+x_2 &amp;= 0.577350269189626  &amp;\approx 1/\sqrt{3} \\
+w_1 &amp;= 1.000000000000000  &amp;\approx 1 \\
+w_2 &amp;= 1.000000000000000  &amp;\approx 1
+\end{align*}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimization</h2>
+</section>
+<section class="slide level2">
+<h2>Existence of Global Minimum</h2>
+<ul>
+<li><span class="color5">To guarantee existence and uniqueness of a global minimum,<br />
+we need to make assumptions about the objective function</span></li>
+<li>For example, if $f$ is continuous on a closed (i.e. $\partial S\subset S$) and bounded set $S \subset \mathbb{R}^n$ then it has global minimum in $S$</li>
+<li>In one dimension, this says $f$ achieves a minimum on the interval $[a,b] \subset \mathbb{R}$</li>
+<li>In general $f$ does not achieve a minimum on $(a,b)$, e.g. consider $f(x) = x$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Coercive Functions</h2>
+<ul>
+<li>Another helpful concept for existence of global minimum is coercivity</li>
+<li>A function $f:S\to \mathbb{R}$ on an unbounded set $S \subset \mathbb{R}^n$ is <span class="color5">coercive</span> if
+\[
+\lim_{\|x\| \to \infty} f(x) = +\infty
+
+\]
+</li>
+<li>That is, $f(x)$ must take large positive values whenever $\|x\|$ is large</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Coercive Functions</h2>
+<ul>
+<li>If $f$ is continuous and coercive on a closed set $S$,<br />
+then $f$ has a global minimum in $S$</li>
+<li><span class="color5">Proof:</span> From the definition of coercivity, for any $M \in \mathbb{R}$, $\exists r &gt; 0$ such that $f(x) \geq M$ for all $x \in S$ where $\|x\| \geq r$</li>
+<li>Take a point $x_0 \in S$, and set $M = f(x_0)$</li>
+<li>Let $Y = S\cap \{\|x\| \geq r\}$, so that $f(x) \geq f(x_0)$ for all $x \in Y$</li>
+<li>And we already know that $f$ achieves a minimum (which is at most $f(x_0)$) on the closed and bounded set $S\cap \{\|x\| \leq r\}$</li>
+<li><span class="color1">Hence $f$ achieves a minimum on $S$</span> $\quad \square$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Coercive Functions: Examples</h2>
+<div class="row" style="margin-top:-10px;line-height:1em;">
+<div class="column3">
+<div style="margin-left:-20px;height:120px;">
+$f = x^2 + y^2$<br />
+<span class="color1">coercive on $\mathbb{R}^2$</span><br />
+
+</div>
+<img src="media/coercive_x2y2.svg" width="90%"><br />
+
+</div>
+<div class="column3">
+<div style="margin-left:-20px;height:120px;">
+$f = x^2 - y^2$<br />
+<span class="color0">not coercive on $\mathbb{R}^2$</span><br />
+$f(0,y) \to -\infty$<br />
+as $|y| \to \infty$
+</div>
+<img src="media/coercive_x2my2.svg" width="90%"><br />
+
+</div>
+<div class="column3">
+<div style="margin-left:-20px;height:120px;">
+$f = 1-e^{-(x^2+y^2)}$<br />
+<span class="color0">not coercive on $\mathbb{R}^2$</span><br />
+$f(x,y) \to 1$<br />
+as $x^2+y^2 \to \infty$
+</div>
+<img src="media/coercive_exp.svg" width="90%"><br />
+
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Convex Functions</h2>
+<ul>
+<li>An important concept for uniqueness is <span class="color5">convexity</span></li>
+<li>A set $S \subset \mathbb{R}^n$ is convex if it contains the line segment between any two of its points</li>
+<li>That is, $S$ is convex if for any $x,y \in S$, we have
+\[
+\{\theta x + (1-\theta)y : \theta \in [0,1] \} \subset S
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convex Functions</h2>
+<ul>
+<li>Similarly, we define convexity of a function $f : S \subset \mathbb{R}^n \to \mathbb{R}$</li>
+<li>$f$ is convex if its graph along any line segment in $S$ is <span class="color5">on or below</span> the chord connecting the function values</li>
+<li>For example, $f$ is convex if for any $x,y \in S$ and any $\theta \in (0,1)$, we have
+\[
+f(\theta x + (1-\theta)y) \leq \theta f(x) + (1-\theta)f(y)
+
+\]
+</li>
+<li>Also, if
+\[
+f(\theta x + (1-\theta)y) &lt; \theta f(x) + (1-\theta)f(y)
+
+\]
+then $f$ is <span class="color5">strictly convex</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convex Functions: Examples</h2>
+<div class="row" style="margin-top:-10px;line-height:1em;">
+<div class="column3">
+<div style="margin-left:-20px;height:120px;">
+$f = x^2 + y^2$<br />
+<span class="color1">convex on $\mathbb{R}^2$</span><br />
+
+</div>
+<img src="media/convex_x2y2.svg" width="90%"><br />
+
+</div>
+<div class="column3">
+<div style="margin-left:-20px;height:120px;">
+$f = x^2 - y^2$<br />
+<span class="color0">not convex on $\mathbb{R}^2$</span><br />
+
+</div>
+<img src="media/convex_x2my2.svg" width="90%"><br />
+
+</div>
+<div class="column3">
+<div style="margin-left:-20px;height:120px;">
+$f = \max(1,\;x^2+ (y+1)^2)$<br />
+<span class="color2">convex but</span><br />
+<span class="color2">not strictly convex on $\mathbb{R}^2$</span><br />
+
+</div>
+<img src="media/convex_max.svg" width="90%"><br />
+
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Convex Functions</h2>
+<ul>
+<li>If $f$ is a convex function on a convex set $S$,<br />
+then <span class="color1">any local minimum of $f$ must be a global minimum</span></li>
+<li><span class="color5">Proof (1/2):</span> Suppose $x$ is a local minimum,<br />
+i.e. there is $\epsilon&gt;0$ so that $f(x) \leq f(y)$ for $y \in B(x,\epsilon)$,<br />
+where $B(x,\epsilon) = \{ y \in S : \|y-x\| \leq \epsilon\}$</li>
+<li>Suppose that $x$ is not a global minimum,<br />
+i.e. that there exists $w \in S$ such that $f(w) &lt; f(x)$</li>
+<li>We will show that this gives a contradiction<br />
+by drawing a line segment between $x$ and $w$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convex Functions</h2>
+<p><span class="color5">Proof (2/2):</span></p>
+<ul>
+<li>For $\theta\in[0,1]$ we have $f(\theta w + (1-\theta)x) \leq \theta f(w) + (1-\theta)f(x)$</li>
+<li>Let $\sigma \in (0,1]$ be sufficiently small so that
+\[
+z = \sigma w + \left(1-\sigma\right)x \in B(x,\epsilon)
+
+\]
+</li>
+<li>Then
+\[
+f(z) \leq \sigma f(w) + \left(1-\sigma\right)f(x) &lt; \sigma f(x) + \left(1-\sigma\right)f(x) = f(x),
+
+\]
+e.g. $f(z) &lt; f(x)$, <span class="color0">which contradicts that $f(x)$ is a local minimum</span></li>
+<li>Hence we cannot have $w \in S$ such that $f(w) &lt; f(x)$ $\quad \square$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Convex Functions</h2>
+<ul>
+<li>Note that convexity does not guarantee uniqueness of global minimum</li>
+<li>However, if $f$ is a strictly convex function on a convex set $S$,<br />
+then <span class="color1">a local minimum of $f$ is the unique global minimum</span></li>
+<li>Optimization of convex functions over convex sets is called<br />
+<span class="color5">convex optimization</span>, which is an important field in optimization</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>We have discussed existence and uniqueness of minima,<br />
+but haven’t considered how to find a minimum</li>
+<li>The familiar optimization idea from calculus in one dimension is:<br />
+<span class="color5">set derivative to zero, check the sign of the second derivative</span></li>
+<li>This can be generalized to $\mathbb{R}^n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>If $f : \mathbb{R}^n \to \mathbb{R}$ is differentiable,<br />
+then the <span class="color5">gradient vector</span> $\nabla f : \mathbb{R}^n \to \mathbb{R}^n$ is
+\[
+\nabla f(x) =
+\left[
+\begin{array}{c}
+\frac{\partial f(x)}{\partial x_1}\\
+\frac{\partial f(x)}{\partial x_2}\\
+\vdots\\
+\frac{\partial f(x)}{\partial x_n}
+\end{array}
+\right]
+
+\]
+</li>
+<li>The importance of the gradient is that $\nabla f$ points “uphill”,<br />
+i.e. towards points with larger values than $f(x)$</li>
+<li>And similarly $-\nabla f$ points “downhill”</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>This follows from Taylor’s theorem for $f : \mathbb{R}^n \to \mathbb{R}$</li>
+<li>Recall that
+\[
+f(x+\delta) - f(x) = \nabla f(x)^T \delta + \text{h.o.t.}
+
+\]
+</li>
+<li>Let <span class="color1">$\delta = -\epsilon\nabla f(x)$</span> for $\epsilon &gt; 0$ and suppose that $\nabla f(x) \neq 0$, then:
+\[
+f(x-\epsilon\nabla f(x)) - f(x) \approx -\epsilon\nabla f(x)^T \nabla f(x) &lt; 0
+
+\]
+</li>
+<li>Also, we see from Cauchy–Schwarz that<br />
+\[
+\Big|\nabla f(x)^T\frac{\delta}{\|\delta\|_2}\Big|
+  \leq
+  \Big|\nabla f(x)^T \frac{\nabla f(x)}{\|\nabla f(x)\|_2}\Big|
+\]
+so $-\nabla f(x)$ is the <span class="color5">steepest descent direction</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>Similarly, we see that a necessary condition<br />
+for a local minimum at $x^\ast \in S$ is that $\nabla f(x^\ast) = 0$</li>
+<li>In this case there is no “downhill direction” at $x^\ast$</li>
+<li>The condition $\nabla f(x^\ast) = 0$ is called<br />
+a <span class="color5">first-order necessary condition</span> for optimality,<br />
+since it only involves first derivatives</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>$x^\ast \in S$ that satisfies the first-order optimality condition<br />
+is called a <span class="color5">critical point</span> of $f$</li>
+<li>A critical point can be<br />
+a <span class="color1">local minimum</span>, <span class="color1">local maximum</span>, or <span class="color1">saddle point</span></li>
+<li>A saddle point is where some directions are “downhill”<br />
+and others are “uphill”, e.g. $(x,y)=(0,0)$ for $f(x,y) = x^2 - y^2$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>As in the one-dimensional case, we can look<br />
+at second derivatives to classify critical points</li>
+<li>If $f : \mathbb{R}^n \to \mathbb{R}$ is twice differentiable, then<br />
+the <span class="color5">Hessian</span> is the matrix-valued function $H_f : \mathbb{R}^n \to \mathbb{R}^{n\times n}$
+\[
+H_f(x) =
+\left[
+\begin{array}{cccc}
+\frac{\partial^2f(x)}{\partial x_1^2} &amp; \frac{\partial^2f(x)}{\partial x_1 x_2} &amp; \cdots &amp; \frac{\partial^2f(x)}{\partial x_1x_n} \\
+\frac{\partial^2f(x)}{\partial x_2x_1} &amp; \frac{\partial^2f(x)}{\partial x_2^2} &amp; \cdots &amp; \frac{\partial^2f(x)}{\partial x_2x_n} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\frac{\partial^2f(x)}{\partial x_nx_1} &amp; \frac{\partial^2f(x)}{\partial x_n x_2} &amp; \cdots &amp; \frac{\partial^2f(x)}{\partial x_n^2}
+\end{array}
+\right]
+
+\]
+</li>
+<li>The Hessian is the Jacobian matrix of the gradient $\nabla f : \mathbb{R}^n \to \mathbb{R}^n$</li>
+<li>If the second partial derivatives of $f$ are continuous,<br />
+then $\partial^2 f/\partial x_i \partial x_j = \partial^2 f/\partial x_j \partial x_i$, and <span class="color5">$H_f$ is symmetric</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>Suppose we have found a critical point $x^\ast$, so that $\nabla f(x^\ast) = 0$</li>
+<li>From Taylor’s theorem, for $\delta \in \mathbb{R}^n$, we have
+\[
+\begin{aligned}
+f(x^\ast + \delta) &amp;= f(x^\ast) + \nabla f(x^\ast)^T \delta + \frac{1}{2}\delta^T H_f(x^\ast + \eta \delta) \delta\\
+&amp;= f(x^\ast) + \frac{1}{2}\delta^T H_f(x^\ast + \eta \delta) \delta\end{aligned}
+
+\]
+for some $\eta \in (0,1)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>Recall <span class="color1">positive definiteness</span>: $A$ is positive definite if $x^T A x &gt; 0$</li>
+<li><span class="color5">Suppose $H_f(x^\ast)$ is positive definite</span></li>
+<li>Then (by continuity) $H_f(x^\ast + \eta\delta)$ is also positive definite<br />
+for $\|\delta\|$ sufficiently small, so that: <span class="color1">$\delta^T H_f(x^\ast + \eta \delta) \delta &gt; 0$</span></li>
+<li>Hence, we have $f(x^\ast + \delta) &gt; f(x^\ast)$ for $\|\delta\|$ sufficiently small,<br />
+e.g. $f(x^\ast)$ is a local minimum</li>
+<li>Positive definiteness of $H_f$ at a critical point $x^\ast$<br />
+is a <span class="color5">second-order sufficient condition for a local minimum</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>A matrix can also be <span class="color1">negative definite</span>: $x^T A x &lt; 0$ for all $x \neq 0$</li>
+<li>Or <span class="color1">indefinite</span>: There exists $x,y$ such that $x^T A x &lt; 0 &lt; y^T A y$</li>
+<li>Then we can classify critical points as follows:
+<ul>
+<li>$H_f(x^\ast)$ positive definite  $\implies$ $x^\ast$ is a local minimum</li>
+<li>$H_f(x^\ast)$ negative definite $\implies$ $x^\ast$ is a local maximum</li>
+<li>$H_f(x^\ast)$ indefinite $\implies$ $x^\ast$ is a saddle point</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li>Also, positive definiteness of the Hessian<br />
+is closely related to convexity of $f$</li>
+<li>If $H_f(x)$ is positive definite, then $f$ is convex<br />
+on some convex neighborhood of $x$</li>
+<li>If $H_f(x)$ is positive definite for all $x \in S$,<br />
+where $S$ is a convex set, then $f$ is convex on $S$</li>
+<li><span class="color5">Question:</span> How do we test for positive definiteness?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions</h2>
+<ul>
+<li><span class="color5">Answer:</span> For a symmetric matrix $A$
+<ul>
+<li>$A$ is positive definite if and only if all eigenvalues of $A$ are positive,<br />
+</li>
+<li>$A$ is negative definite if and only if all eigenvalues of $A$ are negative</li>
+</ul></li>
+<li>Also, a matrix with positive and negative eigenvalues is indefinite</li>
+<li>Hence we can compute all the eigenvalues of $A$ and check their signs</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions: Example</h2>
+<ul>
+<li>From Heath’s book (Example 6.5)</li>
+<li>Consider
+\[
+f(x) = 2x_1^3 + 3x_1^2 + 12 x_1x_2 + 3x_2^2 - 6x_2 + 6
+
+\]
+</li>
+<li>Then
+\[
+\nabla f(x) =
+\left[
+\begin{array}{c}
+6x_1^2 + 6x_1 + 12x_2\\
+12x_1 + 6x_2 - 6
+\end{array}
+\right]
+
+\]
+</li>
+<li>We set $\nabla f(x) = 0$ to find critical points $[1,-1]^T$ and $[2,-3]^T$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimality Conditions: Example</h2>
+<ul>
+<li>The Hessian is
+\[
+H_f(x) =
+\left[
+\begin{array}{cc}
+12x_1 + 6 &amp; 12\\
+12 &amp; 6
+\end{array}
+\right]
+
+\]
+</li>
+<li>and hence
+\[
+\begin{aligned}
+H_f(1,-1) &amp;=
+\left[
+\begin{array}{cc}
+18 &amp; 12\\
+12 &amp; 6
+\end{array}
+\right], \text{ which has eigenvalues } 25.4, -1.4\\
+H_f(2,-3) &amp;=
+\left[
+\begin{array}{cc}
+30 &amp; 12\\
+12 &amp; 6
+\end{array}
+\right], \text{ which has eigenvalues } 35.0, 1.0\end{aligned}
+
+\]
+</li>
+<li>Hence $[2,-3]^T$ is a local minimum whereas $[1,-1]^T$ is a saddle point</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Optimization Methods</h2>
+</section>
+<section class="slide level2">
+<h2>Steepest Descent</h2>
+<ul>
+<li>One gradient-based method for<br />
+unconstrained optimization is <span class="color1">steepest descent</span></li>
+<li><span class="color5">Key idea:</span> The negative gradient $-\nabla f(x)$<br />
+points in the “steepest downhill” direction for $f$ at $x$</li>
+<li>An iterative method for minimizing $f$ is obtained<br />
+by following $-\nabla f(x_k)$ at each step</li>
+<li><span class="color5">Question:</span> How far should we go in the direction of $-\nabla f(x_k)$?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Steepest Descent</h2>
+<ul>
+<li>We can try to find the best step size via an easier subproblem</li>
+<li>For a direction $s \in \mathbb{R}^n$, let $\phi : \mathbb{R}\to \mathbb{R}$ be given by
+\[
+\phi(\eta) = f(x + \eta s)
+
+\]
+</li>
+<li>Then minimizing $f$ along $s$ corresponds<br />
+to minimizing the one-dimensional function $\phi$</li>
+<li>This process of minimizing $f$ along a line is called a <span class="color5">line search</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Steepest Descent</h2>
+<ul>
+<li>Putting these pieces together leads to the <span class="color1">steepest descent</span> method:
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose initial guess $x_0$<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 0,1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}$$s_k = -\nabla f(x_k)$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}$choose $\eta_k$ to minimize $f(x_k + \eta_k s_k)$<br />
+<span class="linenum">5:</span>$\hspace{1.2em}$$x_{k+1} = x_k + \eta_k s_k$<br />
+<span class="linenum">6:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+<li>However, steepest descent often <span class="color0">converges very slowly</span></li>
+<li><span class="color5">Steepest descent is part of HW4</span></li>
+<li>A simpler option to use a constant $\eta_k=\eta$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>We can get faster convergence by using more information about $f$</li>
+<li>Note that $\nabla f(x) = 0$ is a system of nonlinear equations,<br />
+so we can solve it with quadratic convergence via Newton’s method</li>
+<li>The Jacobian matrix of $\nabla f(x)$ is $H_f(x)$ and<br />
+therefore Newton’s method for unconstrained optimization is:
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose initial guess $x_0$<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 0,1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}$solve $H_f(x_k)s_k = -\nabla f(x_k)$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}$$x_{k+1} = x_k + s_k$<br />
+<span class="linenum">5:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method</h2>
+<ul>
+<li>We can also interpret Newton’s method as seeking a stationary point<br />
+based on a sequence of local quadratic approximations</li>
+<li>Recall that for small $\delta$
+\[
+\htmlClass{color5}{ f(x+\delta) \approx f(x) + \nabla f(x)^T \delta + \frac{1}{2} \delta^T H_f(x)\delta = q(\delta)}
+
+\]
+where $q(\delta)$ is quadratic in $\delta$ (for a fixed $x$)</li>
+<li>We find stationary point of $q$ in the usual way:
+\[
+\nabla q(\delta) = \nabla f(x) + H_f(x)\delta = 0
+
+\]
+</li>
+<li>This leads to $H_f(x)\delta = -\nabla f(x)$, as in the previous slide</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method: Example</h2>
+<ul>
+<li>Rosenbrock function
+\[
+f(x,y) = 100 (y - x^2)^2 + (1 - x)^2
+
+\]
+with minimum 0 at $(x,y)=(1,1)$</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit4/rosenbrock.py">[examples/unit4/rosenbrock.py]</a>,<br />
+Rosenbrock function minimized with Newton’s method
+<p><img data-src="media/rosenbrock.svg" style="margin:auto; display: block;" height="200" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method: Robustness</h2>
+<ul>
+<li>Newton’s method generally converges <span class="color1">much faster</span> than steepest descent</li>
+<li>However, Newton’s method can be <span class="color0">unreliable far away from a solution</span></li>
+<li>To improve robustness during early iterations<br />
+it is common to perform a line search in the Newton step direction</li>
+<li>Also line search can ensure we don’t approach a local maximum<br />
+(instead of minimum) as can happen with raw Newton method</li>
+<li>The line search modifies the Newton step size,<br />
+therefore often referred to as a <span class="color5">damped Newton method</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method: Robustness</h2>
+<ul>
+<li>Another way to improve robustness is with <span class="color5">trust region methods</span></li>
+<li>At each iteration $k$, a “trust radius” $R_k$ is computed</li>
+<li>This determines a region surrounding $x_k$<br />
+on which we “trust” our quadratic approx.</li>
+<li>We require $\|x_{k+1}-x_k\| \leq R_k$,<br />
+which is a constrained optimization problem<br />
+(with quadratic objective function) at each step</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Newton’s Method: Robustness</h2>
+<ul>
+<li>Size of $R_{k+1}$ is based on comparing actual change,<br />
+$f(x_{k+1}) - f(x_k)$, to change predicted by the quadratic model</li>
+<li>If quadratic model is accurate, we expand the trust radius,<br />
+otherwise we contract it</li>
+<li>When close to a minimum, $R_k$ should be large enough<br />
+to allow full Newton steps $\implies$ <span class="color1">eventual quadratic convergence</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Quasi-Newton Methods</h2>
+<ul>
+<li>Possible drawbacks of Newton’s method
+<ul>
+<li><span class="color0">unreliable:</span> only converges when sufficiently close to a minimum</li>
+<li><span class="color0">expensive:</span> the Hessian $H_f$ is dense in general,<br />
+making the method expensive if $n$ is large</li>
+<li><span class="color0">complicated:</span> can be impractical to compute the Hessian exactly</li>
+</ul></li>
+<li>Methods that do not require the Hessian but achieve<br />
+superlinear convergence are <span class="color5">quasi-Newton methods</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Quasi-Newton Methods</h2>
+<ul>
+<li>General form of quasi-Newton methods:
+\[
+\htmlClass{color5}{  x_{k+1} = x_k - \alpha_k B_k^{-1}\nabla f(x_k) }
+
+\]
+where $\alpha_k$ is a line search parameter and<br />
+$B_k$ is some approximation to the Hessian</li>
+<li>Quasi-Newton methods generally lose quadratic convergence<br />
+of Newton’s method, but often achieve <span class="color5">superlinear</span> convergence</li>
+<li>We now consider some specific quasi-Newton methods</li>
+</ul>
+</section>
+<section id="bfgs" class="slide level2">
+<h2>BFGS</h2>
+<ul>
+<li>The Broyden–Fletcher–Goldfarb–Shanno (BFGS) method<br />
+is one of the most popular quasi-Newton methods
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose initial guess $x_0$<br />
+<span class="linenum">2:</span>$\hspace{0em}$choose $B_0$, initial guess for Hessian, e.g. $B_0 = {\rm I}$<br />
+<span class="linenum">3:</span>$\hspace{0em}$<strong>for</strong> $k = 0,1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">4:</span>$\hspace{1.2em}$solve $B_k s_k = -\nabla f(x_k)$<br />
+<span class="linenum">5:</span>$\hspace{1.2em}$$x_{k+1} = x_k + s_k$<br />
+<span class="linenum">6:</span>$\hspace{1.2em}$$y_k = \nabla f(x_{k+1}) - \nabla f(x_k)$<br />
+<span class="linenum">7:</span>$\hspace{1.2em}$$B_{k+1} = B_k + \Delta B_k$<br />
+<span class="linenum">8:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+<div style="padding:0 0 50px 50px;">
+<p>where $\Delta B_k = \frac{y_ky_k^T}{y_k^Ts_k} - \frac{B_k s_k s_k^T B_k}{s_k^T B_ks_k}$</p>
+</div>
+</section>
+<section class="slide level2">
+<h2>BFGS</h2>
+<ul>
+<li>Basic idea is that $B_k$ <span class="color1">accumulates second derivative information</span><br />
+on successive iterations and eventually approximates $H_f$ well</li>
+<li>BFGS is implemented in <code>scipy.optimize.fmin_bfgs()</code></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit4/rosenbrock.py">[examples/unit4/rosenbrock.py]</a>,<br />
+Rosenbrock function minimized with BFGS
+<p><img data-src="media/rosenbrock_bfgs.svg" style="margin:auto; display: block;" height="200" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>BFGS: Derivation</h2>
+<ul>
+<li>Replace Newton’s update $H_f(x_k)s_k=-\nabla f(x_k)$ with <span class="color5">
+\[
+B_ks_k=-\nabla f(x_k)
+\]
+</span> where $s_k = x_{k+1}-x_k$</li>
+<li>Define $B_{k+1}\in\mathbb{R}^{n\times n}$ to satisfy the requirements
+<ul>
+<li>$B_{k+1}$ is obtained by a “small” change from $B_k$</li>
+<li>$B_{k+1}$ is symmetric and positive definite</li>
+<li>$B_{k+1}\approx H_f(x_{k+1})$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>BFGS: Derivation</h2>
+<ul>
+<li>In particular, we want $B_{k+1}s_k\approx H_f(x_{k+1})s_k$</li>
+<li>The product $H_f(x_{k+1})s_k$ is the <span class="color5">directional derivative</span> of $\nabla{f}$ along $s_k$<br />
+and can be approximated by the difference <span class="color5">$y_k = \nabla f(x_{k+1}) - \nabla f(x_k)$</span>
+\[
+
+H_f(x_{k+1})s_k = \lim_{h\to0} \frac{\nabla f(x_{k+1}) - \nabla f(x_{k+1} - hs_k)}{h}
+\underset{h=1}{\approx}
+\nabla f(x_{k+1}) - \nabla f(x_k) = y_k
+
+\]
+</li>
+<li>Impose the requirement <span class="color5">$B_{k+1}s_k = y_k$</span> exactly</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>BFGS: Derivation</h2>
+<ul>
+<li>Look for $B_{k+1}$ in the form of a rank-two update
+\[
+
+B_{k+1} = \htmlClass{color1}{ B_k -\beta vv^T} + \htmlClass{color3}{ \alpha uu^T}
+
+\]
+with unknown $\alpha,\beta\in\mathbb{R}$ and $u,v\in\mathbb{R}^n$
+<ul>
+<li>impose $(B_k -\beta vv^T)s_k=0$
+\[
+0=(B_k -\beta vv^T)s_k=B_ks_k -  \beta vv^Ts_k=B_ks_k -  (\beta v^Ts_k)v
+\]
+which is achieved by <span class="color1">$v=B_ks_k$</span> and <span class="color1">$\beta=\frac{1}{s_k^TB_ks_k}$</span></li>
+<li>impose $\alpha uu^Ts_k=y_k$
+\[
+y_k=\alpha uu^Ts_k=(\alpha u^Ts_k)u
+\]
+which is achieved by <span class="color3">$u=y_k$</span> and <span class="color3">$\alpha=\frac{1}{y_k^T s_k}$</span></li>
+</ul></li>
+<li>This implies $B_{k+1}s_k=y_k$ and recovers the BFGS algorithm <a href="#bfgs">above</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>BFGS: Derivation</h2>
+<ul>
+<li>Note that if $B_k$ is symmetric and positive definite,<br />
+then $B_k-\beta vv^T=B_k-\frac{B_k s_k^T s_k^T B_k}{s_k^TB_ks_k}$ is positive semi-definite</li>
+<li>Under the assumption $y_k^Ts_k&gt;0$, known as the <span class="color5">curvature condition</span>,<br />
+the matrix $\alpha uu^T=\frac{y_ky_k^T}{y_k^Ts_k}$ is positive definite</li>
+<li>Therefore, $B_{k+1} = B_k-\beta vv^T + \alpha uu^T$ is positive definite</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>BFGS: Inverse Hessian</h2>
+<div>
+<ul>
+<li>Actual implementation of BFGS: store and update<br />
+the <span class="color5">inverse approximate Hessian</span> $H_k$ to avoid solving a linear system
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose initial guess $x_0$<br />
+<span class="linenum">2:</span>$\hspace{0em}$choose $H_0$, initial guess for inverse Hessian, e.g. $H_0 = {\rm I}$<br />
+<span class="linenum">3:</span>$\hspace{0em}$<strong>for</strong> $k = 0,1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">4:</span>$\hspace{1.2em}$$s_k = - H_k \nabla f(x_k)$<br />
+<span class="linenum">5:</span>$\hspace{1.2em}$$x_{k+1} = x_k + s_k$<br />
+<span class="linenum">6:</span>$\hspace{1.2em}$$y_k = \nabla f(x_{k+1}) - \nabla f(x_k)$<br />
+<span class="linenum">7:</span>$\hspace{1.2em}$$H_{k+1} = (I-\rho_k s_k y_k^T)H_k(I-\rho_k y_k s_k^T) + \rho_k s_k s_k^T$<br />
+<span class="linenum">8:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</div>
+<div style="padding:0 0 50px 50px;">
+<p>where $\rho_k=\frac{1}{y_k^T s_k}$</p>
+</div>
+</section>
+<section class="slide level2">
+<h2>BFGS: Inverse Hessian</h2>
+<ul>
+<li>The update rule for $H_{k+1}$ follows from the update rule for $B_{k+1}$<br />
+and the <span class="color5">Sherman–Morrison–Woodbury formula</span>
+\[
+(A + U V^T)^{-1} = A^{-1} - A^{-1} U (I + V^TA^{-1}U)^{-1}V^TA^{-1}
+\]
+where $A\in\mathbb{R}^{n\times n}\quad$ and $\quad U,V\in\mathbb{U}^{n \times p}$</li>
+<li>Provides a low-rank update of the inverse<br />
+from a low-rank update of the matrix</li>
+<li>In our case
+\[
+B_{k+1} =B_k + UV^T = B_k+  \frac{1}{y_k^T s_k} y_k y_k^T-\frac{1}{s_k^T B_k s_k} B_ks_k s_k^T B_k
+\]
+\[
+U=\Big[\frac{1}{y_k^T s_k} y_k \;\;\; -\!\frac{1}{s_k^T B_k s_k} B_s s_k\Big],\quad V=\big[y_k \;\;\; B_k s_k\big]\in\mathbb{R}^{n\times 2}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>BFGS: Modifications</h2>
+<ul>
+<li>Typically, the search direction $s_k$ is adjusted<br />
+by a more robust inexact line search, e.g. <span class="color5">Wolfe conditions</span></li>
+<li><span class="color5">Limited-memory BFGS</span> (L-BFGS) avoids storing the full $H_k$<br />
+and instead represents $H_k$ implicitly using a limited history<br />
+of gradient evaluations. Suited for large-scale problems</li>
+<li>Extra reading: <a href="https://doi.org/10.1007/978-0-387-40065-5">Nocedal &amp; Wright. <em>Numerical Optimization</em>, 1999</a><br />
+(chapters 6 and 7)</li>
+</ul>
+<!---
+## Conjugate Gradient Method
+
+* The conjugate gradient (CG) method is another alternative  
+  to Newton's method that does not require the Hessian
+
+  <div style="text-align:center;">
+  ::: algo
+  [1:]{.linenum}$\hspace{0em}$choose initial guess $x_0$  
+  [2:]{.linenum}$\hspace{0em}$$g_0 = \nabla f(x_0)$  
+  [3:]{.linenum}$\hspace{0em}$$x_0 = -g_0$  
+  [4:]{.linenum}$\hspace{0em}$**for** $k = 0,1,2,\ldots$ **do**  
+  [5:]{.linenum}$\hspace{1.2em}$choose $\eta_k$ to minimize $f(x_k + \eta_k s_k)$  
+  [6:]{.linenum}$\hspace{1.2em}$$x_{k+1} = x_k + \eta_k s_k$  
+  [7:]{.linenum}$\hspace{1.2em}$$g_{k+1} = \nabla f(x_{k+1})$  
+  [8:]{.linenum}$\hspace{1.2em}$$\beta_{k+1} = (g_{k+1}^Tg_{k+1})/(g_k^Tg_k)$  
+  [9:]{.linenum}$\hspace{1.2em}$$s_{k+1} = -g_{k+1} + \beta_{k+1}s_k$  
+  [10:]{.linenum}$\hspace{0em}$**end for**  
+  :::
+  </div>
+
+* Will be discussed in Unit 5
+--->
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+<ul>
+<li>So far we have ignored constraints</li>
+<li>Now we consider <span class="color5">equality constrained optimization</span>
+\[
+\min_{x\in\mathbb{R}^n} f(x) \quad \text{ subject to } \quad g(x) = 0,
+
+\]
+where $f : \mathbb{R}^n \to \mathbb{R}$ and $g : \mathbb{R}^n \to \mathbb{R}^m$, with $m \leq n$</li>
+<li>There are $n$ unknowns and $m$ constraints</li>
+<li>This problem is solved with <span class="color5">Lagrange mutlipliers</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+<ul>
+<li>We illustrate the concept of Lagrange multipliers for $f, g : \mathbb{R}^2 \to \mathbb{R}$</li>
+<li>Let $f(x,y) = x + y$ and $g(x,y) = 2x^2 + y^2 - 5$
+<p><img data-src="media/lagrange_multiplier_fig_init.png" style="margin:auto; display: block;" height="200" /></p></li>
+<li><span class="color5">$\nabla g$ is normal to $S$:</span> at any $x \in S$ we must move in direction<br />
+$(\nabla g(x))_\perp$ (tangent direction) to remain in $S$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+<ul>
+<li>Also, change in $f$ due to infinitesimal step in direction $(\nabla g(x))_\perp$ is
+\[
+f(x \pm \epsilon(\nabla g(x))_\perp) = f(x) \pm \epsilon\nabla f(x)^T(\nabla g(x))_\perp + \text{h.o.t.}
+
+\]
+</li>
+<li>A critical point $x^\ast \in S$ satisfies $\nabla f(x^\ast)^T(\nabla g(x^\ast))_\perp = 0$, or
+\[
+\htmlClass{color5}{ \nabla f(x^\ast) = \lambda^\ast \nabla g(x^\ast)}, \quad \text{for some } \lambda^\ast \in \mathbb{R}
+
+\]
+</li>
+</ul>
+<p><img data-src="media/lagrange_multiplier_fig.png" style="margin:auto; display: block;" height="200" /></p>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+<ul>
+<li>This shows that for a stationary point with $m=1$ constraints,<br />
+<span class="color5">$\nabla f$ cannot have any component in the “tangent direction” to $S$</span></li>
+<li>Now, consider the case with $m &gt; 1$ equality constraints</li>
+<li>Then $g : \mathbb{R}^n \to \mathbb{R}^m$ and we have the gradients $\nabla g_i$, $i=1,\ldots,m$</li>
+<li>Then the feasible set is $S = \{ x \in \mathbb{R}^n : g_i(x) = 0, i=1,\ldots,m\}$</li>
+<li>Any “tangent direction” at $x \in S$ must be orthogonal to <span class="color5">all</span><br />
+gradient vectors $\{\nabla g_i(x), i=1,\ldots,m\}$ to remain in $S$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+<ul>
+<li>Let $\mathcal{T}(x) = \{ v \in \mathbb{R}^n : \nabla g_i(x)^T v = 0, i=1,2,\ldots,m\}$<br />
+denote the <span class="color5">orthogonal complement</span> of $\{\nabla g_i(x), i=1,\ldots,m\}$</li>
+<li>Then, for $\delta \in \mathcal{T}(x)$ and $\epsilon&gt;0$, $\epsilon \delta$ is a step in a “tangent direction” of $S$ at $x$</li>
+<li>Since we have
+\[
+f(x^\ast + \epsilon\delta) = f(x^\ast) + \epsilon\nabla f(x^\ast)^T\delta + \text{h.o.t.}
+\]
+it follows that for a stationary point we need<br />
+\[
+\htmlClass{color5}{\nabla f(x^\ast)^T\delta = 0}\;\text{for all}\;\delta \in \mathcal{T}(x^\ast)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+<ul>
+<li>We require that at a stationary point $x^\ast \in S$ we have
+\[
+\nabla f(x^\ast) \in \mathop{\mathrm{span}}\{\nabla g_i(x^\ast), i=1,\ldots,m\}
+\]
+</li>
+<li>This can be written as a linear system
+\[
+\htmlClass{color5}{ \nabla f(x^\ast) = (J_g(x^\ast))^T \lambda^\ast}
+\]
+for some $\lambda^\ast \in \mathbb{R}^m$, where $(J_g(x^\ast))^T \in \mathbb{R}^{n\times m}$</li>
+<li>This follows because the columns of $(J_g(x^\ast))^T$<br />
+are the vectors $\{\nabla g_i(x^\ast), i=1,\ldots,m\}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+<ul>
+<li>We can write equality constrained optimization problems more concisely<br />
+by introducing the <span class="color5">Lagrangian function</span>, $\mathcal{L}: \mathbb{R}^{n+m} \to \mathbb{R}$,
+\[
+\begin{aligned}
+\mathcal{L}(x,\lambda) &amp;= f(x) + \lambda^T g(x)\\
+                &amp;= f(x) + \lambda_1 g_1(x) + \cdots + \lambda_m g_m(x)\end{aligned}
+
+\]
+</li>
+<li>Then
+\[
+\begin{array}{llll}
+\frac{\partial \mathcal{L}(x,\lambda)}{\partial x_i} &amp;= \frac{\partial f(x)}{\partial x_i} + \lambda_1 \frac{\partial g_1(x)}{\partial x_i} + \cdots + \lambda_n \frac{\partial g_n(x)}{\partial x_i}, &amp; i=1,\ldots,n\\
+\\
+\frac{\partial \mathcal{L}(x,\lambda)}{\partial \lambda_i} &amp;= g_i(x), &amp; i=1,\ldots,m
+\end{array}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization</h2>
+<ul>
+<li>In matrix form
+\[
+\nabla \mathcal{L}(x,\lambda) =
+\left[
+\begin{array}{c}
+\nabla_x \mathcal{L}(x,\lambda)\\
+\nabla_\lambda\mathcal{L}(x,\lambda)
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+\nabla f(x) + J_g(x)^T\lambda\\
+g(x)
+\end{array}
+\right],
+
+\]
+</li>
+<li>Therefore, the first order necessary optimality condition<br />
+for the constrained problem can be written as a nonlinear system
+\[
+\htmlClass{color5}{ \nabla\mathcal{L}(x,\lambda) =
+\left[
+\begin{array}{c}
+\nabla f(x) + J_g(x)^T\lambda\\
+g(x)
+\end{array}
+\right] = 0}
+  
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization: Examples</h2>
+<ul>
+<li>Consider a cylinder with radius $x_1$ and height $x_2$</li>
+<li>Minimize the <span class="color5">surface area</span> of a cylinder subject to a constraint on its <span class="color5">volume</span>
+<p>
+\[
+\min_x f(x_1,x_2) = 2\pi x_1(x_1 + x_2)
+\]
+\[
+\text{ subject to } g(x_1,x_2) = \pi x_1^2 x_2 - V = 0
+\]
+</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization: Examples</h2>
+<ul>
+<li>Another example is the underdetermined linear<br />
+least squares problem from Unit 1
+\[
+\min_{b\in\mathbb{R}^n} f(b) \quad \text{ subject to } \quad g(b) = 0,
+
+\]
+where $f(b) = b^T b$, $g(b) = Ab - y$ and $A \in \mathbb{R}^{m\times n}$ with $m &lt; n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization: Examples</h2>
+<ul>
+<li>Introducing Lagrange multipliers gives
+\[
+\htmlClass{color5}{ \mathcal{L}(b,\lambda) = b^Tb + \lambda^T(Ab - y)}
+
+\]
+where $b \in \mathbb{R}^n$ and $\lambda \in \mathbb{R}^{m}$</li>
+<li>And the necessary optimality condition $\nabla\mathcal{L}(b,\lambda) = 0$ is
+\[
+\left[
+\begin{array}{c}
+\nabla f(b) + J_g(b)^T\lambda\\
+g(b)
+\end{array}
+\right] =
+\left[
+\begin{array}{c}
+2b + A^T\lambda\\
+Ab-y
+\end{array}
+\right]
+=
+0 \in \mathbb{R}^{n+m}
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization: Examples</h2>
+<ul>
+<li>We obtain the $(n+m)\times(n+m)$ square linear system
+\[
+\left[
+\begin{array}{cc}
+2{\rm I} &amp; A^T\\
+A &amp; 0
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+b\\
+\lambda
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+0\\
+y
+\end{array}
+\right]
+  
+\]
+which we can solve for $\left[\begin{array}{c}b \\ \lambda\end{array}\right] \in \mathbb{R}^{n+m}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Constrained Optimization: Examples</h2>
+<ul>
+<li>We have $b = -\frac{1}{2}A^T\lambda$ from the first “block row”</li>
+<li>Subsituting into $Ab = y$ (the second “block row”) yields $\lambda = -2(AA^T)^{-1}y$</li>
+<li>And hence
+\[
+\htmlClass{color5}{ b = -\frac{1}{2}A^T\lambda = A^T (AA^T)^{-1} y}
+
+\]
+which was the solution we introduced (but didn’t derive) in Unit 1</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>Consider equality constrained minimization
+\[
+\htmlClass{color5}{ \min_{x\in\mathbb{R}^n} f(x) \quad \text{subject to} \quad g(x) = 0}
+\]
+where $f : \mathbb{R}^n \to \mathbb{R}$ and $g : \mathbb{R}^n \to \mathbb{R}^m$</li>
+<li>With the Lagrangian $\mathcal{L}(x,\lambda) = f(x) + \lambda^T g(x)$,<br />
+the necessary condition for optimality is
+\[
+\htmlClass{color5}{ \nabla\mathcal{L}(x,\lambda) =
+\left[
+\begin{array}{c}
+\nabla f(x) + J_g^T(x)\lambda\\
+g(x)
+\end{array}
+\right] = 0}
+\]
+</li>
+<li>Once again, this is a nonlinear system of equations<br />
+that can be solved using Newton’s method</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>To derive the Jacobian of this system, we write
+\[
+\nabla\mathcal{L}(x,\lambda) =
+\left[
+\begin{array}{c}
+\nabla f(x) + \sum_{k=1}^m \lambda_k \nabla g_k(x)\\
+g(x)
+\end{array}
+\right] \in \mathbb{R}^{n+m}
+\]
+</li>
+<li>Then we differentiate w.r.t to $x\in \mathbb{R}^n$ and $\lambda\in \mathbb{R}^m$</li>
+<li>For $i=1,\ldots,n$, we have
+\[
+(\nabla \mathcal{L}(x,\lambda))_i  = \frac{\partial f(x)}{\partial x_i} + \sum_{k=1}^m \lambda_k \frac{\partial g_k(x)}{\partial x_i}
+\]
+</li>
+<li>Differentiating w.r.t $x_j$, for $i,j=1,\ldots,n$, gives
+\[
+\frac{\partial}{\partial x_j}(\nabla \mathcal{L}(x,\lambda))_i  =
+\frac{\partial^2 f(x)}{\partial x_i \partial x_j} + \sum_{k=1}^m \lambda_k \frac{\partial^2 g_k(x)}{\partial x_i\partial x_j}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>The top-left $n\times n$ block of the Jacobian of $\nabla \mathcal{L}(x,\lambda)$ is
+\[
+\htmlClass{color5}{ B(x,\lambda) = H_f(x) + \sum_{k=1}^m\lambda_k H_{g_k}(x) \in \mathbb{R}^{n\times n} }
+\]
+</li>
+<li>Differentiating $(\nabla \mathcal{L}(x,\lambda))_i$ w.r.t $\lambda_j$, for $i=1,\ldots,n$, $j=1,\ldots,m$, gives
+\[
+\frac{\partial}{\partial \lambda_j}(\nabla \mathcal{L}(x,\lambda))_i = \frac{\partial g_j(x)}{\partial x_i}
+\]
+</li>
+<li>The top-right $n \times m$ block of the Jacobian of $\nabla \mathcal{L}(x,\lambda)$ is
+\[
+\htmlClass{color5}{  J_g(x)^T \in \mathbb{R}^{n\times m} }
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>For $i=n+1,\ldots,n+m$, we have
+\[
+(\nabla \mathcal{L}(x,\lambda))_i  = g_i(x)
+\]
+</li>
+<li>Differentiating $(\nabla \mathcal{L}(x,\lambda))_i$ w.r.t $x_j$, for $i=n+1,\ldots,n+m$, $j=1,\ldots,n$, gives
+\[
+\frac{\partial}{\partial x_j}(\nabla \mathcal{L}(x,\lambda))_i = \frac{\partial g_i(x)}{\partial x_j}
+\]
+</li>
+<li>The bottom-left $m \times n$ block of the Jacobian of $\nabla \mathcal{L}(x,\lambda)$ is
+\[
+\htmlClass{color5}{  J_g(x) \in \mathbb{R}^{m\times n} }
+\]
+</li>
+<li>The final $m\times m$ bottom right block is zero ($g_i(x)$ does not depend on $\lambda_j$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>We have derived the following Jacobian matrix for $\nabla\mathcal{L}(x,\lambda)$
+\[
+\htmlClass{color5}{
+\left[
+\begin{array}{cc}
+B(x,\lambda) &amp; J_g^T(x)\\
+J_g(x) &amp; 0
+\end{array}
+\right] \in \mathbb{R}^{(m+n)\times(m+n)}}
+\]
+</li>
+<li>Note the $2\times 2$ block structure of this matrix</li>
+<li>Matrices with this structure are called <span class="color5">KKT matrices</span><br />
+after Karush, Kuhn, and Tucker</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>Therefore, Newton’s method for $\nabla\mathcal{L}(x,\lambda) = 0$ is
+\[
+\htmlClass{color5}{
+\left[
+\begin{array}{cc}
+B(x_k,\lambda_k) &amp; J_g^T(x_k)\\
+J_g(x_k) &amp; 0
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+s_k\\
+\delta_k
+\end{array}
+\right]
+=
+-
+\left[
+\begin{array}{c}
+\nabla f(x_k) + J_g^T(x_k)\lambda_k\\
+g(x_k)
+\end{array}
+\right]}
+\]
+for $k=0,1,2,\ldots$</li>
+<li>Here $(s_k,\delta_k) \in \mathbb{R}^{n+m}$ is the $k$-th Newton step</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>Now, consider the constrained minimization problem,<br />
+where $(x_k,\lambda_k)$ is our Newton iterate at step $k$:
+\[
+\min_s \left\{\frac{1}{2} s^TB(x_k,\lambda_k)s + s^T(\nabla f(x_k) + J_g^T(x_k)\lambda_k)\right\}
+\]
+\[
+\text{subject to} \quad J_g(x_k) s + g(x_k) = 0
+\]
+</li>
+<li>The objective function is <span class="color5">quadratic in $s$</span> (here $x_k$, $\lambda_k$ are constants)</li>
+<li>This minimization problem has Lagrangian
+\[
+\begin{aligned}
+\mathcal{L}_k(s,\delta) &amp;= \frac{1}{2} s^TB(x_k,\lambda_k)s + s^T(\nabla f(x_k) + J_g^T(x_k)\lambda_k)\\
+&amp;+ \delta^T (J_g(x_k)s + g(x_k))\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>Then solving $\nabla\mathcal{L}_k(s,\delta) = 0$ (i.e. first-order necessary conditions)<br />
+gives a linear system, which is the same as the $k$-th Newton step</li>
+<li>Therefore, at each step of Newton’s method, we exactly solve<br />
+a minimization problem with a quadratic objective and linear constraints</li>
+<li>Optimization of this type is called <span class="color5">quadratic programming</span></li>
+<li>Therefore, Newton’s method applied to $\mathcal{L}(x,\lambda) = 0$<br />
+is called <span class="color1">sequential quadratic programming (SQP)</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sequential Quadratic Programming</h2>
+<ul>
+<li>SQP is an important method, and there are many issues to be considered<br />
+to obtain an <span class="color5">efficient</span> and <span class="color5">reliable</span> implementation:
+<ul>
+<li>efficient solution of the linear systems at each Newton iteration — matrix block structure can be exploited</li>
+<li>quasi-Newton approximations to the Hessian</li>
+<li>trust region, line search to improve robustness</li>
+<li>treatment of constraints (equality and inequality) during the iterative process</li>
+<li>selection of a good initial guess for $\lambda$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Penalty Methods</h2>
+<ul>
+<li>Another approach to constrained optimization is <span class="color5">penalty methods</span></li>
+<li>This converts a constrained problem into an unconstrained problem</li>
+<li><span class="color5">Key idea:</span> Introduce a new objective function<br />
+which is a weighted sum of objective function and constraints</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Penalty Methods</h2>
+<ul>
+<li>Given the minimization problem
+\[
+\min_x f(x) \quad \text{subject to} \quad g(x) = 0 \qquad
+\]
+define the corresponding <span class="color5">penalized unconstrained problem</span>
+\[
+\min_x\phi_\rho(x) = f(x) + \frac{1}{2}\rho g(x)^Tg(x)
+\]
+with a parameter $\rho\in\mathbb{R}$</li>
+<li>Let $x^\ast$ be the solution of the constrained problem</li>
+<li>Let $x^\ast_\rho$ be the solution of the penalized unconstrained problem</li>
+<li>Under appropriate conditions, it can be shown that
+\[
+\htmlClass{color5}{ \lim_{\rho\to\infty} x^\ast_\rho = x^\ast}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Penalty Methods</h2>
+<ul>
+<li>In practice, we can solve the unconstrained problem for a large value of $\rho$ to get a good approximation of $x^\ast$</li>
+<li>Another strategy is to solve for a sequence of penalty parameters $\rho_k$,<br />
+where $x_{\rho_k}^\ast$ serves as an initial guess for $x_{\rho_{k+1}}^\ast$</li>
+<li>Note that the major drawback of penalty methods is that<br />
+a large factor $\rho$ will <span class="color0">increase the condition number of the Hessian $H_{\phi_\rho}$</span></li>
+<li>However, penalty methods can be convenient due to their simplicity</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDE-Constrained Optimization</h2>
+</section>
+<section class="slide level2">
+<h2>PDE-Constrained Optimization</h2>
+<ul>
+<li>Consider a general optimization problem
+\[
+\min_{p \in \mathbb{R}^n} \mathcal{G}(p)
+\]
+with the objective function $\mathcal{G}:\mathbb{R}^n\to\mathbb{R}$</li>
+<li>Gradient-based methods require gradients of the objective</li>
+<li>They could be approximated with <span class="color5">finite differences</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDE-Constrained Optimization</h2>
+<ul>
+<li>However, each partial derivative requires an extra evaluation of $\mathcal{G}$
+\[
+\frac{\partial \mathcal{G}(p)}{\partial p_i} \approx \frac{\mathcal{G}(p+h e_i) - \mathcal{G}(p)}{h},
+\]
+so we need $n+1$ evaluations of $\mathcal{G}$ to approximate $\nabla \mathcal{G}(p)$</li>
+<li>For example, if $\mathcal{G}(p)$ requires solving a PDE and<br />
+parameters $p$ represent an unknown field on a grid,<br />
+this procedure becomes too expensive</li>
+<li>The accuracy of finite differences is also limited</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>PDE-Constrained Optimization</h2>
+<ul>
+<li>There are two main alternative approaches<br />
+for computing gradients of solutions of ODEs or PDEs
+<ul>
+<li><span class="color5">direct method</span></li>
+<li><span class="color5">adjoint method</span></li>
+</ul></li>
+<li>The direct method is simpler, but the adjoint method<br />
+is more efficient in cases with many parameters</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>One-Dimensional Case</h2>
+<ul>
+<li>Consider the boundary value problem for an ODE
+\[
+-u''(x;p) + r(x;p) u(x;p) = f(x), \qquad u(a) = u(b) = 0
+\]
+referred to as the <span class="color5">primal equation</span></li>
+<li>Here the functions $r : \mathbb{R}\times \mathbb{R}^n \to \mathbb{R}$ and $f:\mathbb{R}\to\mathbb{R}$ are given</li>
+<li>The objective function $\mathcal{G}:\mathbb{R}^n\to\mathbb{R}$ is assumed to be a linear functional
+\[
+\mathcal{G}(p) = \int_a^b \sigma(x) u(x;p) \text{d}x
+\]
+for some given function $\sigma:\mathbb{R}\to\mathbb{R}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Direct Method</h2>
+<ul>
+<li>Note that the gradient of the objective is
+\[
+\frac{\partial \mathcal{G}(p)}{\partial p_i} = \int_a^b \sigma(x) \frac{\partial u}{\partial p_i} \text{d}x
+\]
+so we can compute it from derivatives of the solution $\frac{\partial u}{\partial p_i}$</li>
+<li>Differentiate the original ODE with respect to $p_i$
+\[
+-\frac{\partial u}{\partial p_i}''(x;p) + r(x;p) \frac{\partial u}{\partial p_i}(x;p) = -\frac{\partial r}{\partial p_i}u(x;p)
+\]
+for $i=1,2,\ldots,n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Direct Method</h2>
+<ul>
+<li>Once we compute each $\frac{\partial u}{\partial p_i}$ we can then evaluate $\nabla \mathcal{G}(p)$<br />
+by evaluating a sequence of $n$ integrals</li>
+<li>This is <span class="color0">not much better than using finite differences</span>:<br />
+we still need to solve $n$ separate problems</li>
+<li>However, those can be cheaper since only the right-hand side changes.<br />
+For example, we can reuse a common LU factorization</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Adjoint Method</h2>
+<ul>
+<li>A more efficient approach when $n$ is large is the <span class="color5">adjoint method</span></li>
+<li>The <span class="color5">adjoint problem</span> is defined as
+\[
+-z''(x;p) + r(x;p) z(x;p) = \sigma(x), \qquad z(a) = z(b) = 0
+\]
+</li>
+<li>Since $\sigma(x)$ enters the right-hand side,<br />
+the adjoint problem depends on the objective</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Adjoint Method</h2>
+<ul>
+<li>Given a solution $z(x;p)$ of the adjoint problem, the gradient is
+\[
+\begin{aligned}
+\frac{\partial \mathcal{G}(p)}{\partial p_i} &amp;= \int_a^b \sigma(x) \frac{\partial u}{\partial p_i} \text{d}x \\
+&amp;= \int_a^b \left[-z''(x;p) + r(x;p) z(x;p)\right] \frac{\partial u}{\partial p_i} \text{d}x\\
+&amp;= \int_a^b z(x;p) \left[-\frac{\partial u}{\partial p_i}''(x;p) + r(x;p) \frac{\partial u}{\partial p_i}(x;p)\right] \text{d}x\end{aligned}
+\]
+</li>
+<li>The last line follows from integrating by parts twice<br />
+(boundary terms vanish because $\frac{\partial u}{\partial p_i}$ and $z$ are zero at $a$ and $b$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Adjoint Method</h2>
+<ul>
+<li>Recall the derivative of the primal problem with respect to $p_i$
+\[
+-\frac{\partial u}{\partial p_i}''(x;p) + r(x;p) \frac{\partial u}{\partial p_i}(x;p) = -\frac{\partial r}{\partial p_i}u(x;p)
+\]
+</li>
+<li>Combining both, we get
+\[
+\frac{\partial \mathcal{G}(p)}{\partial p_i} = - \int_a^b \frac{\partial r}{\partial p_i} z(x;p) u(x;p) \text{d}x
+\]
+</li>
+<li>Therefore, we only need to <span class="color5">solve the primal and adjoint problems once</span><br />
+and then can obtain each component of $\nabla \mathcal{G}(p)$ from the integral</li>
+<li>This idea extends to PDEs</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Linear Programming</h2>
+</section>
+<section class="slide level2">
+<h2>Linear Programming</h2>
+<ul>
+<li>As we mentioned earlier, the optimization problem
+\[
+\min_{x\in\mathbb{R}^n} f(x) \text{ subject to } g(x) = 0 \text{ and } h(x) \leq 0, \qquad\qquad
+\]
+with $f, g, h$ affine, is called a <span class="color5">linear programming problem</span></li>
+<li>The feasible region is a convex polyhedron</li>
+<li>Since the objective function has a constant non-zero gradient,<br />
+its global minimum must occur at a vertex of the feasible region</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Linear Programming</h2>
+<ul>
+<li>Example of a convex feasible region in $\mathbb{R}^2$
+<p><img data-src="media/linear_prog.svg" style="margin:auto; display: block;" height="250" /></p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Linear Programming</h2>
+<ul>
+<li>The standard approach to linear programming is conceptually simple:<br />
+<span class="color5">try a sequence of the vertices to find the minimum</span></li>
+<li>This is called the <span class="color5">simplex method</span></li>
+<li>In the worst case, the computational cost of the simplex method<br />
+<span class="color0">grows exponentially</span> with the size of the problem</li>
+<li>But this worst-case behavior is rare. In practice, the cost grows linearly</li>
+<li>We will not discuss the implementation of the simplex method</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Linear Programming</h2>
+<ul>
+<li><code>scipy.optimize.linprog</code> uses the HiGHS library that<br />
+implements the <a href="https://doi.org/10.1007/s12532-017-0130-5">dual revised simplex method</a></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit4/linprog.py">[examples/unit4/linprog.py]</a>, solving the problem
+\[
+\min_x f(x) = -5x_1 - 4x_2 -6x_3
+\]
+subject to
+\[
+\begin{aligned}
+x_1 - x_2 + x_3 &amp;\leq&amp; 20\\
+3x_1 + 2x_2 + 4x_3 &amp;\leq&amp; 42\\
+3x_1 + 2x_2 &amp;\leq&amp; 30\end{aligned}
+\]
+and $0 \leq x_1, 0 \leq x_2, 0 \leq x_3$</li>
+</ul>
+</section>
+    </div>
+  </div>
+
+  <script src="..//dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="..//plugin/notes/notes.js"></script>
+  <script src="..//plugin/math/math.js"></script>
+  <!--<script src="..//plugin/search/search.js"></script>-->
+  <script src="..//plugin/highlight/highlight.js"></script>
+
+  <script>
+    Reveal.initialize({
+      // Layout.
+      center: true,
+      width: 960,
+      height: 540,
+
+      transition: 'none',
+      transitionSpeed: 'fast',
+      backgroundTransition: 'none',
+
+      // Navigation.
+      controls: true,
+      controlsLayout: 'bottom-right',
+      controlsBackArrows: 'visible',
+      history: false,
+      hash: true,
+      mouseWheel: false,
+      controlsTutorial: false,
+      slideNumber: 'c',
+      progress: false,
+      // TODO: change to true.
+      hashOneBasedIndex: false,
+      pause: false, // No blackout on `;`.
+
+      katex: {
+        trust: true,
+      },
+      plugins: [RevealHighlight, RevealNotes, RevealMath.KaTeX]
+    });
+    Reveal.configure({ pdfSeparateFragments: false });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/copy-tex.min.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" crossorigin="anonymous"></script>
+
+    </body>
+</html>

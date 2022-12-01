@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>AM205 Unit 5. Eigenvalue Problems and Iterative Methods</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, minimal-ui">
+  <link rel="stylesheet" href="..//dist/reset.css">
+  <link rel="stylesheet" href="..//dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
+  <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
+</head>
+<body>
+
+  <style>
+.katex{
+  font-size:1em;
+}
+  </style>
+
+  <div class="reveal">
+    <div class="slides">
+
+<section class="slide level2">
+
+<section>
+<h1>
+Applied Mathematics 205
+</h1>
+<h2>
+Unit 5. Eigenvalue Problems <br>and Iterative Methods
+</h2>
+<br> Lecturer: Petr Karnakov <br> <br> November 21, 2022
+</section>
+</section>
+<section class="slide level2">
+<h2>Outline</h2>
+<ul>
+<li>In this Unit, we will discuss
+<ul>
+<li>methods to compute eigenvalues and eigenvectors of matrices</li>
+<li>iterative methods to solve linear systems</li>
+</ul></li>
+<li>Eigenvalue problems have applications in stability analysis,<br />
+vibration analysis, and are useful to study properties of matrices</li>
+<li>Iterative methods are better suited for large-scale problems<br />
+and parallel computation than direct methods (e.g. Gaussian elimination)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalues and Eigenvectors</h2>
+<ul>
+<li>Consider a matrix $A\in\mathbb{R}^{n\times n}$</li>
+<li>Vector $v\in\mathbb{R}^{n}$ is called an <span class="color5">eigenvector</span> of $A$ if
+\[
+Av = \lambda v
+\]
+for a scalar $\lambda\in\mathbb{R}$</li>
+<li>The corresponding $\lambda$ is called an <span class="color5">eigenvalue</span> of $A$</li>
+<li>Pair $(\lambda,v)$ is called an <span class="color5">eigenpair</span></li>
+<li>The prefix comes from German “eigen” meaning “own”</li>
+<li>In the following, we will also consider complex matrices $A\in\mathbb{C}^{n\times n}$,<br />
+eigenvectors $v\in\mathbb{C}^n$, and eigenvalues $\lambda\in\mathbb{C}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Eigenvalue Problems</h2>
+<ul>
+<li>The definition of eigenvalues extends to linear operators in general,<br />
+including differential operators in a function space</li>
+<li>Recall the <span class="color5">wave equation</span> describing the vibration of a string
+\[
+u_{tt}-c^2u_{xx}=0
+\]
+with zero Dirichlet boundary conditions $u(0, t)=u(1, t)=0$</li>
+<li>Eigenfunctions $U(x)$ of the operator $U_{xx}$ found from the problem
+\[
+U_{xx}=\lambda U
+\]
+correspond to solutions of the wave equation called <span class="color5">standing waves</span>
+\[
+u(x,t)=e^{i\omega t} U(x)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Eigenvalue Problems</h2>
+<ul>
+<li>By substituting the ansatz $u(x,t)=e^{i\omega t} U(x)$ into the wave equation
+\[
+\frac{\partial^2}{\partial t^2}\Big(e^{i\omega t} U(x)\Big) - c^2\frac{\partial^2}{\partial x^2}\Big(e^{i\omega t} U(x)\Big) = 0
+\]
+and using that $U(x)$ is an eigenfunction, we get
+\[
+(-\omega^2 - c^2 \lambda) e^{i\omega t} U(x) = 0
+\]
+</li>
+<li>So the wave equation is satisfied for
+\[
+\omega = c\sqrt{-\lambda}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation: Eigenvalue Problems</h2>
+<style>
+  .lessmargin{ margin:20px -70px -10px 10px; text-align:center;}
+  .lessmargin2{ margin:0 -70px -30px -70px; text-align:center;}
+</style>
+<ul>
+<li>Eigenfunctions $U(x)$ of the operator $U_{xx}$
+\[
+U_{xx}=\lambda U
+\]
+that satisfy boundary conditions $U(0)=U(1)=0$ are given by
+\[
+U_k(x)=\sin{(\pi k x)} \qquad k=1,2,\dots
+\]
+with eigenvalues $\lambda_k=-\pi^2k^2$</li>
+</ul>
+<div class="row" style="margin-bottom:-0.5em;">
+<div class="column4 lessmargin">
+<p>$\sin(\pi x)$</p>
+</div>
+<div class="column4 lessmargin">
+<p>$\sin(2\pi x)$</p>
+</div>
+<div class="column4 lessmargin">
+<p>$\sin(3\pi x)$</p>
+</div>
+<div class="column4 lessmargin">
+<p>$\sin(4\pi x)$</p>
+</div>
+</div>
+<div class="row">
+<div class="column4 lessmargin2">
+<p><img data-src="media/harmonics_1.svg" width=200></p>
+</div>
+<div class="column4 lessmargin2">
+<p><img data-src="media/harmonics_2.svg" width=200></p>
+</div>
+<div class="column4 lessmargin2">
+<p><img data-src="media/harmonics_3.svg" width=200></p>
+</div>
+<div class="column4 lessmargin2">
+<p><img data-src="media/harmonics_4.svg" width=200></p>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Motivation: Eigenvalue Problems <span style="font-size:0.7em;">🔊</span></h2>
+<div class="row">
+<div class="column" style="flex:60%;margin-right:-100px;">
+<ul>
+<li>Wave equation with forcing <a href="../unit3/#/191">[Unit 3]</a>
+\[
+u_{tt} - u_{xx} = f
+\]
+<img data-src="media/wave_energy.svg" style="margin:auto; display: block;" height="250" /></li>
+<li>Energy $\int{u_t^2dx}$<br />
+</li>
+<li>Sound $\int{u_x^2dx}$ (change in arc length)</li>
+</ul>
+</div>
+<div class="column" style="flex:40%;margin-left:-100px;">
+<div>
+<ul>
+<li>Forcing $f = x \sin(\omega(t) t)$<br />
+$\omega(t)=at + b$</li>
+</ul>
+<video height="180" controls poster="media/wave_force.jpg">
+<source data-src="media/wave_force.webm" type="video/webm">
+</video>
+</div>
+<div>
+<video height="180" controls poster="media/wave_signal.jpg">
+<source data-src="media/wave_signal.webm" type="video/webm">
+</video>
+</div>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Motivation: Eigenvalue Problems</h2>
+<ul>
+<li>This is an example of <span class="color5">resonance</span>:<br />
+the system is able to store energy at certain frequencies</li>
+<li>Other systems and phenomena related to resonance
+<ul>
+<li>pendulums</li>
+<li>natural vibration modes of structures</li>
+<li>musical instruments</li>
+<li>lasers</li>
+<li>nuclear magnetic resonance (NMR)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Problems</h2>
+<ul>
+<li>Eigenvalues and eigenvectors of real-valued matrices can be complex</li>
+<li>Therefore, we will generally work with complex-valued matrices and vectors</li>
+<li>For $A \in \mathbb{C}^{n\times n}$, consider the <span class="color5">eigenvalue problem</span>:<br />
+find $(\lambda,v) \in \mathbb{C}\times\mathbb{C}^n$ such that
+\[
+\begin{aligned}Av &amp;= \lambda v\\
+\|v\|_2 &amp;= 1\end{aligned}
+\]
+</li>
+<li>The 2-norm of a complex vector $v\in\mathbb{C}^n$ is defined<br />
+using <span class="color5">absolute values</span> of components (as opposed to just $(v_k)^2$):<br />
+\[
+\textstyle \|v\|_2 = \big(\sum_{k=1}^n |v_k|^2\big)^{1/2}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalues and Eigenvectors</h2>
+<ul>
+<li>This problem can be reformulated as
+\[
+(A - \lambda{I})v = 0
+\]
+</li>
+<li>We know this system has a non-trivial solution<br />
+if and only if $(A - \lambda I)$ is singular, therefore
+\[
+\det(A - \lambda{I}) = 0
+\]
+</li>
+<li>The polynomial $p(z) = \det(A - z{I})$ is called<br />
+the <span class="color5">characteristic polynomial</span> of $A$</li>
+<li>Eigenvalues $\lambda$ are roots of $p(z)$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Characteristic Polynomial</h2>
+<ul>
+<li>By the fundamental theorem of algebra, we can factorize $p(z)$ as
+\[
+p(z) = c_n(z - \lambda_1)(z - \lambda_2)\cdots(z - \lambda_n)
+\]
+where the roots $\lambda_i \in \mathbb{C}$ need not be distinct</li>
+<li>Note also that complex eigenvalues of a real matrix $A \in \mathbb{R}^{n\times n}$<br />
+must occur as <span class="color5">complex conjugate pairs</span></li>
+<li>That is, if $\lambda = \alpha + i\beta$ is an eigenvalue,<br />
+then so is its complex conjugate $\overline\lambda = \alpha - i\beta$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Characteristic Polynomial</h2>
+<ul>
+<li>This follows from the fact that for a polynomial $p$ with <span class="color5">real coefficients</span>,<br />
+$p(\overline{z}) = \overline{p(z)}$ for any $z \in \mathbb{C}$:
+\[
+p(\overline{z}) = \sum_{k=0}^n c_k (\overline{z})^k = \sum_{k=0}^n c_k \overline{z^k} =  \overline{\sum_{k=0}^n c_k z^k} = \overline{p(z)}
+\]
+</li>
+<li>Therefore, if $w \in \mathbb{C}$ is a root of $p$, then so is $\overline{w}$, since
+\[
+0 = p(w) = \overline{p(w)} = p(\overline{w})
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Companion Matrix</h2>
+<ul>
+<li>We have seen that every matrix has an associated characteristic polynomial</li>
+<li>Conversely, every polynomial has an associated <span class="color5">companion matrix</span></li>
+<li>The companion matrix $C_n$, of a polynomial $p \in \mathbb{P}_n$<br />
+is a matrix which has eigenvalues that match the roots of $p$</li>
+<li>Divide $p$ by its leading coefficient to get a <span class="color5">monic</span> polynomial,<br />
+i.e. with leading coefficient equal to 1 (this doesn’t change the roots)
+\[
+p_\text{monic}(z) = c_0 + c_1 z + \cdots + c_{n-1}z^{n-1} + z^n
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Companion Matrix</h2>
+<ul>
+<li>Then $p_\text{monic}$ is the characteristic polynomial<br />
+of the following $n\times n$ matrix
+\[
+C_n =
+\left[
+\begin{array}{ccccc}
+0 &amp; 0 &amp; \cdots &amp; 0 &amp; -c_0\\
+1 &amp; 0 &amp; \cdots &amp; 0 &amp; -c_1\\
+0 &amp; 1 &amp; \cdots &amp; 0 &amp; -c_2\\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \vdots\\
+0 &amp; 0 &amp; \cdots &amp; 1 &amp; -c_{n-1}
+\end{array}
+\right]
+\]
+</li>
+<li>Therefore, $C_n$ is <span class="color5">companion matrix</span> for $p$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Companion Matrix</h2>
+<ul>
+<li>Let us show this for the $n=3$ case</li>
+<li>Consider
+\[
+p_{\text{monic}}(z) = c_0 + c_1z + c_2 z^2 + z^3
+\]
+for which
+\[
+\small C_3 =
+\left[
+\begin{array}{ccc}
+0 &amp; 0 &amp; -c_0\\
+1 &amp; 0 &amp; -c_1\\
+0 &amp; 1 &amp; -c_2
+\end{array}
+\right]
+\]
+</li>
+<li>Recall that the determinant of a $3 \times 3$ matrix is
+\[
+\small\textstyle
+\det
+\left[
+\begin{array}{ccc}
+a_{11} &amp; a_{12} &amp; a_{13}\\
+a_{21} &amp; a_{22} &amp; a_{23}\\
+a_{31} &amp; a_{32} &amp; a_{33}
+\end{array}
+\right] =
+\begin{array}{c}
+\\
+a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32} \\
+- a_{13}a_{22}a_{31} - a_{11}a_{23}a_{32} - a_{12}a_{21}a_{33}
+\end{array}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Companion Matrix</h2>
+<ul>
+<li>Substituting entries of $C_3$ then gives
+\[
+\det(z {\rm I} - C_3) = c_0 + c_1 z + c_2 z^2 + z^3 = p_{\text{monic}}(z)
+\]
+</li>
+<li>This link between matrices and polynomials is used by <code>numpy.roots()</code><br />
+that computes roots of a polynomial as eigenvalues of the companion matrix</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Decomposition</h2>
+<ul>
+<li>Let $\lambda$ be an eigenvalue of $A \in \mathbb{C}^{n\times n}$; the set of all eigenvalues is called the <span class="color5">spectrum of $A$</span></li>
+<li>The <span class="color5">algebraic multiplicity</span> of $\lambda$ is the multiplicity of the corresponding root of the characteristic polynomial</li>
+<li>The <span class="color5">geometric multiplicity</span> of $\lambda$ is the number of linearly independent eigenvectors corresponding to $\lambda$</li>
+<li>For example, for $A = {\rm I}$, $\lambda = 1$ is an eigenvalue with algebraic and geometric multiplicity of $n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Decomposition</h2>
+<ul>
+<li><span class="color5">Theorem:</span> The geometric multiplicity of an eigenvalue<br />
+is less than or equal to its algebraic multiplicity</li>
+<li>If $\lambda$ has geometric multiplicity strictly less than algebraic multiplicity,<br />
+then $\lambda$ is said to be <span class="color5">defective</span></li>
+<li>We say a matrix is <span class="color5">defective</span> if it has at least one defective eigenvalue</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Decomposition</h2>
+<ul>
+<li>For example, the matrix
+\[
+A =
+\left[
+\begin{array}{ccc}
+2 &amp; 1 &amp; 0\\
+0 &amp; 2 &amp; 1\\
+0 &amp; 0 &amp; 2
+\end{array}
+\right]
+\]
+has one eigenvalue with algebraic multiplicity of 3<br />
+and geometric multiplicity of 1
+<pre class="python-repl"><code>&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; a = np.array([[2, 1, 0], [0, 2, 1], [0, 0, 2]])
+&gt;&gt;&gt; d, v = np.linalg.eig(a)
+&gt;&gt;&gt; d
+array([ 2.,  2.,  2.])
+&gt;&gt;&gt; v
+array([[  1.00000e+00,  -1.00000e+00,   1.00000e+00],
+       [  0.00000e+00,   4.44089e-16,  -4.44089e-16],
+       [  0.00000e+00,   0.00000e+00,   1.97215e-31]])</code></pre></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Decomposition</h2>
+<ul>
+<li>Let $A \in\mathbb{C}^{n\times n}$ be a <span class="color5">nondefective</span> matrix, then it has a full set of $n$ linearly independent eigenvectors $v_1, v_2, \ldots, v_n \in \mathbb{C}^n$</li>
+<li>Suppose $V \in \mathbb{C}^{n\times n}$ contains the eigenvectors of $A$ as columns,<br />
+and let $D = \mathop{\mathrm{diag}}(\lambda_1,\ldots,\lambda_n)$</li>
+<li>Then <span class="color5">$A v_i = \lambda_i v_i$, $i=1,2,\ldots,n$</span> is equivalent to <span class="color5">$AV = VD$</span></li>
+<li>Since we assumed $A$ is nondefective, we can invert $V$ to obtain
+\[
+\htmlClass{color5}{ A = VDV^{-1}}
+\]
+</li>
+<li>This is the <span class="color5">eigendecomposition</span> of $A$</li>
+<li>This shows that for a non-defective matrix, $A$ is <span class="color5">diagonalized</span> by $V$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Decomposition</h2>
+<ul>
+<li>We introduce the <span class="color5">conjugate transpose</span> $A^\ast \in \mathbb{C}^{n\times m}$ of a matrix $A \in \mathbb{C}^{m\times n}$
+\[
+(A^\ast)_{ij} = \overline{A_{ji}}, \quad i = 1,2,\ldots,m, ~ j = 1,2,\ldots,n
+\]
+</li>
+<li>A matrix is said to be <span class="color5">hermitian</span> if $A = A^\ast$<br />
+(this generalizes matrix symmetry)</li>
+<li>A matrix is said to be <span class="color5">unitary</span> if $AA^\ast = {\rm I}$<br />
+(this generalizes the concept of an orthogonal matrix)</li>
+<li>Also, for $v \in\mathbb{C}^n$, $\|v\|_2 = \sqrt{v^*v}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Decomposition</h2>
+<ul>
+<li>For <code>numpy</code>-array, the <code>.T</code> property contains the transpose,<br />
+while the <code>.getH()</code> function performs the conjugate transpose
+<pre style="width:60%"><code data-trim class="language-python-repl">
+>>> import numpy as np
+>>> a = np.matrix([[1+1j, 2+3j], [0, 4]])
+>>> a.T
+matrix([[ 1.+1.j,  0.+0.j],
+        [ 2.+3.j,  4.+0.j]])
+>>> a.getH()
+matrix([[ 1.-1.j,  0.-0.j],
+        [ 2.-3.j,  4.-0.j]])
+</code></pre></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Decomposition</h2>
+<ul>
+<li>In some cases, the eigenvectors of $A$<br />
+can be chosen such that they are orthonormal
+\[
+v_i^\ast v_j =
+\begin{cases}
+1, \quad i=j\\
+0, \quad i\neq j
+\end{cases}
+\]
+</li>
+<li>In such a case, the matrix of eigenvectors $Q$ is unitary,<br />
+and hence $A$ can be <span class="color5">unitarily diagonalized</span>
+\[
+A = Q D Q^\ast
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Eigenvalue Decomposition</h2>
+<ul>
+<li><span class="color5">Theorem:</span> A hermitian matrix is unitarily diagonalizable,<br />
+and its eigenvalues are real</li>
+<li>But hermitian matrices are not the only matrices that can be unitarily diagonalized<br />
+</li>
+<li>Matrix $A \in\mathbb{C}^{n\times n}$ is called <span class="color5">normal</span> if
+\[
+A^\ast A = A A^\ast
+\]
+</li>
+<li><span class="color5">Theorem:</span> A matrix is unitarily diagonalizable if and only if it is normal</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gershgorin’s Theorem</h2>
+<ul>
+<li>Due to the link between eigenvalues and polynomial roots,<br />
+in general one has to use iterative methods to compute eigenvalues<br />
+(recall that polynomials of degree higher than four cannot be solved in radicals)</li>
+<li>However, it is possible to gain some information about eigenvalue locations more easily from <span class="color5">Gershgorin’s Theorem</span></li>
+<li>Let $D(c, r) = \{ x \in \mathbb{C}: |x - c| \leq r\}$ denote a disk in the complex plane centered at $c$ with radius $r$</li>
+<li>For a matrix $A \in \mathbb{C}^{n\times n}$, disk $D(a_{ii}, R_i)$ is called a <span class="color5">Gershgorin disk</span>, where
+\[
+\textstyle R_i = \sum_{\substack{j=1\\j\neq i}}^n |a_{ij}|
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gershgorin’s Theorem</h2>
+<ul>
+<li><span class="color5">Theorem:</span> All eigenvalues of $A \in \mathbb{C}^{n\times n}$ are contained<br />
+within the union of all $n$ Gershgorin disks of $A$</li>
+<li><span class="color5">Proof:</span> Assume that $Av=\lambda v$, and $i=\mathrm{argmax}_j|v_j|$.
+\[
+\left|\lambda -a_{ii}\right|=\left|\sum _{j\neq i}{\frac {a_{ij}v_{j}}{v_{i}}}\right|\leq \sum _{j\neq i}\left|a_{ij}\right|=R_{i}\quad\square
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gershgorin’s Theorem</h2>
+<ul>
+<li>Recall that a matrix is <span class="color5">diagonally dominant</span> if
+\[
+\textstyle |a_{ii}| &gt; \sum_{\substack{j=1\\j\neq i}}^n |a_{ij}|, \quad \text{for}~i=1,2,\ldots,n
+\]
+</li>
+<li>It follows from Gershgorin’s Theorem that a diagonally dominant matrix cannot have a zero eigenvalue, hence <span class="color5">must be invertible</span></li>
+<li>For example, the finite difference discretization matrix of the differential operator <span class="color5">$-\nabla^2 + {\rm I}$</span> is diagonally dominant</li>
+<li>In -dimensions, $(-\nabla^2 + {\rm I})u = -u_{xx} - u_{yy} + u$<br />
+(each row of the corresponding discretization matrix contains<br />
+diagonal entry $4/h^2 + 1$, and four off-diagonal entries of $-1/h^2$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Algorithms for Eigenvalue Problems</h2>
+</section>
+<section class="slide level2">
+<h2>Power Method</h2>
+<ul>
+<li>The <span class="color5">power method</span> is perhaps the simplest eigenvalue algorithm</li>
+<li>It finds the eigenvalue of $A \in \mathbb{C}^{n\times n}$ with <span class="color5">largest absolute value</span>
+<div style="text-align:center">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose $x_0 \in \mathbb{C}^n$ arbitrarily<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}x_k = A x_{k-1}$<br />
+<span class="linenum">4:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+<li><span class="color5">Question:</span> How does this algorithm work?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Power Method</h2>
+<ul>
+<li>Assuming $A$ is nondefective, so the eigenvectors $v_1,v_2,\ldots,v_n$<br />
+provide a basis for $\mathbb{C}^n$</li>
+<li>Assume that the eigenvalues are ordered: $|\lambda_1| \leq |\lambda_2| \leq \cdots \leq |\lambda_n|$</li>
+<li>Therefore there exist coefficients $\alpha_i$ such that $x_0 = \sum_{j=1}^n \alpha_j v_j$</li>
+<li>Then, we have
+\[
+\begin{aligned}\small
+x_k &amp;= Ax_{k-1} = A^2x_{k-2} = \cdots = A^kx_0\\
+   &amp;= A^k \left(\sum_{j=1}^n \alpha_j v_j\right) =  \sum_{j=1}^n \alpha_j A^k v_j = \sum_{j=1}^n \alpha_j \lambda_j^k v_j \\
+   &amp;= \lambda_n^k\left(\alpha_nv_n + \sum_{j=1}^{n-1} \alpha_j \left[\frac{\lambda_j}{\lambda_n}\right]^k v_j \right)\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Power Method</h2>
+<ul>
+<li>Then if $|\lambda_n| &gt; |\lambda_j|$, $1 \leq j &lt; n$, we see that <span class="color5">$x_k \to \lambda_n^k\alpha_nv_n$</span> as <span class="color5">$k \to \infty$</span></li>
+<li>This algorithm converges linearly: the error terms are scaled by a factor at most $|\lambda_{n-1}|/|\lambda_{n}|$ at each iteration</li>
+<li>Also, we see that the method converges faster if $\lambda_n$ is well-separated from the rest of the spectrum</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Power Method</h2>
+<ul>
+<li>However, in practice the exponential factor $\lambda_n^k$ could cause overflow or underflow after relatively few iterations</li>
+<li>Therefore the standard form of the power method is actually<br />
+the <span class="color5">normalized power method</span>
+<div style="text-align:center">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose $x_0 \in \mathbb{C}^n$ arbitrarily<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}y_k = A x_{k-1}$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}x_k = y_k/\|y_k\|$<br />
+<span class="linenum">5:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Power Method</h2>
+<ul>
+<li>Convergence analysis of the normalized power method is essentially the same as the un-normalized case</li>
+<li>Only difference is we now get an extra scaling factor, $c_k \in \mathbb{R}$, due to the normalization at each step
+\[
+x_k = c_k \lambda_n^k\left(\alpha_nv_n + \sum_{j=1}^{n-1} \alpha_j \left[\frac{\lambda_j}{\lambda_n}\right]^k v_j \right)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Power Method</h2>
+<ul>
+<li>This algorithm directly produces the eigenvector $v_n$</li>
+<li>One way to recover $\lambda_n$ is to note that
+\[
+y_k = A x_{k-1} \approx \lambda_n x_{k-1}
+\]
+</li>
+<li><span class="color5">Hence we can compare an entry of $y_k$ and $x_{k-1}$ to approximate $\lambda_n$</span></li>
+<li>We also note two potential issues:
+<ol type="1">
+<li>we require $x_0$ to have a nonzero component of $v_n$</li>
+<li>there may be more than one eigenvalue with maximum absolute value</li>
+</ol></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Power Method</h2>
+<ul>
+<li>These issues may not realize in practice</li>
+<li>Issue 1:
+<ul>
+<li>Very unlikely that $x_0$ will be orthogonal to $v_n$</li>
+<li>Even if $x_0^\ast v_n = 0$, rounding error will introduce a component of $v_n$ during the power iterations</li>
+</ul></li>
+<li>Issue 2:
+<ul>
+<li>We cannot ignore the possibility that there is more than one maximum eigenvalue</li>
+<li>In this case $x_k$ would converge to a member of the corresponding eigenspace</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Power Method</h2>
+<ul>
+<li>An important idea in eigenvalue computations is to consider the “shifted” matrix <span class="color5">$A - \sigma {\rm I}$</span>, for $\sigma \in \mathbb{R}$</li>
+<li>We see that
+\[
+(A - \sigma {\rm I}) v_i = (\lambda_i - \sigma) v_i
+\]
+and hence the spectrum of $A-\sigma{\rm I}$ is shifted by $-\sigma$, and the eigenvectors are the same</li>
+<li>For example, if all the eigenvalues are real, a shift can be used with the power method to converge to $\lambda_1$ instead of $\lambda_n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Inverse Iteration</h2>
+</section>
+<section class="slide level2">
+<h2>Inverse Iteration</h2>
+<ul>
+<li>The eigenvalues of $A^{-1}$ are the reciprocals of the eigenvalues of $A$, since
+\[
+Av = \lambda v \Longleftrightarrow A^{-1} v = \frac{1}{\lambda} v
+\]
+</li>
+<li><span class="color5">Question:</span> What happens if we apply the power method to $A^{-1}$?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Inverse Iteration</h2>
+<ul>
+<li><span class="color5">Answer:</span> We converge to the largest (in absolute value) eigenvalue of $A^{-1}$, which is $1/\lambda_1$ (recall that $\lambda_1$ is the smallest eigenvalue of $A$)</li>
+<li>This is called <span class="color5">inverse iteration</span></li>
+</ul>
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose $x_0 \in \mathbb{C}^n$ arbitrarily<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}$solve $Ay_k = x_{k-1}$ for $y_k$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}x_k = y_k/\|y_k\|$<br />
+<span class="linenum">5:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</section>
+<section class="slide level2">
+<h2>Inverse Iteration</h2>
+<ul>
+<li>Hence inverse iteration gives $\lambda_1$ without requiring a shift</li>
+<li>This is helpful since it may be difficult to determine<br />
+what shift is required to get $\lambda_1$ in the power method</li>
+<li><span class="color5">Question:</span> What happens if we apply inverse iteration<br />
+to the shifted matrix $A - \sigma {\rm I}$?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Inverse Iteration</h2>
+<ul>
+<li>The smallest eigenvalue of $A - \sigma {\rm I}$ is $(\lambda_{i^\ast}-\sigma)$, where
+\[
+i^\ast = \argmin_{i=1,\dots,n}|\lambda_i - \sigma|
+\]
+</li>
+<li><span class="color5">Answer:</span> We converge to $\tilde\lambda = 1/(\lambda_{i^\ast} - \sigma)$, then recover $\lambda_{i^\ast}$ via
+\[
+\lambda_{i^\ast} = \frac{1}{\tilde\lambda} + \sigma
+\]
+</li>
+<li>Inverse iteration with shift allows us to find the eigenvalue <span class="color5">closest to $\sigma$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient</h2>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient</h2>
+<ul>
+<li>Consider a <span class="color5">real</span> matrix $A \in \mathbb{R}^{n\times n}$</li>
+<li>Assume that the eigenvalues are ordered: $|\lambda_1| \leq |\lambda_2| \leq \cdots \leq |\lambda_n|$</li>
+<li>The <span class="color5">Rayleigh quotient</span> is a function $r:\mathbb{R}^n\to\mathbb{R}$ defined as
+\[
+r(x) =  \frac{x^T A x}{x^T x}
+\]
+</li>
+<li>If $Av=\lambda v$, then
+\[
+r(v) = \frac{v^T A v}{v^T v} = \frac{\lambda v^T v}{v^T v} = \lambda
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient</h2>
+<ul>
+<li><span class="color5">Theorem:</span> Suppose $A \in \mathbb{R}^{n\times n}$ is a symmetric matrix, then for any $x \in\mathbb{R}^n$
+\[
+\lambda_{\rm 1} \leq r(x) \leq \lambda_n
+\]
+</li>
+<li><span class="color5">Proof:</span> We write $x$ as a linear combination of orthogonal eigenvectors<br />
+$x = \sum_{j=1}^n \alpha_j v_j$, and the lower bound follows from
+\[
+r(x) = \frac{x^T A x}{x^T x} = \frac{\sum_{j=1}^n \lambda_j \alpha_j^2}{\sum_{j=1}^n \alpha_j^2} \geq \lambda_1 \frac{\sum_{j=1}^n  \alpha_j^2}{\sum_{j=1}^n \alpha_j^2} = \lambda_1
+\]
+</li>
+<li>The proof of the upper bound $r(x) \leq \lambda_n$ is analogous $\quad \square$</li>
+<li>Therefore, the Rayleigh quotient of a symmetric matrix<br />
+<span class="color5">always remains within the range of its spectrum</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient</h2>
+<ul>
+<li><span class="color5">Theorem:</span> A symmetric matrix $A \in \mathbb{R}^{n\times n}$ is positive definite<br />
+if and only if all of its eigenvalues are positive</li>
+<li><span class="color5">Proof:</span> ($\Rightarrow$) Suppose $A$ is symmetric positive definite,<br />
+then for any nonzero $x \in \mathbb{R}^n$, we have $x^T A x &gt; 0$. Take $x=v_1$
+\[
+\lambda_1 = r(v_1) = \frac{v_1^TAv_1}{v_1^T v_1} &gt; 0
+\]
+</li>
+<li>($\Leftarrow$) Suppose $A$ has positive eigenvalues, then for any nonzero $x \in \mathbb{R}^n$,<br />
+from the previous theorem
+\[
+x^T A x = r(x) (x^T x) \geq \lambda_1 \|x\|_2^2 &gt; 0\quad \square
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient</h2>
+<ul>
+<li>If $x\in\mathbb{R}^n$ approximates an eigenvector,<br />
+then $r(x)$ approximates the eigenvalue</li>
+<li>Consider Taylor’s expansion of $r(x)$ about a vector $v$
+\[
+r(x) = r(v) + \nabla r(v)^T (x-v) + \mathcal{O}(\|x-v\|^2_2)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient</h2>
+<ul>
+<li>Let’s compute the gradient $\nabla r(x)$</li>
+<li>Recall from <a href="../unit1/#68">[Unit 1, slide 69]</a> that $\nabla (x^T A x) = (A+A^T)x$</li>
+<li>Then using the product rule
+\[
+\begin{aligned}\nabla r(x) &amp;= \nabla \Big({x^TAx}\frac{1}{x^Tx}\Big) = \frac{\nabla (x^TAx)}{x^Tx} - (x^TAx)\frac{\nabla(x^T x)}{(x^Tx)^2} = \\
+  &amp;= \frac{(A+A^T)x}{x^Tx} - (\htmlClass{color5}{x^TAx})\frac{2x}{(\htmlClass{color5}{x^Tx})^2}
+    = \frac{(A+A^T)x}{x^Tx} - \htmlClass{color5}{r(x)}\frac{2x}{x^Tx} = \\
+  &amp;= \frac{2}{x^T x} \Big( \frac{A+A^T}{2}x - r(x) x \Big) = \frac{2}{x^T x} \Big( \frac{A+A^T}{2} - r(x) I \Big) x
+\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient</h2>
+<ul>
+<li>If $A$ is symmetric, then $A=\tfrac{A+A^T}{2}$ and
+\[
+\nabla r(x) =  \frac{2}{x^T x} \big(A - r(x) I \big)x
+\]
+</li>
+<li>Therefore, <span class="color5">eigenvectors of a symmetric matrix<br />
+coincide with stationary points of its Rayleigh quotient</span></li>
+<li>Indeed, for any $x\neq 0$ and $\lambda\in\mathbb{R}$
+\[
+Ax=\lambda x \;\Leftrightarrow\; \frac{2}{x^T x}(A-\lambda I) x=0 \;\Leftrightarrow\; \nabla r(x) = 0, \; \lambda=r(x)
+
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient</h2>
+<ul>
+<li>Suppose that $Av=\lambda v$</li>
+<li>Then $r(v)=\lambda$ and $\nabla r(v)=0$, therefore Taylor’s expansion turns into
+\[
+r(x) = r(v) + \nabla r(v)^T (x-v) + \mathcal{O}(\|x-v\|^2_2) = \lambda + \mathcal{O}(\|x-v\|^2_2)
+\]
+</li>
+<li>Then the approximation error is
+\[
+|r(x) - \lambda| = \mathcal{O}(\|x-v\|^2_2)
+\]
+</li>
+<li>That is, the Rayleigh quotient approximation to an eigenvalue<br />
+<span class="color5">squares the error</span> of the approximation to the eigenvector</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient Iteration</h2>
+<ul>
+<li>The <span class="color5">Rayleigh quotient iteration</span> combines the inverse iteration,<br />
+spectrum shifts, and Rayleigh quotient approximations to an eigenvalue
+<div style="text-align:center">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose $x_0 \in \mathbb{R}^n$ arbitrarily<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}\sigma_k = \tfrac{x_{k-1}^T A x_{k-1}}{x_{k-1}^T x_{k-1}}$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}$solve $(A-\sigma_k I)y_k = x_{k-1}$ for $y_k$<br />
+<span class="linenum">5:</span>$\hspace{1.2em}x_k = y_k/\|y_k\|$<br />
+<span class="linenum">6:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient Iteration</h2>
+<ul>
+<li>For a symmetric matrix $A$, if the Rayleigh quotient iteration<br />
+converges, it results in <span class="color5">cubic convergence</span></li>
+<li>Let’s show the idea for the case $0 &lt; \lambda_1 &lt; \lambda_2 \leq \dots \leq \lambda_n$<br />
+assuming that $x_k\to v_1$ and $\sigma_k \to \lambda_1$</li>
+<li>Convergence of the inverse iteration is linear, and the rate is determined<br />
+by the ratio of the two eigenvalues closest to zero. Asymptotically,
+\[
+\|x_k - v_1\|
+  \sim \tfrac{|\lambda_1 - \sigma_k|}{|\lambda_2 - \sigma_k|}\, \|x_{k-1} - v_1\|
+  \sim \tfrac{|\lambda_1 - \sigma_k|}{|\lambda_2 - \lambda_1|}\, \|x_{k-1} - v_1\|
+  
+\]
+</li>
+<li>On the other hand, the Rayleigh quotient squares the error
+\[
+
+|\lambda_1 - \sigma_k| = \mathcal{O}(\|x_{k-1} - v_1\|^2)
+
+\]
+</li>
+<li>This shows cubic convergence
+\[
+\|x_k - v_1\| \leq C \|x_{k-1} - v_1\|^3
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Rayleigh Quotient Iteration: Example</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit5/rayleigh_iter.py">[examples/unit5/rayleigh_iter.py]</a><br />
+the Rayleigh quotient iteration applied to a $3\times 3$ matrix
+\[
+
+A = \begin{bmatrix}
+5 &amp; 1 &amp; 1 \\
+1 &amp; 6 &amp; 1 \\
+1 &amp; 1 &amp; 7
+\end{bmatrix}
+
+\]
+
+<pre style="width:400px;"><code data-trim class="plaintext">
+it=0
+|Ax - sigma x|   = 2.2176638128637163e-01
+|sigma - lambda| = 2.1431974337752990e-01
+
+it=1
+|Ax - sigma x|   = 1.2052279264915474e-03
+|sigma - lambda| = 1.2049892791683448e-03
+
+it=2
+|Ax - sigma x|   = 1.9350397099098787e-10
+|sigma - lambda| = 1.9349855051586928e-10
+
+it=3
+|Ax - sigma x|   = 0.0000000000000000e+00
+|sigma - lambda| = 5.3290705182007514e-15
+</code></pre></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>The QR algorithm is a standard algorithm for computing eigenvalues</li>
+<li>It was developed independently in the late 1950s<br />
+by John G.F. Francis (England) and Vera N. Kublanovskaya (USSR)</li>
+<li>The QR algorithm efficiently provides approximations<br />
+to <span class="color5">all eigenvalues and eigenvectors</span> of a matrix</li>
+<li>In the following, assume that $A\in\mathbb{A}^{n\times n}$ is <span class="color5">symmetric</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>To motivate the QR-algorithm, let’s start with<br />
+the power method applied to $p$ vectors at once</li>
+<li>Let $x_1^{(0)},\ldots,x_p^{(0)}$ denote $p$ linearly independent starting vectors<br />
+stored in the columns of $X_0\in\mathbb{R}^{n\times p}$</li>
+<li>The power method applied to these vectors results in
+<div style="text-align:center">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose an $n\times p$ matrix $X_0$ arbitrarily<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}$$X_k = A X_{k-1}$<br />
+<span class="linenum">4:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>Assume that the eigenvalues are ordered $|\lambda_1| \leq |\lambda_2| \leq \cdots \leq |\lambda_n|$<br />
+and $v_1,\dots,v_n$ is a full set of eigenvectors</li>
+<li>Again, to analyze convergence of the method, express each $x_i^{(k)}$<br />
+in the basis of $v_1,\dots,v_n$ for each $i=1,2,\ldots,p$
+\[
+\begin{aligned}
+x_i^{(k)} &amp;= \lambda_n^k\alpha_{i,n}v_n + \lambda_{n-1}^k\alpha_{i,n-1}v_{n-1} + \cdots + \lambda_{1}^k\alpha_{i,1}v_{1} \\
+  &amp;= \lambda_{n-p}^k\Big(
+    \htmlClass{color5}{ \sum_{j=n-p+1}^{n} \big(\tfrac{\lambda_j}{\lambda_{n-p}}\big)^k\alpha_{i,j} v_j} +
+    \htmlClass{color1}{ \sum_{j=1}^{n-p} \big(\tfrac{\lambda_j}{\lambda_{n-p}}\big)^k\alpha_{i,j} v_j }\Big)\end{aligned}
+\]
+</li>
+<li>If $|\lambda_{n-p+1}| &gt; |\lambda_{n-p}|$, the <span class="color5">sum in orange</span> will dominate<br />
+compared to the <span class="color1">sum in green</span> as $k \to \infty$</li>
+<li>Therefore, the columns of $X_k$ will converge to a basis of $\mathrm{span}\{v_{n-p+1},\ldots,v_n\}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>However, this method does not provide a good basis:<br />
+since $\lambda_n$ is the largest eigenvalue, <span class="color5">columns of $X_k$ will approach $v_n$</span></li>
+<li>Therefore the columns of $X_k$ will be more “linearly dependent”</li>
+<li>We can resolve this issue by <span class="color5">enforcing orthonormality</span> at each step</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>Using the reduced QR factorization, we orthonormalize the vectors after each iteration</li>
+<li>This algorithm is called the <span class="color5">simultaneous iteration</span>
+<div style="text-align:center">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$choose $n\times p$ matrix $\hat{Q}_0$ with orthonormal columns<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}$$X_k = A\hat Q_{k-1}$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}$$\hat Q_k \hat R_k = X_{k}$<br />
+<span class="linenum">5:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+<li>The column spaces of $\hat Q_k$ and $X_{k}$ in line 4 are the same</li>
+<li>Columns of $\hat Q_k$ converge to an <span class="color5">orthonormal</span> basis of $\mathrm{span}\{v_{n-p+1},\ldots,v_n\}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>In fact, columns $\hat{Q}_k$ do not just converge to a basis,<br />
+they actually converge to a set of eigenvectors</li>
+<li><span class="color5">Theorem:</span> The columns of $\hat Q_k$ converge to the $p$ dominant eigenvectors of $A$</li>
+<li>We will not discuss the full proof, but this result is not surprising since
+<ul>
+<li>the eigenvectors of a symmetric matrix are orthogonal</li>
+<li>columns of $\hat Q_k$ converge to a basis of $\mathrm{span}\{v_{n-p+1},\ldots,v_n\}$</li>
+</ul></li>
+<li>To approximate the eigenvalues, we again use the Rayleigh quotient<br />
+\[
+\hat Q^T A \hat Q \approx \mathop{\mathrm{diag}}(\lambda_1,\ldots,\lambda_n)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>With $p=n$, the simultaneous iteration will <span class="color5">converge to all eigenpairs</span> of $A$</li>
+<li>We now show a more convenient formulation of the simultaneous iteration</li>
+<li>To distinguish matrices from two different formulations,<br />
+we introduce some extra notation: the $Q$ and $R$ matrices in<br />
+the simultaneous iteration will be <span class="color5">underlined</span>: $\underline{Q}_k$, $\underline{R}_k$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>Define the $k$-th Rayleigh quotient matrix <span class="color5">$A_k = \underline{Q}_k^TA \underline{Q}_k$</span><br />
+and the QR factors $Q_k$, $R_k$ as <span class="color5">$Q_{k} R_k = A_{k-1}$</span></li>
+<li>Our goal is to show that
+\[
+A_k = R_k Q_k, \qquad k=1,2,\ldots
+\]
+</li>
+<li>Initialize $\underline{Q}_0 = {\rm I} \in \mathbb{R}^{n\times n}$</li>
+<li>Then in the first iteration: $X_1 = A$ and $\underline{Q}_1 \underline{R}_1 = A$</li>
+<li>It follows that $\htmlClass{color5}{ A_1} = \underline{Q}_1^T A \underline{Q}_1 = \underline{Q}_1^T (\underline{Q}_1 \underline{R}_1) \underline{Q}_1 = \htmlClass{color5}{ \underline{R}_1 \underline{Q}_1}$</li>
+<li>Also $Q_1 R_1 = A_0 = \underline{Q}_0^T A \underline{Q}_0 = A$, so that $Q_1 = \underline{Q}_1$, $R_1 = \underline{R}_1$, and <span class="color5">$A_1 = R_1 Q_1$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>In the second iteration, we have $X_2 = A \underline{Q}_1$,<br />
+and we compute the QR factorization $\underline{Q}_2 \underline{R}_2 = X_2$</li>
+<li>Also, using our QR factorization of $A_1$ gives
+\[
+X_2 = A \underline{Q}_1 = (\underline{Q}_1 \underline{Q}_1^T) A \underline{Q}_1 = \underline{Q}_1 A_1 = \underline{Q}_1 (Q_2 R_2)
+\]
+which implies that $\underline{Q}_2 = \underline{Q}_1 Q_2 = Q_1 Q_2$ and $\underline{R}_2 = R_2$</li>
+<li>Therefore
+\[
+\htmlClass{color5}{ A_2} = \underline{Q}_2^T A \underline{Q}_2 = Q_2^T\underline{Q}_1^T A \underline{Q}_1 Q_2 = Q_2^T A_1 Q_2 = Q_2^T Q_2 R_2 Q_2 = \htmlClass{color5}{ R_2 Q_2}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>The same pattern continues for $k=3,4,\ldots$:<br />
+<span class="color5">we QR factorize $A_k$ to get $Q_k$ and $R_k$, then we compute $A_{k+1} = R_k Q_k$</span></li>
+<li>The columns of the product $\underline{Q}_k = Q_1 Q_2 \cdots Q_k$<br />
+approximate the eigenvectors of $A$</li>
+<li>The diagonal entries of the Rayleigh quotient matrix $A_k = \underline{Q}_k^T A \underline{Q}_k$<br />
+approximate the eigenvalues of $A$</li>
+<li>Also, $A_k$ converges to a diagonal matrix due to the eigenvalue decomposition</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>This discussion motivates the <span class="color5">QR algorithm</span>
+<div style="text-align:center">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$$A_0 = A$<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1,2,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}$$Q_k R_k = A_{k-1}$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}$$A_k = R_k Q_{k}$<br />
+<span class="linenum">5:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm: Example</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit5/qr_algorithm.py">[examples/unit5/qr_algorithm.py]</a>,<br />
+eigenvalues and eigenvectors of a 4 by 4 matrix
+\[
+A =
+\left[
+\begin{array}{cccc}
+2.9766 &amp; 0.3945 &amp; 0.4198 &amp; 1.1159\\
+0.3945 &amp; 2.7328 &amp; -0.3097 &amp; 0.1129\\
+0.4198 &amp; -0.3097 &amp; 2.5675 &amp; 0.6079\\
+1.1159 &amp; 0.1129 &amp; 0.6079 &amp; 1.7231
+\end{array}
+\right]
+\]
+</li>
+<li>This matrix has eigenvalues 1, 2, 3 and 4</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Algorithm</h2>
+<ul>
+<li>We have presented the simplest version of the QR algorithm:<br />
+the “unshifted” QR algorithm</li>
+<li>Practically relevant implementations include various improvements
+<ul>
+<li>introduce shifts to accelerate convergence,<br />
+like in the Rayleigh quotient iteration</li>
+<li>reduce $A$ to a tridiagonal form (e.g. via Householder reflectors)<br />
+to reduce computational cost</li>
+<li>add reliable convergence criteria for the eigenvalues and eigenvectors</li>
+</ul></li>
+<li>One example is <code>_geev()</code> in <code>LAPACK</code> used by <code>numpy.linalg.eig()</code></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Iterative Methods<br>for Linear Systems</h2>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+</section>
+<section class="slide level2">
+<h2>Krylov Subspaces</h2>
+<ul>
+<li>Given a matrix $A$ and vector $b$, a <span class="color5">Krylov sequence</span><br />
+is the set of vectors
+\[
+\{b, Ab, A^2 b, A^3 b, \ldots \}
+\]
+</li>
+<li>The corresponding <span class="color5">Krylov subspaces</span> are the spaces spanned<br />
+by successive groups of these vectors<br />
+\[
+\mathcal{K}_m(A,b) = \mathop{\mathrm{span}}\{b, Ab, A^2 b, \ldots, A^{m-1} b\}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Krylov Subspaces</h2>
+<ul>
+<li>Krylov subspaces are the basis for <span class="color5">iterative methods</span></li>
+<li><span class="color5">An important advantage</span>: Krylov methods do not deal directly with $A$,<br />
+but rather with matrix–vector products involving $A$<br />
+</li>
+<li>This is particularly helpful when $A$ is large and sparse,<br />
+since matrix–vector multiplications are relatively cheap<br />
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>The <span class="color5">conjugate gradient method</span> (CG) is one Krylov subspace methods</li>
+<li>Assume that $A\in\mathbb{R}^{n\times n}$ is symmetric and positive definite</li>
+<li>CG is an iterative method for solving $Ax = b$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>Iterative solvers (e.g. CG) and direct solvers (e.g. Gaussian elimination)<br />
+for solving $Ax=b$ are fundamentally different
+<ul>
+<li><span class="color5">direct solvers:</span> In exact arithmetic, gives exact answer after finitely many steps</li>
+<li><span class="color5">iterative solvers:</span> In principle require infinitely many iterations,<br />
+but should give accurate approximation after few iterations</li>
+</ul></li>
+<li>Iterative methods are typically more efficient for very large, sparse systems</li>
+<li>Also, iterative methods are generally better suited to parallelization,<br />
+hence an important topic in high performance computing</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>This is the conjugate gradient algorithm
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}x_0 = 0$, $r_0 = b$, $p_0 = r_0$<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1,2,3,\ldots$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}\alpha_k = (r_{k-1}^T r_{k-1}) / (p^T_{k-1}A p_{k-1})$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}x_{k} = x_{k-1} + \alpha_k p_{k-1}$<br />
+<span class="linenum">5:</span>$\hspace{1.2em}r_{k} = r_{k-1} - \alpha_k A p_{k-1}$<br />
+<span class="linenum">6:</span>$\hspace{1.2em}\beta_{k} = (r_{k}^T r_{k}) / (r_{k-1}^T r_{k-1})$<br />
+<span class="linenum">7:</span>$\hspace{1.2em}p_{k} = r_{k} + \beta_{k} p_{k-1}$<br />
+<span class="linenum">8:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>We will now discuss CG in more detail</li>
+<li>Let $x_\ast = A^{-1}b$ denote the exact solution,<br />
+and let $e_k = x_\ast - x_k$ denote the error at step $k$</li>
+<li>Also, let $\|\cdot\|_A$ denote the norm
+\[
+\|x\|_A = \sqrt{x^T A x}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li><span class="color5">Theorem:</span> The CG iterate $x_k$ is the unique member of $\mathcal{K}_k(A,b)$<br />
+which minimizes $\|e_k\|_A$. Also, $x_k = x_\ast$ for some $k \leq n$.</li>
+<li><span class="color5">Proof:</span> This result relies on a set of identities which can be derived<br />
+by induction from the CG algorithm:
+<ul>
+<li><span class="color5">(i)</span> $\mathcal{K}_k(A,b) = \mathrm{span}\{x_1,x_2,\ldots,x_k\} = \mathrm{span}\{ p_0,p_1\ldots,p_{k-1}\}$<br />
+$\hspace{5.2em}= \mathrm{span}\{r_0,r_1,\ldots,r_{k-1}\}$</li>
+<li><span class="color5">(ii)</span> $r_k^T r_j = 0$ for $j &lt; k$</li>
+<li><span class="color5">(iii)</span> $p_k^T A p_j = 0$ for $j &lt; k$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>From the first identity above, it follows that $x_k \in \mathcal{K}_k(A,b)$</li>
+<li>We will now show that $x_k$ is the <span class="color5">unique minimizer in $\mathcal{K}_k(A,b)$</span></li>
+<li>Let $\tilde x \in \mathcal{K}_k(A,b)$ be another “candidate minimizer”<br />
+and let $\Delta x = x_k - \tilde x$, then
+\[
+\begin{aligned}
+\|x_\ast - \tilde x\|_A^2 &amp;= \|(x_\ast - x_k) + (x_k - \tilde x)\|_A^2\\
+&amp;= \|e_k + \Delta x\|_A^2\\
+&amp;= (e_k + \Delta x)^T A (e_k + \Delta x)\\
+&amp;= e_k^TA e_k + \htmlClass{color5}{ 2e_k^T A \Delta x} + \Delta x^T A \Delta x\end{aligned}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>Next, let $r(x_k) = b - Ax_k$ denote the residual at step $k$, so that
+\[
+\htmlClass{color5}{ r(x_k)} = b - Ax_k = b - A(x_{k-1} + \alpha_k p_{k-1}) = \htmlClass{color5}{ r(x_{k-1}) - \alpha_k A p_{k-1}}
+\]
+</li>
+<li>Since $r(x_0) = b = r_0$, by induction we see that<br />
+for $r_k$ computed in line 5 of CG,
+\[
+r_k = r_{k-1}  - \alpha_k A p_{k-1}
+\]
+we have <span class="color5">$r_k = r(x_k)$, $k=1,2,\ldots$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>Now, recall our expression for $\|x_\ast - \tilde x\|_A^2$:
+\[
+\|x_\ast - \tilde x\|_A^2 = e_k^TA e_k +
+\htmlClass{color5}{ 2e_k^T A \Delta x} + \Delta x^T A \Delta x
+\]
+and note that
+\[
+\htmlClass{color5}{ 2 e_k^T A \Delta x} = 2\Delta x^T A (x_\ast - x_k) =
+2\Delta x^T (b - A x_k) = 2\Delta x^T r_k
+\]
+</li>
+<li>Now,
+<ul>
+<li>$\Delta x = x_k - \tilde x \in \mathcal{K}_k(A,b)$</li>
+<li>from (i), $\mathcal{K}_k(A,b) = \text{span}\{r_0,r_1,\ldots,r_{k-1}\}$</li>
+<li>from (ii), $r_k \perp \text{span}\{r_0,r_1,\ldots,r_{k-1}\}$</li>
+</ul></li>
+<li>Therefore, we have $\htmlClass{color5}{ 2 e_k^T A \Delta x} = 2\Delta x^T r_k = \htmlClass{color5}{ 0}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>This implies that,
+\[
+\|x_\ast - \tilde x\|_A^2 = e_k^TA e_k + \Delta x^T A \Delta x \geq \|e_k\|_A^2,
+\]
+with equality only when $\Delta x = 0$, so $x_k \in \mathcal{K}_k(A,b)$ is the <span class="color5">unique minimizer</span></li>
+<li>This also tells us that <span class="color5">if $x_\ast \in \mathcal{K}_k(A,b)$, then $x_k = x_\ast$</span></li>
+<li>Therefore CG will converge to $x_\ast$ in at most $n$ iterations<br />
+since $\mathcal{K}_k(A,b)$ is a subspace of $\mathbb{R}^n$ of dimension $k$ $\quad \square$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>The theorem implies that CG will converge in at most $n$ steps</li>
+<li>However, in floating point arithmetic we will not get exact convergence to $x_\ast$</li>
+<li>Also, if $n$ is large, we want to terminate CG well before $n$ iterations,<br />
+after reaching sufficient accuracy</li>
+<li>Steps of CG are chosen to give the orthogonality properties <span class="color5">(ii)</span>, <span class="color5">(iii)</span>,<br />
+which lead to the remarkable CG optimality property:<br />
+<span class="color5">CG minimizes the error over the Krylov subspace $\mathcal{K}_k(A,b)$ at step $k$</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li><span class="color5">Question:</span> Where did the steps in the CG algorithm come from?</li>
+<li><span class="color5">Answer:</span> It turns out that CG can be derived by developing an optimization algorithm for $\phi : \mathbb{R}^n \to \mathbb{R}$ given by
+\[
+\phi(x) = \frac{1}{2} x^T A x - x^T b
+\]
+</li>
+</ul>
+<p>e.g. lines 3 and 4 in CG perform line search, line 7 gives a search direction $p_k$</p>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>The name “conjudate gradient” comes from the property
+\[
+\htmlClass{color5}{ \text{(ii)}} \quad \nabla \phi(x_k)^T\nabla \phi(x_j) = r_k^T r_j = 0 \text{ for } j &lt; k
+\]
+since $-\nabla \phi(x) = b - Ax = r(x)$</li>
+<li>That is, the gradient directions at $x_k$ and $x_j$ are orthogonal, or “conjugate”</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li><span class="color5">Question:</span> Why is the quadratic objective function $\phi$ relevant to $Ax = b$?</li>
+<li><span class="color5">Answer:</span> Minimizing $\phi$ is equivalent to minimizing $\|e_k\|_A^2$, since
+\[
+\begin{aligned}
+\|e_k\|_A^2 &amp;= (x_\ast - x_k)^T A (x_\ast - x_k) \\
+            &amp;= x_k^T A x_k - 2 x_k^T A x_\ast + x_\ast^T A x_\ast\\
+            &amp;= x_k^T A x_k - 2 x_k^T b + x_\ast^T b\\
+            &amp;= 2\phi(x_k) + \text{const}\end{aligned}
+\]
+</li>
+<li>Our argument from above shows that at iteration $k$,<br />
+CG solves the optimization problem
+\[
+\htmlClass{color5}{ \min_{x \in \mathcal{K}_k(A,b)} \phi(x)}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Conjugate Gradient Method</h2>
+<ul>
+<li>How fast does $\|e_k\|_A$ converge?</li>
+<li>One result for CG is that if $A$ has 2-norm condition number $\kappa$, then
+\[
+\frac{\|e_k\|_A}{\|e_0\|_A} \leq 2\left(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa} + 1}\right)^k
+\]
+</li>
+<li><span class="color5">Smaller condition number $\kappa(A)$ implies faster convergence</span></li>
+<li>Taking this upper bound as an error estimate, it can be shown that<br />
+the number of CG iterations to reach $\frac{\|e_k\|_A}{\|e_0\|_A} \leq \epsilon$ for a given tolerance $\epsilon&gt;0$<br />
+grows approximately as $\sqrt{\kappa}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multigrid Method</h2>
+</section>
+<section class="slide level2">
+<h2>Model Problem</h2>
+<ul>
+<li>Consider a boundary value problem for the discrete Poisson equation
+\[
+
+\begin{aligned}
+  -u_{i-1} + 2u_i - u_{i+1} &amp;= f_i \qquad i=1,\dots,n-1 \\
+  u_0 &amp;= 0 \\
+  u_n &amp;= 0 \\
+\end{aligned}
+
+\]
+where $u_i$ approximate a function $u(x_i)$ with $x_i=i/n\in[0,1]$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Model Problem</h2>
+<ul>
+<li>This problem is linear and can be expressed in matrix form
+\[
+Au=f
+\]
+\[
+\small
+A =
+\left[
+\begin{array}{cccccc}
+1  &amp; 0  &amp;         &amp;        &amp;      &amp;         \\
+0  &amp; 2  &amp; -1      &amp;        &amp;      &amp;         \\
+   &amp; -1 &amp; \ddots  &amp; \ddots &amp;      &amp;         \\
+   &amp;    &amp; \ddots  &amp; \ddots &amp; -1   &amp;         \\
+   &amp;    &amp;         &amp; -1     &amp; 2    &amp; 0        \\
+   &amp;    &amp;         &amp;        &amp; 0    &amp; 1       \\
+\end{array}
+\right]
+\quad
+u =
+\left[
+\begin{array}{c}
+  u_0\\
+  u_1\\
+  \vdots \\
+  u_{n-1}\\
+  u_n\\
+\end{array}
+\right]
+\quad
+f =
+\left[
+\begin{array}{c}
+  0\\
+  f_1\\
+  \vdots \\
+  f_{n-1}\\
+  0\\
+\end{array}
+\right].
+
+\]
+</li>
+<li>Note that the boundary conditions are eliminated<br />
+from the equations for $i=1$ and $i=n-1$</li>
+<li>The matrix $A\in\mathbb{R}^{(n+1)\times(n+1)}$ is symmetric</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Jacobi Method</h2>
+<ul>
+<li>One iterative method for solving $Au=f$ is the <span class="color5">Jacobi method</span></li>
+<li>The update rule to obtain $u^{(k+1)}_i$ is
+\[
+-u^{(k)}_{i-1} + 2u^{(k+1)}_i - u^{(k)}_{i+1} = f_i
+\]
+or equivalently
+\[
+2(u^{(k+1)}_i- u^{(k)}_i) -u^{(k)}_{i-1} + 2u^{(k)}_i - u^{(k)}_{i+1} = f_i
+\]
+</li>
+<li>In matrix form
+\[
+
+D(u^{(k+1)} - u^{(k)}) + Au^{(k)} = f
+
+\]
+\[
+
+Du^{(k+1)} = f- (A-D)u^{(k)}
+
+\]
+where $D$ is the diagonal part of $A$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Jacobi Method</h2>
+<div class="row" style="padding:0px 100px 0px 100px;">
+<div class="column">
+<video height="255" loop data-autoplay controls> <source data-src="media/multigrid_jacobi.webm" type="video/webm"> </video>
+</div>
+<div class="column" style="padding-left:-200px;">
+<img height="240" data-src="media/multigrid_sm_jac.svg">
+</div>
+</div>
+<ul>
+<li>The black line is the exact solution $u(x) = \sin{(4 \pi x)} + 0.5 \sin{(16 \pi x)}$<br />
+for the right-hand side generated as $f=Au$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss-Seidel Method</h2>
+<ul>
+<li>Another iterative method for solving $Au=f$ is the <span class="color5">Gauss-Seidel method</span></li>
+<li>The update rule to obtain $u^{(k+1)}_i$ is
+\[
+-u^{(k+1)}_{i-1} + 2u^{(k+1)}_i - u^{(k)}_{i+1} = f_i
+\]
+</li>
+<li>In matrix form
+\[
+
+L(u^{(k+1)} - u^{(k)}) + Au^{(k)} = f
+
+\]
+\[
+
+Lu^{(k+1)} = f- (A-L)u^{(k)}
+
+\]
+where $L$ is the lower triangular part of $A$ (including the diagonal)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gauss-Seidel Method</h2>
+<div class="row" style="padding:0px 100px 0px 100px;">
+<div class="column">
+<video height="255" loop data-autoplay controls> <source data-src="media/multigrid_gs.webm" type="video/webm"> </video>
+</div>
+<div class="column" style="padding-left:-200px;">
+<img height="240" data-src="media/multigrid_sm.svg">
+</div>
+</div>
+<ul>
+<li>The black line is the exact solution $u(x) = \sin{(4 \pi x)} + 0.5 \sin{(16 \pi x)}$<br />
+for the right-hand side generated as $f=Au$</li>
+<li>Gauss-Seidel converges slightly faster than Jacobi</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multigrid Method</h2>
+<ul>
+<li>However, both of these methods are <span class="color5">local</span>,<br />
+i.e. iteration only depends on the neighboring points</li>
+<li>Note that the <span class="color5">high-frequency components</span><br />
+are <span class="color5">found much faster</span> than the low-frequency components</li>
+<li>The idea of the <span class="color5">multigrid</span> method is to solve the problem<br />
+on a hierarchy of coarser grids</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multigrid Method</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit5/multigrid.py">[examples/unit5/multigrid.py]</a>,<br />
+implementation of the multigrid method<br />
+for the one-dimensional Poisson equation</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multigrid Method</h2>
+<ul>
+<li>Convergence of the multigrid method using the Gauss-Seidel smoother
+<blockquote>
+<p><img height="280" data-src="media/multigrid_maxlvl_gs.svg"></p>
+</blockquote></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multigrid Method</h2>
+<ul>
+<li>Convergence of the multigrid method using the Jacobi smoother
+<blockquote>
+<p><img height="280" data-src="media/multigrid_maxlvl_jac.svg"></p>
+</blockquote></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Multigrid Method</h2>
+<ul>
+<li>Convergence of the multigrid method using the Jacobi smoother<br />
+with relaxation factor $\omega=0.5$
+<div style="margin-bottom:-30px;">
+<p>
+\[
+
+u^{(k+1)} = u^{(k)} + \omega\big(D^{-1} (f- (A-D)u^{(k)}) - u^{(k)}\big)
+
+\]
+</p>
+</div>
+<blockquote>
+<p><img height="280" data-src="media/multigrid_maxlvl_jac05.svg"></p>
+</blockquote></li>
+</ul>
+</section>
+    </div>
+  </div>
+
+  <script src="..//dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="..//plugin/notes/notes.js"></script>
+  <script src="..//plugin/math/math.js"></script>
+  <!--<script src="..//plugin/search/search.js"></script>-->
+  <script src="..//plugin/highlight/highlight.js"></script>
+
+  <script>
+    Reveal.initialize({
+      // Layout.
+      center: true,
+      width: 960,
+      height: 540,
+
+      transition: 'none',
+      transitionSpeed: 'fast',
+      backgroundTransition: 'none',
+
+      // Navigation.
+      controls: true,
+      controlsLayout: 'bottom-right',
+      controlsBackArrows: 'visible',
+      history: false,
+      hash: true,
+      mouseWheel: false,
+      controlsTutorial: false,
+      slideNumber: 'c',
+      progress: false,
+      // TODO: change to true.
+      hashOneBasedIndex: false,
+      pause: false, // No blackout on `;`.
+
+      katex: {
+        trust: true,
+      },
+      plugins: [RevealHighlight, RevealNotes, RevealMath.KaTeX]
+    });
+    Reveal.configure({ pdfSeparateFragments: false });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/copy-tex.min.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" crossorigin="anonymous"></script>
+
+    </body>
+</html>

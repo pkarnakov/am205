@@ -1,0 +1,3633 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>AM205 Unit 2. Numerical Linear Algebra</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, minimal-ui">
+  <link rel="stylesheet" href="..//dist/reset.css">
+  <link rel="stylesheet" href="..//dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
+  <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
+</head>
+<body>
+
+  <style>
+.katex{
+  font-size:1em;
+}
+  </style>
+
+  <div class="reveal">
+    <div class="slides">
+
+<section class="slide level2">
+
+<section>
+<h1>
+Applied Mathematics 205
+</h1>
+<h2>
+Unit 2. Numerical Linear Algebra
+</h2>
+<br> Lecturer: Petr Karnakov <br> <br> September 19, 2022
+</section>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li><span class="color1">Scientific Computing relies on Numerical Linear Algebra</span></li>
+<li>We often reformulate problems as $Ax=b$</li>
+<li>Examples from Unit 1:
+<ul>
+<li>interpolation (Vandermonde matrix) and linear least squares (normal equations) are naturally expressed as linear systems</li>
+<li>Gauss–Newton method involves approximating a nonlinear problem with a sequence of linear systems</li>
+</ul></li>
+<li>We will see more applications of linear systems<br />
+(Numerical Calculus, Optimization, Eigenvalue problems)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li>The goal of this Unit is to cover:
+<ul>
+<li>concepts from linear algebra relevant for Scientific Computing</li>
+<li>stable and efficient algorithms for solving $Ax=b$</li>
+<li>algorithms for computing factorizations of $A$<br />
+that are useful in many practical contexts (LU, QR)</li>
+</ul></li>
+<li>First, we discuss some practical cases where $Ax=b$<br />
+arises directly in mathematical modeling of physical systems</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Electric Circuits</h2>
+<div class="row">
+<div class="column" style="margin-right:-5em;flex:70%;">
+<ul>
+<li>Linear systems describe circuits consisting<br />
+of voltage sources and resistors
+<ul>
+<li><span class="color5">Ohm’s law:</span> Voltage drop $V$ due to current $I$ through a resistor $R$ is
+\[
+V = IR
+\]
+</li>
+<li><span class="color5">Kirchoff’s law:</span> Directed sum of the voltages around any closed loop is zero</li>
+</ul></li>
+</ul>
+</div>
+<div class="column">
+<p><img style="width:100%;margin-top:-1em;" data-src="media/electric_circuit.svg"></p>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Example: Electric Circuits</h2>
+<div class="row">
+<div class="column" style="margin-right:-5em;flex:70%;">
+<ul>
+<li>The circuit has three loops
+<ul>
+<li><span class="color1">Loop 1</span><br />
+$R_1 I_1 + R_3 (I_1+I_2) + R_4 (I_1 + I_3) = V_1$</li>
+<li><span class="color2">Loop 2</span><br />
+$R_2 I_2 + R_3 (I_1+I_2) + R_5 (I_2 - I_3) = V_2$</li>
+<li><span class="color3">Loop 3</span><br />
+$R_5 (I_3-I_2) + R_4 (I_3 + I_1) + R_6 I_3 = 0$</li>
+</ul></li>
+</ul>
+</div>
+<div class="column">
+<p><img style="width:100%;margin-top:-1em;" data-src="media/electric_circuit.svg"></p>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Example: Electric Circuits</h2>
+<ul>
+<li>We obtain a linear system for unknown currents $I_1$, $I_2$, $I_3$
+\[
+\small\left[
+\begin{array}{ccc}
+  R_1 + R_3 + R_4 &amp; R_3 &amp; R_4 \\
+  R_3 &amp; R_2 + R_3 + R_5 &amp; -R_5\\
+  R_4 &amp; -R_5 &amp; R_4 + R_5 + R_6\\
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+  I_1 \\
+  I_2 \\
+  I_3 \\
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+  V_1 \\
+  V_2 \\
+  0\\
+\end{array}
+\right]
+\]
+</li>
+<li>Note that the matrix is
+<ul>
+<li><span class="color1">symmetric</span>, i.e. $a_{ij}=a_{ji}$</li>
+<li><span class="color1">strictly diagonally dominant</span>, i.e. $|a_{ii}|&gt;\sum_{j\neq i} |a_{ij}|$<br />
+(assuming $R_k&gt;0$)</li>
+</ul></li>
+<li>Circuit simulators solve large linear systems of this type</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Electric Circuits</h2>
+<ul>
+<li>Another linear system corresponds to unknown resistances $R_i$, $i=1,\ldots,6$
+<p>
+\[
+\small\left[
+\begin{array}{ccc}
+  \htmlClass{color1}{I_1} &amp; \htmlClass{color1}{0} &amp; I_1 + I_2 &amp; I_1 &amp; 0 &amp; \htmlClass{color1}{0} \\
+  \htmlClass{color1}{0} &amp; \htmlClass{color1}{I_2} &amp; I_2 &amp; 0 &amp; -I_3 &amp; \htmlClass{color1}{0} \\
+  \htmlClass{color1}{0} &amp; \htmlClass{color1}{0} &amp; 0 &amp; I_1 + I_3 &amp; -I_2 &amp; \htmlClass{color1}{I_3} \\
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+  R_1 \\
+  R_2 \\
+  R_3 \\
+  R_4 \\
+  R_5 \\
+  R_6 \\
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+  V_1 \\
+  V_2 \\
+  0\\
+\end{array}
+\right]
+\]
+</p></li>
+<li>Note that the matrix has <span class="color1">full rank</span> (assuming $I_k\neq 0$)</li>
+<li>The system is <span class="color0">underdetermined:</span> 3 equations for 6 unknowns</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Structural Analysis</h2>
+<div class="row">
+<div class="column" style="margin-right:-4em;flex:70%;">
+<ul>
+<li>Common in structural analysis is to use<br />
+a linear relationship between force and displacement, <span class="color5">Hooke’s law</span></li>
+<li>Simplest case is the Hookean spring law
+\[
+F = k x
+\]
+
+<ul>
+<li>$k$: spring constant (stiffness)</li>
+<li>$F$: applied load</li>
+<li>$x$: spring extension (displacement)</li>
+</ul></li>
+</ul>
+</div>
+<div class="column">
+<p><img style="width:400px;margin-top:1em;" data-src="media/spring.svg"></p>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Example: Structural Analysis</h2>
+<ul>
+<li>This relationship can be generalized to structural systems in 2D and 3D, which yields a linear system of the form
+\[
+Kx = F
+\]
+
+<ul>
+<li>$K \in \mathbb R^{n\times n}$: “stiffness matrix”</li>
+<li>$F \in \mathbb R^n$: “load vector”</li>
+<li>$x \in \mathbb R^n$: “displacement vector”</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Structural Analysis</h2>
+<ul>
+<li>It is common engineering practice to use Hooke’s law<br />
+to simulate complex structures, which leads to large linear systems
+<div class="row">
+<div class="column3">
+<img height=300 data-src="media/sap2000_tower.png">
+</div>
+<div class="column3">
+<img height=300 data-src="media/sap2000_building.png">
+</div>
+<div class="column3">
+<img height=300 data-src="media/sap2000_structures.png">
+</div>
+</div>
+<blockquote>
+<p>(from SAP2000, structural analysis software)</p>
+</blockquote></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Economics</h2>
+<ul>
+<li>Leontief awarded Nobel Prize in Economics in 1973 for developing<br />
+a linear input/output model for production/consumption of goods</li>
+<li>Consider an economy in which $n$ goods are produced and consumed
+<ul>
+<li>$A \in \mathbb R^{n\times n}$: $a_{ij}$ represents<br />
+the amount of good $j$ required to produce a unit of good $i$</li>
+<li>$x \in \mathbb R^n$: $x_i$ is number of units of good $i$ produced</li>
+<li>$d \in \mathbb R^n$: $d_i$ is consumer demand for good $i$</li>
+</ul></li>
+<li>In general $a_{ii} = 0$, and $A$ may be sparse</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Economics</h2>
+<ul>
+<li>The total amount of $x_i$ produced is given by the sum of<br />
+<span class="color2">consumer demand $d_i$</span> and <span class="color2">the amount of $x_i$ required to produce each $x_j$</span>
+\[
+x_i = \underbrace{a_{i1} x_1 + a_{i2}x_2 + \cdots + a_{in}
+x_n}_\text{production of other goods} + d_i
+\]
+</li>
+<li>Hence $x = Ax + d$ or,
+\[
+\htmlClass{color2}{ ({\rm I} - A)x = d}
+\]
+</li>
+<li>Solve for $x$ to determine the required amount of production of each good</li>
+<li>If we consider many goods (e.g. an entire economy),<br />
+then we get a large linear system</li>
+<li>Can be used to predict the effect of disruptions in the supply chain</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Summary</h2>
+<ul>
+<li>Matrix computations are <span class="color1">very common</span></li>
+<li>Numerical Linear Algebra provides us with a toolbox<br />
+for performing these computations in an efficient and stable manner</li>
+<li>In most cases, we can use these tools as a black box,<br />
+<span class="color2">but it’s important to understand what they do</span>
+<ul>
+<li>pick the right algorithm for a given situation<br />
+(e.g. exploit structure of a problem: symmetry, sparsity, etc)</li>
+<li>understand how and when the algorithm fail</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Preliminaries</h2>
+</section>
+<section class="slide level2">
+<h2>Preliminaries</h2>
+<ul>
+<li>In this section we will focus on linear systems
+\[
+Ax = b
+\]
+with matrix $A \in \mathbb R^{n\times n}$, unknown vector $x \in \mathbb R^n$<br />
+and the right-hand side vector $b \in \mathbb R^n$</li>
+<li>Recall that it is often helpful to think of matrix multiplication<br />
+as a <span class="color1">linear combination of the columns of $A$</span>, where $x_j$ are the coefficients</li>
+<li>That is, we have
+\[
+Ax = \sum_{j=1}^n x_j a_{(:,j)}
+\]
+where <span class="color1">$a_{(:,j)} \in \mathbb R^n$</span> is the $j$-th column of $A$ and <span class="color1">$x_j$</span> are scalars</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Preliminaries</h2>
+<ul>
+<li>This can be displayed schematically as
+<p>
+\[
+\begin{split}
+Ax =
+\left[
+\begin{array}{c|c|c|c}
+&amp;&amp;&amp;\\
+&amp;&amp;&amp;\\
+a_{(:,1)} &amp; a_{(:,2)} &amp; \cdots &amp; a_{(:,n)}\\
+&amp;&amp;&amp;\\
+&amp;&amp;&amp;\\
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+x_1\\
+x_2\\
+\vdots\\
+x_n\\
+\end{array}
+\right]
+=\\
+=
+\begin{array}{c}
+\\
+\\
+x_1\\
+\\
+\\
+\end{array}
+\!\!\!\!
+\left[
+\begin{array}{c}
+\\
+\\
+a_{(:,1)}\\
+\\
+\\
+\end{array}
+\right]
+\begin{array}{c}
+\\
+\\
++ \cdots + ~~x_n\\
+\\
+\\
+\end{array}
+\!\!\!\!
+\left[
+\begin{array}{c}
+\\
+\\
+a_{(:,n)}\\
+\\
+\\
+\end{array}
+\right]\end{split}
+\]
+</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Preliminaries</h2>
+<ul>
+<li>We therefore interpret $Ax = b$ as:<br />
+<span class="color1">“$x$ is the vector of coordinates of $b$ in the basis of columns of $A$”</span></li>
+<li>Often this is a more helpful point of view than conventional<br />
+interpretation of “dot-product of matrix row with vector”</li>
+<li>Now we see that $Ax = b$ has a solution if
+\[
+b \in \mathop{\mathrm{span}}\{ a_{(:,1)}, a_{(:,2)},\cdots, a_{(:,n)}\}
+\]
+(this holds even for a non-square $A$)</li>
+<li>Denote <span class="color5">
+\[
+{\mathop{\mathrm{image}}}(A) = \mathop{\mathrm{span}}\{ a_{(:,1)}, a_{(:,2)},\cdots, a_{(:,n)}\}
+\]
+</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Preliminaries</h2>
+<p><span class="color1">Existence and Uniqueness</span></p>
+<ul>
+<li>If $b \in \mathop{\mathrm{image}}(A)$, then solution $x \in \mathbb R^n$ <span class="color0">exists</span>
+<ul>
+<li>if solution $x$ exists and the columns $\{ a_{(:,1)}, a_{(:,2)},\cdots, a_{(:,n)}\}$ are linearly independent, then $x$ is <span class="color0">unique</span><br />
+(if $x$ and $y$ are both solutions, then $A(x-y)=0$, therefore $x=y$)</li>
+<li>if $x$ is a solution and $z \neq 0$ is such that $Az = 0$,<br />
+then also $A(x + \gamma z) = b$ for any $\gamma \in \mathbb R$,<br />
+so there are <span class="color0">infinitely many solutions</span></li>
+</ul></li>
+<li>If $b \not\in \mathop{\mathrm{image}}(A)$ then $Ax = b$ has <span class="color0">no solution</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Preliminaries</h2>
+<ul>
+<li>The inverse map $A^{-1} \colon \mathbb R^n \to \mathbb R^n$ is well-defined<br />
+if and only if $Ax = b$ has <span class="color2">unique solution</span> for any $b\in \mathbb R^n$</li>
+<li>The inverse matrix $A^{-1} \in \mathbb R^{n\times n}$ such that $A A^{-1} = A^{-1}A = I$<br />
+exists if any of the following equivalent conditions are satisfied
+<ul>
+<li>det$(A) \neq 0$</li>
+<li>rank$(A) = n$</li>
+<li>$A z \neq 0$ for any $z \neq 0$ (null space of $A$ is $\{ 0 \}$)</li>
+</ul></li>
+<li>$A$ is <span class="color2">nonsingular</span> if $A^{-1}$ exists, and then $x = A^{-1} b \in \mathbb R^n$</li>
+<li>$A$ is <span class="color2">singular</span> if $A^{-1}$ does not exist</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Norms</h2>
+<ul>
+<li>A norm $\|\cdot\| : V \to \mathbb R$ is a function on a vector space $V$ that satisfies
+<ul>
+<li>positive definiteness, $\|x\| \geq 0$ and $\|x\| = 0 \implies x = 0$</li>
+<li>absolute homogeneity, $\|\gamma x\| = |\gamma| \|x\|$, for $\gamma \in \mathbb R$</li>
+<li>triangle inequality, $\|x + y\| \leq \|x\| + \|y\|$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Norms</h2>
+<ul>
+<li>The triangle inequality implies another helpful inequality:<br />
+the <span class="color1">“reverse triangle inequality”</span>
+\[
+\big| \|x\| - \|y\| \big| \leq \|x - y\|
+\]
+</li>
+<li><span class="color2">Proof:</span>
+\[
+\|x\| = \|(x - y) + y\| \leq \|x-y\|+\|y\| \implies \|x\| - \|y\| \leq \|x-y\|
+\]
+
+<p>
+\[
+\|y\| = \|(y - x) + x\| \leq \|y-x\|+\|x\| \implies \|y\| - \|x\| \leq \|x-y\|
+\]
+</p></li>
+<li>Therefore $\big| \|x\| - \|y\| \big| \leq \|x - y\|$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Vector Norms</h2>
+<ul>
+<li>Let’s now introduce some common norms on $\mathbb R^n$</li>
+<li>Most common norm is the Euclidean norm (or $2$-norm):
+\[
+\textstyle \|x\|_2 = \sqrt{\sum_{j=1}^n x_j^2}
+\]
+</li>
+<li>$2$-norm is special case of the $p$-norm for any $p \geq 1$:
+\[
+\textstyle \|x\|_p = \left(\sum_{j=1}^n |x_j|^p\right)^{1/p}
+\]
+</li>
+<li>Condition $p\geq 1$ is required for the triangle inequality</li>
+<li>Norm $\|x\|_p$ approaches $\|x\|_\infty$ as $p\to\infty$
+\[
+\|x\|_{\infty} = \max_{1 \leq i \leq n} |x_i|
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Limit of $p$-norm</h2>
+<ul>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/norm_inf.py">[examples/unit2/norm_inf.py]</a></li>
+<li>For vector $x=(1.2, 0.5, -0.1, 2.3, -1.05, -2.35)^T \in \mathbb{R}^6$</li>
+<li>$\|x\|_\infty=2.35$ (component of $x$ with the largest magnitude)</li>
+<li>Norm $\|x\|_p$ approaches $\|x\|_\infty$ as $p\to\infty$</li>
+<li>Bounds: $\|x\|_\infty \leq \|x\|_p \leq n^{1/p} \|x\|_\infty$</li>
+</ul>
+<p><img data-src="media/norm_inf.svg" style="margin:auto; display: block;" height="250" /></p>
+</section>
+<section class="slide level2">
+<h2>Vector Norms</h2>
+<ul>
+<li>We generally use whichever norm is most convenient/appropriate for a given problem, e.g. $2$-norm for least-squares analysis</li>
+<li>Different norms give different (but related) measures of size</li>
+<li>An important fact is:
+<blockquote>
+<p><span class="color2">All norms on a finite dimensional space (such as $\mathbb R^n$) are equivalent</span></p>
+</blockquote></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Vector Norms</h2>
+<ul>
+<li>That is, let $\|\cdot\|_a$ and $\|\cdot\|_b$ be two norms on a finite dimensional space $V$, then $\exists\; c_1, c_2 &gt; 0$ such that for any $x \in V$
+\[
+c_1 \|x\|_a \leq \|x\|_b \leq c_2 \|x\|_a
+\]
+</li>
+<li>Also, from above we have $\frac{1}{c_2}\|x\|_b \leq \|x\|_a \leq \frac{1}{c_1}\|x\|_b$</li>
+<li>Hence if we can derive an inequality in one norm on $V$,<br />
+it applies (after appropriate scaling) in any other norm as well</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Vector Norms</h2>
+<ul>
+<li>Norm $\|x\|_2$ bounds norm $\|x\|_1$
+\[
+\|x\|_2 \leq \|x\|_1 \leq \sqrt{n}\|x\|_2
+\]
+</li>
+<li><span class="color2">Proof</span> of $\|x\|_2 \leq \|x\|_1$
+<p>
+\[
+\begin{split}
+  \textstyle
+  \|x\|_1^2 = \big(\sum_{i=1}^n|x_i|\big)^2 = \big(\sum_{i=1}^n |x_i|\big) \big(\sum_{j=1}^n |x_j|\big)=\\
+  \textstyle
+  =\sum_{i=1}^n \sum_{j=1}^n |x_i|\,|x_j|\geq \sum_{i=1}^n |x_i|\,|x_i|=\sum_{i=1}^n |x_i|^2 =\|x\|_2^2
+\end{split}
+\]
+</p></li>
+<li><span class="color2">Proof</span> of $\|x\|_1 \leq \sqrt{n}\|x\|_2$. The Cauchy-Schwarz inequality<br />
+\[
+\textstyle \sum_{i=1}^n a_i b_i \leq \big(\sum_{i=1}^n a_i^2\big)^{1/2}\big(\sum_{i=1}^n b_i^2\big)^{1/2}
+\]
+with $a_i=1$ and $b_i=|x_i|$ gives
+<p>
+\[
+\|x\|_1 = \sum_{i=1}^n 1 \;|x_i| \leq \big(\sum_{i=1}^n
+  1^2\big)^{1/2} \big( \sum_{i=1} |x_i|^2 \big)^{1/2}
+  = \sqrt{n}\,  \|x\|_2
+\]
+</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Vector Norms</h2>
+<style>
+  .columneqn{width:130%;margin-bottom:-1em;margin-top:0em;}
+  .columnimg{width:200px;padding:-1em}
+</style>
+<ul>
+<li>Each norm produces a different <span class="color0">unit circle</span>
+\[
+\{x\in\mathbb{R}^2 : \|x\|_p=1\}
+\]
+
+<div class="row" style="margin-bottom:-1em;">
+<div class="column4">
+<div class="columneqn">
+$\|x\|_1$
+</div>
+<img class="columnimg" data-src="media/unit_circle_norm_1.svg">
+</div>
+<div class="column4">
+<div class="columneqn">
+$\|x\|_2$
+</div>
+<img class="columnimg" data-src="media/unit_circle_norm_2.svg">
+</div>
+<div class="column4">
+<div class="columneqn">
+$\|x\|_4$
+</div>
+<img class="columnimg" data-src="media/unit_circle_norm_4.svg">
+</div>
+<div class="column4">
+<div class="columneqn">
+$\|x\|_\infty$
+</div>
+<img class="columnimg" data-src="media/unit_circle_norm_inf.svg">
+</div>
+</div></li>
+<li>Norm $\|x\|_p$ approaches $\|x\|_\infty$ as $p\to\infty$</li>
+<li>Commonly used norms are $\|x\|_1$, $\|x\|_2$, and $\|x\|_\infty$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Matrix Norms</h2>
+<ul>
+<li>There are many ways to define norms on matrices</li>
+<li>For example, the Frobenius norm is defined as
+\[
+\|A\|_F = \Big(\sum_{i=1}^n\sum_{j=1}^n |a_{ij}|^2 \Big)^{1/2}
+\]
+</li>
+<li>If we think of $A$ as a vector in $\mathbb R^{n^2}$,<br />
+then Frobenius is equivalent to the vector $2$-norm of $A$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Matrix Norms</h2>
+<ul>
+<li>Matrix norms <span class="color2">induced by vector norms</span> are most useful</li>
+<li>Here, matrix $p$-norm is induced by vector $p$-norm
+\[
+\|A\|_p = \max_{x \neq 0} \frac{\|Ax\|_p}{\|x\|_p} = \max_{\|x\|_p=1} \|Ax\|_p
+\]
+</li>
+<li>This definition implies the useful property<br />
+\[
+\|Ax\|_p \leq \|A\|_p \|x\|_p
+\]
+since
+\[
+\htmlClass{color2}{ \|Ax\|_p} = \frac{\|Ax\|_p}{\|x\|_p} \|x\|_p \leq \left(\max_{v\neq 0} \frac{\|Av\|_p}{\|v\|_p}\right) \|x\|_p = \htmlClass{color2}{ \|A\|_p \|x\|_p}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Matrix Norms</h2>
+<ul>
+<li>The $1$-norm and $\infty$-norm can be calculated straightforwardly:
+<p>
+\[
+\begin{aligned}
+  \|A\|_1 &amp;= \max_{1 \leq j \leq n} \|a_{(:,j)}\|_1     &amp;\text{~(max column sum)} \\
+  \|A\|_\infty &amp;= \max_{1 \leq i\leq n} \|a_{(i,:)}\|_1 &amp;\text{~(max row sum)}
+\end{aligned}
+\]
+</p></li>
+<li>Later we will see how to compute the $2$-norm of a matrix</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Matrix Norm Using Monte Carlo</h2>
+<ul>
+<li>How to compute the matrix norm induced by a <span class="color0">“black box”</span> vector norm?</li>
+<li>One approach is the <span class="color2">Monte-Carlo method</span><br />
+that solves problems using repeated random sampling</li>
+<li>Recall the definition of a matrix norm induced by vector norm
+\[
+\|A\| = \max_{x \neq 0} \frac{\|Ax\|}{\|x\|}
+\]
+</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/norm_monte_carlo.py">[examples/unit2/norm_monte_carlo.py]</a></li>
+<li><span class="color0">Warning:</span> Common norms can be computed with more efficient methods!</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Condition Number</h2>
+<ul>
+<li>Recall from Unit 0 that the condition number of $A \in \mathbb R^{n\times n}$ is defined as
+\[
+\htmlClass{color2}{ \kappa(A) = \|A\| \, \|A^{-1}\|}
+\]
+</li>
+<li>The value of $\kappa(A)$ depends on which norm we use</li>
+<li><code>numpy.linalg.cond</code> computes the condition number for various norms</li>
+<li>If $A$ is a singular square matrix, then by convention $\kappa(A) = \infty$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Residual</h2>
+<ul>
+<li>Recall that the residual $r(x) = b - A x$<br />
+was crucial in least-squares problems</li>
+<li>It is also crucial in assessing the accuracy<br />
+of a proposed solution ($\hat x$) to a linear system $Ax = b$</li>
+<li><span class="color2">Key point:</span> The residual $r(\hat x)$ is straightforward to compute,<br />
+while the error $\Delta x = x - \hat x$ is not (without knowing the exact solution)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Residual</h2>
+<ul>
+<li>We have that $\|\Delta x\| = \|x - \hat x\| = 0$ if and only if $\|r(\hat x)\| = 0$</li>
+<li>However, <span class="color0">small residual doesn’t necessarily imply small $\|\Delta x\|$</span></li>
+<li>Observe that
+\[
+\|\Delta x\| = \|x - \hat x\| = \| A^{-1}(b - A\hat x) \| = \|
+A^{-1} r(\hat x)\|\leq \|A^{-1}\|\|r(\hat x)\|
+\]
+Hence
+\[
+\htmlClass{color2}{
+\frac{\|\Delta x\|}{\|\hat x\|}} \leq  \frac{\|A^{-1}\|\|r(\hat x)\|}{\|\hat
+x\|} = \frac{\|A\|\|A^{-1}\|\|r(\hat x)\|}{\|A\|\|\hat x\|} =
+\htmlClass{color2}{ \kappa(A)\frac{\|r(\hat x)\|}{\|A\|\|\hat x\|}} \quad (*)
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Residual</h2>
+<ul>
+<li>Define the <span class="color1">relative residual</span> as <span class="color1">
+\[
+\frac{\|r(\hat x)\|}{\|A\|\|\hat x\|}
+\]
+</span></li>
+<li>Then our inequality $(*)$ states that<br />
+“relative error is bounded by condition number times the relative residual”</li>
+<li>This is just like our condition number relationship from Unit 0:
+\[
+\kappa(A) \geq \frac{\|\Delta x\|/\|x\|}{\|\Delta b\|/\|b\|}, \qquad \text{i.e.} \qquad \frac{\|\Delta x\|}{\|x\|} \leq \kappa(A)
+\frac{\|\Delta b\|}{\|b\|} \quad (**)
+\]
+</li>
+<li>The reason $(*)$ and $(**)$ are related is that<br />
+the residual measures the input pertubation ($\Delta b$) in $Ax = b$</li>
+<li>To see this, let’s consider $Ax = b$ to be a map $b \in \mathbb R^n \to x \in \mathbb R^n$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Residual</h2>
+<ul>
+<li>Then we can consider $\hat x$ to be the <span class="color2">exact solution</span><br />
+for some <span class="color2">perturbed input</span> $\hat b = b + \Delta b$
+\[
+A\hat x = \hat b
+\]
+</li>
+<li>The residual associated with $\hat x$ is
+\[
+r(\hat x) = b - A\hat x = b - \hat b = -\Delta b
+\]
+i.e. $\|r(\hat x)\| = \|\Delta b\|$</li>
+<li>In general, a (backward) stable algorithm gives us<br />
+the <span class="color2">exact solution</span> to a <span class="color2">slightly perturbed problem</span>, i.e. a small residual</li>
+<li>This is a reasonable expectation for a stable algorithm:<br />
+rounding error doesn’t accumulate, so effective input perturbation is small</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Residual vs. Error</h2>
+<ul>
+<li>From Heath’s book (Example 2.8)</li>
+<li>Consider a $2\times 2$ example to clearly demonstrate<br />
+the difference between residual and error
+<p>
+\[
+Ax =
+\left[
+\begin{array}{cc}
+0.913 &amp; 0.659\\
+0.457 &amp; 0.330
+\end{array}
+\right]
+\left[
+\begin{array}{cc}
+x_1\\
+x_2
+\end{array}
+\right]
+=
+\left[
+\begin{array}{cc}
+0.254\\
+0.127
+\end{array}
+\right]
+= b
+\]
+</p></li>
+<li>The exact solution is given by $x = [1, -1]^T$</li>
+<li>Suppose we compute two different approximate solutions
+\[
+\hat x^{(1)} =
+\left[
+\begin{array}{c}
+-0.0827\\
+0.5
+\end{array}
+\right],
+\qquad
+\hat x^{(2)} =
+\left[
+\begin{array}{c}
+0.999\\
+-1.001
+\end{array}
+\right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Residual vs. Error</h2>
+<ul>
+<li>Then,
+\[
+\|r(\hat x^{(1)})\|_1 = 2.1\times 10^{-4}, \qquad \|r(\hat x^{(2)})\|_1 = 2.4\times 10^{-2}
+\]
+</li>
+<li>but
+\[
+\|x-\hat x^{(1)}\|_1 = 2.58, \qquad  \|x -  \hat x^{(2)}\|_1 = 0.002
+\]
+</li>
+<li><span class="color0">In this case, $\hat x^{(2)}$ is better solution, but has larger residual!</span></li>
+<li>This is possible here because $\kappa(A) = 1.25\times 10^4$ is quite large<br />
+($\text{relative error} \leq 1.25\times 10^4\times\text{relative residual}$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving $Ax = b$</h2>
+</section>
+<section class="slide level2">
+<h2>Solving $Ax = b$</h2>
+<ul>
+<li>Familiar idea for solving $Ax = b$ is to use <span class="color1">Gaussian elimination</span><br />
+to transform $Ax=b$ to a <span class="color2">triangular system</span></li>
+<li>What is a triangular system?
+<div class="rowf" style="width:110%;">
+<div class="columnf" style="margin-right:-1em;">
+<ul>
+<li>upper triangular $U \in \mathbb R^{n\times n}$
+<blockquote>
+<p>$u_{ij} = 0$ for $i &gt; j$</p>
+</blockquote>
+<p>$U=\left[ \begin{array}{cc} u_{11} &amp; u_{12} &amp; u_{13} \\ 0 &amp; u_{22} &amp; u_{23} \\ 0 &amp; 0 &amp; u_{33} \\ \end{array} \right]$</p></li>
+</ul>
+</div>
+<div class="columnf">
+<ul>
+<li>lower triangular $L \in \mathbb R^{n\times n}$
+<blockquote>
+<p>$\ell_{ij} = 0$ for $i &lt; j$</p>
+</blockquote>
+<p>$L=\left[ \begin{array}{cc} l_{11} &amp; 0 &amp; 0 \\ l_{21} &amp; l_{22} &amp; 0 \\ l_{31} &amp; l_{32} &amp; l_{33} \\ \end{array} \right]$</p></li>
+</ul>
+</div>
+</div></li>
+<li><span class="color2">Question:</span> Why triangular?</li>
+<li><span class="color2">Answer:</span> Because triangular systems are easy to solve!</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving $Ax = b$</h2>
+<ul>
+<li>For an upper-triangular system $U x = b$,<br />
+we can use <span class="color2">backward substitution</span>
+<p>$x_n = b_n / u_{nn}$<br />
+$x_{n-1} = (b_{n-1} - u_{n-1,n}x_n ) / u_{n-1,n-1}$<br />
+$\ldots$<br />
+$x_j = \left( b_j - \sum_{k=j+1}^n u_{jk}x_k \right) / u_{jj}$</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving $Ax = b$</h2>
+<ul>
+<li>For a lower triangular system $L x = b$,<br />
+we can use <span class="color2">forward substitution</span>
+<p>$x_1 = b_1 / \ell_{11}$<br />
+$x_{2} = (b_{2} - \ell_{21}x_1 ) / \ell_{22}$<br />
+$\ldots$<br />
+$x_j =\textstyle \left( b_j - \sum_{k=1}^{j-1} \ell_{jk}x_k \right) / \ell_{jj}$</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Asymptotic Notation</h2>
+<ul>
+<li>To simplify the cost estimation for an algorithm, we analyze its<br />
+asymptotic behavior as the size of the problem increases ($n\to\infty$)</li>
+<li>Notation <span class="color5">$f(n) \sim g(n)$</span> refers to <span class="color5">asymptotic equivalence</span>
+\[
+\lim_{n\to \infty}\frac{f(n)}{g(n)} = 1
+\]
+</li>
+<li>Notation <span class="color1">$f(n) = \mathcal{O}(g(n))$</span> refers to an <span class="color1">asymptotic upper bound</span>
+\[
+|f(n)| \leq M |g(n)|
+\]
+for all $n \geq N$, where $M&gt;0$ and $N &gt; 0$</li>
+<li>If <span class="color5">$f(n) \sim g(n)$</span>, then <span class="color1">$f(n) = \mathcal{O}(g(n))$</span>. The opposite is not true!</li>
+<li>We prefer “$\sim$” since it indicates the scaling factor of the leading term</li>
+<li>For example, if $f(n) = n^2/4 + n$, then $f(n) = \mathcal{O}(n^2)$, whereas $f(n) \sim n^2/4$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving $Ax = b$</h2>
+<ul>
+<li>Backward (and forward) substitution<br />
+can be implemented with a double nested loop</li>
+<li><span class="color1">It requires just one pass through the matrix!</span></li>
+<li>The computational work is dominated by evaluating the sum
+\[
+\sum_{k=1}^{j-1} \ell_{jk}x_k  \quad j=1,\ldots,n
+\]
+which takes $j-1$ additions and multiplications for each $j$</li>
+<li>So the total number of floating point operations is asymptotically
+\[
+2\sum_{j=1}^n j = \frac{2n(n+1)}{2} \sim n^2
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving $Ax = b$</h2>
+<ul>
+<li>How can we transform $Ax = b$ to a triangular system?</li>
+<li><span class="color2">Observation:</span> If we multiply $Ax = b$ by a nonsingular matrix $M$,<br />
+then the new system $MAx = Mb$ has the same solution</li>
+<li>We can devise a sequence of matrices
+\[
+M_{1}, M_2, \ldots, M_{n-1}
+\]
+such that $M = M_{n-1}\dots M_1$ and $U=MA$ is upper triangular</li>
+<li><span class="color1">Gaussian elimination</span> provides such a sequence<br />
+and gives the transformed system $Ux = M b$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>We will show shortly that if $MA = U$,<br />
+then $L = M^{-1}$ is lower triangular</li>
+<li>Therefore, we obtain that the matrix factorizes into
+\[
+\htmlClass{color2}{ A = M^{-1}U=LU}
+\]
+a product of lower ($L$) and upper ($U$) triangular matrices</li>
+<li>This is the <span class="color2">LU factorization</span> of $A$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li><span class="color1">LU factorization is a common way of solving linear systems!</span></li>
+<li>Once a factorization $A=LU$ is known, the system
+\[
+LUx = b
+\]
+is solved in two steps
+<ul>
+<li>lower triangular: $Ly=b$</li>
+<li>upper triangular: $Ux=y$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li><span class="color1">Next question</span>: How can we find $M_{1}, M_2, \cdots, M_{n-1}$?</li>
+<li>We need to be able to annihilate selected entries of $A$<br />
+below the diagonal in order to obtain an upper-triangular matrix</li>
+<li>To do this, we use <span class="color2">elementary elimination matrices</span></li>
+<li>Let $L_j$ denote $j$-th elimination matrix</li>
+<li>From now on, we denote them $L_j$ rather than $M_j$<br />
+since elimination matrices are lower triangular</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>Here we describe how to proceed from step $j-1$ to step $j$</li>
+<li>Let $X=L_{j-1}L_{j-2}\cdots L_1 A$ denote the matrix at the start of step $j$,<br />
+and $x_{(:,k)} \in \mathbb R^n$ denote column $k$ of $X$
+<p>
+\[
+X =
+\left[
+\begin{array}{ccccccc}
+\htmlClass{color1} {x_{11} } &amp; \htmlClass{color1} \cdots &amp; \htmlClass{color1}{x_{1,j-1}}   &amp; \htmlClass{color0}{x_{1j}  } &amp; x_{1,j+1}   &amp; \cdots &amp; x_{1n}      \\
+\htmlClass{color1} {\vdots } &amp; \htmlClass{color1} \ddots &amp; \htmlClass{color1}{\vdots     } &amp; \htmlClass{color0}{\vdots   } &amp; \vdots      &amp; \ddots &amp; \vdots     \\
+\htmlClass{color1} {0      } &amp; \htmlClass{color1} \cdots &amp; \htmlClass{color1}{x_{j-1,j-1}} &amp; \htmlClass{color0}{x_{j-1,j}} &amp; x_{j-1,j+1} &amp; \cdots &amp; x_{j-1,n}  \\
+\htmlClass{color1} {0      } &amp; \htmlClass{color1} \cdots &amp; \htmlClass{color1}{0          } &amp; \htmlClass{color0}{x_{jj}  } &amp; x_{j,j+1}   &amp; \cdots &amp; x_{jn}      \\
+\htmlClass{color1} {0      } &amp; \htmlClass{color1} \cdots &amp; \htmlClass{color1}{0          } &amp; \htmlClass{color0}{x_{j+1,j}} &amp; x_{j+1,j+1} &amp; \cdots &amp; x_{j+1,n}  \\
+\htmlClass{color1} {\vdots } &amp; \htmlClass{color1} \ddots &amp; \htmlClass{color1}{\vdots     } &amp; \htmlClass{color0}{\vdots   } &amp; \vdots      &amp; \ddots &amp; \vdots     \\
+\htmlClass{color1} {0      } &amp; \htmlClass{color1} \cdots &amp; \htmlClass{color1}{0          } &amp; \htmlClass{color0}{x_{nj}   } &amp; x_{n,j+1}   &amp; \cdots &amp; x_{nn}
+\end{array}
+\right]
+\]
+</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>We are looking for a matrix $L_j$ such that multiplication $L_j X$
+<ul>
+<li>eliminates elements below the diagonal in $x_{(:,j)}$</li>
+<li>does not modify columns $x_{(:,k)}$ for $k=1,\ldots,j-1$</li>
+</ul></li>
+<li>Let’s define $L_j$ such that
+\[
+L_j x_{(:,j)} =
+\left[
+\begin{array}{cccccc}
+1 &amp; \cdots &amp; 0 &amp; 0 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; 1 &amp; 0 &amp; \cdots &amp; 0\\
+0 &amp; \cdots &amp; -x_{j+1,j}/x_{jj} &amp; 1 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; -x_{nj}/x_{jj} &amp; 0 &amp; \cdots &amp; 1
+\end{array}
+\right]
+\left[
+\htmlClass{color0}{
+  \begin{array}{c}
+   x_{1j}\\
+   \vdots\\
+  x_{jj}\\
+  x_{j+1,j}\\
+  \vdots\\
+  x_{nj}
+  \end{array}
+}
+\right]
+=
+\left[
+\begin{array}{c}
+x_{1j}\\
+\vdots\\
+x_{jj}\\
+0\\
+\vdots\\
+0
+\end{array}
+\right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>For brevity, we denote $\ell_{ij} = x_{ij}/x_{jj}$ and define</li>
+</ul>
+<p>
+\[
+L_j =
+\left[
+\begin{array}{cccccc}
+1 &amp; \cdots &amp; 0 &amp; 0 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; 1 &amp; 0 &amp; \cdots &amp; 0\\
+0 &amp; \cdots &amp; -\ell_{j+1,j} &amp; 1 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; -\ell_{nj} &amp; 0 &amp; \cdots &amp; 1
+\end{array}
+\right]
+\]
+</p>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>Using elementary elimination matrices,<br />
+we can reduce $A$ to an upper triangular form, <span class="color0">one column at a time</span></li>
+<li>Schematically, for a $4\times 4$ matrix, we have
+\[
+\begin{array}{ccccc}
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+* &amp; * &amp; * &amp; *\\
+* &amp; * &amp; * &amp; *\\
+* &amp; * &amp; * &amp; *
+\end{array}
+\right]
+&amp;
+\xrightarrow{L_1}
+&amp;
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+0 &amp; * &amp; * &amp; *\\
+0 &amp; * &amp; * &amp; *\\
+0 &amp; * &amp; * &amp; *
+\end{array}
+\right]
+&amp;
+\xrightarrow{L_2}
+&amp;
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+0 &amp; * &amp; * &amp; *\\
+0 &amp; 0 &amp; * &amp; *\\
+0 &amp; 0 &amp; * &amp; *
+\end{array}
+\right]\\
+\\
+A &amp; &amp; L_1 A &amp; &amp; L_2L_1 A
+\end{array}
+\]
+</li>
+<li><span class="color0">Key point</span>: $L_j$ does not modify columns $1,\ldots,j-1$ of $L_{j-1}L_{j-2}\cdots L_1 A$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>After $n-1$ steps, we obtain an upper triangular matrix<br />
+\[
+U = L_{n-1} \cdots L_2 L_1 A =
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+0 &amp; * &amp; * &amp; *\\
+0 &amp; 0 &amp; * &amp; *\\
+0 &amp; 0 &amp; 0 &amp; *
+\end{array}
+\right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>We have $L_{n-1} \cdots L_2 L_1 A = U$</li>
+<li>To form a factorization $A = LU$,<br />
+we need $L = (L_{n-1} \cdots L_2 L_1)^{-1} = L_1^{-1}L_2^{-1}\cdots L_{n-1}^{-1}$</li>
+<li><span class="color1">First observation</span>:<br />
+$L_j^{-1}$ is obtained by negating the subdiagonal elements of $L_j$
+<div style="font-size:0.9em;margin-left:-2em;">
+<p>
+\[
+L_j =
+\left[
+\begin{array}{cccccc}
+1 &amp; \cdots &amp; 0 &amp; 0 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; 1 &amp; 0 &amp; \cdots &amp; 0\\
+0 &amp; \cdots &amp; -\ell_{j+1,j} &amp; 1 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; -\ell_{nj} &amp; 0 &amp; \cdots &amp; 1
+\end{array}
+\right]
+\quad
+L_j^{-1} =
+\left[
+\begin{array}{cccccc}
+1 &amp; \cdots &amp; 0 &amp; 0 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; 1 &amp; 0 &amp; \cdots &amp; 0\\
+0 &amp; \cdots &amp; \ell_{j+1,j} &amp; 1 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; \ell_{nj} &amp; 0 &amp; \cdots &amp; 1
+\end{array}
+\right]
+\]
+</p>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>$L_j L_j^{-1} = I$ can be verified directly by multiplication</li>
+<li><span class="color2">Intuitive explanation</span>
+<div class="rowf">
+<div class="columnf" style="margin-right:-0em;">
+<ul>
+<li>multiplication $L_j v$ subtracts<br />
+a scaled component $v_j$
+<div style="font-size:0.9em;">
+\[
+
+L_j
+\left[
+\begin{array}{c}
+  v_{1}\\
+  \vdots\\
+  v_{j}\\
+  v_{j+1}\\
+  \vdots\\
+  v_{n}
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+  v_{1}\\
+  \vdots\\
+  v_{j}\\
+  v_{j+1} - \ell_{j+1,j}v_j\\
+  \vdots\\
+  v_{n} - \ell_{nj}v_j
+\end{array}
+\right]
+
+\]
+
+</div></li>
+</ul>
+</div>
+<div class="columnf" style="margin-left:-0em;margin-right:-2em;">
+<ul>
+<li>so the inverse should add it back ($v_j$ itself is unchanged)
+<div style="font-size:0.9em;">
+\[
+
+L_j^{-1}
+\left[
+\begin{array}{c}
+  v_{1}\\
+  \vdots\\
+  v_{j}\\
+  v_{j+1}\\
+  \vdots\\
+  v_{n}
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+  v_{1}\\
+  \vdots\\
+  v_{j}\\
+  v_{j+1} + \ell_{j+1,j}v_j\\
+  \vdots\\
+  v_{n} + \ell_{nj}v_j
+\end{array}
+\right]
+
+\]
+
+</div></li>
+</ul>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li><span class="color1">Second observation</span>: consider $L_{j-1}^{-1} L_j^{-1}$
+<div style="font-size:0.72em;margin-left:-4em;margin-top:2em;">
+<p>
+\[
+
+\underbrace{
+\left[
+\begin{array}{ccccccc}
+\htmlClass{color5} 1      &amp; \cdots   &amp; 0                &amp; 0             &amp; 0           &amp; \cdots     &amp; 0\\
+\vdots  &amp; \htmlClass{color5}\ddots   &amp; \vdots           &amp; \vdots        &amp; \vdots      &amp; \ddots     &amp; \vdots\\
+0      &amp; \cdots   &amp; \htmlClass{color5}1                &amp; 0             &amp; 0           &amp; \cdots     &amp; 0\\
+0       &amp; \cdots   &amp; \ell_{j,j-1}     &amp; \htmlClass{color5}1             &amp; 0           &amp; \cdots     &amp; 0\\
+0      &amp; \cdots   &amp; \ell_{j+1,j-1}   &amp; 0             &amp; \htmlClass{color5}1           &amp; \cdots     &amp; 0\\
+\vdots  &amp; \ddots   &amp; \vdots           &amp; \vdots        &amp; \vdots      &amp; \htmlClass{color5}\ddots     &amp; \vdots\\
+0       &amp; \cdots   &amp; \ell_{n,j-1}     &amp; 0             &amp; 0           &amp; \cdots     &amp; \htmlClass{color5}1
+\end{array}
+\right]
+}_{\Large L_{j-1}^{-1}}
+\;
+\underbrace{
+\left[
+\begin{array}{ccccccc}
+\htmlClass{color5}1      &amp; \cdots   &amp; 0               &amp; 0              &amp; 0           &amp; \cdots     &amp; 0\\
+\vdots  &amp; \htmlClass{color5}\ddots   &amp; \vdots          &amp; \vdots         &amp; \vdots      &amp; \ddots     &amp; \vdots\\
+0      &amp; \cdots   &amp; \htmlClass{color5}1               &amp; 0              &amp; 0           &amp; \cdots     &amp; 0\\
+0       &amp; \cdots   &amp; 0               &amp; \htmlClass{color5}1              &amp; 0           &amp; \cdots     &amp; 0\\
+0      &amp; \cdots   &amp; 0               &amp; \ell_{j+1,j}   &amp; \htmlClass{color5}1           &amp; \cdots     &amp; 0\\
+\vdots  &amp; \ddots   &amp; \vdots          &amp; \vdots         &amp; \vdots      &amp; \htmlClass{color5}\ddots     &amp; \vdots\\
+0       &amp; \cdots   &amp; 0               &amp; \ell_{nj}      &amp; 0           &amp; \cdots     &amp; \htmlClass{color5}1
+\end{array}
+\right]
+}_{\Large L_{j}^{-1}}
+=
+\left[
+\begin{array}{ccccccc}
+\htmlClass{color5}1      &amp; \cdots   &amp; 0               &amp; 0              &amp; 0           &amp; \cdots     &amp; 0\\
+\vdots  &amp; \htmlClass{color5}\ddots   &amp; \vdots          &amp; \vdots         &amp; \vdots      &amp; \ddots     &amp; \vdots\\
+0      &amp; \cdots   &amp; \htmlClass{color5}1               &amp; 0              &amp; 0           &amp; \cdots     &amp; 0\\
+0       &amp; \cdots   &amp; \ell_{j,j-1}  &amp; \htmlClass{color5}1              &amp; 0           &amp; \cdots     &amp; 0\\
+0      &amp; \cdots   &amp; \ell_{j+1,j-1}  &amp; \ell_{j+1,j}   &amp; \htmlClass{color5}1           &amp; \cdots     &amp; 0\\
+\vdots  &amp; \ddots   &amp; \vdots          &amp; \vdots         &amp; \vdots      &amp; \htmlClass{color5}\ddots     &amp; \vdots\\
+0       &amp; \cdots   &amp; \ell_{n,j-1}    &amp; \ell_{nj}      &amp; 0           &amp; \cdots     &amp; \htmlClass{color5}1
+\end{array}
+\right]
+
+\]
+</p>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li><span class="color1">Therefore, by generalizing to all $n-1$ matrices</span>
+\[
+L = L_{1}^{-1} L_2^{-1} \cdots L_{n-1}^{-1} =
+\left[
+\begin{array}{ccccc}
+1 \\
+\ell_{21} &amp; 1 \\
+\ell_{31} &amp; \ell_{32} &amp; 1 \\
+\vdots &amp; \vdots &amp; \ddots &amp; \ddots\\
+\ell_{n1} &amp; \ell_{n2} &amp;\cdots &amp;\ell_{n,n-1} &amp; 1
+\end{array}
+\right]
+\]
+</li>
+<li>So we simply collect the subdiagonal terms<br />
+from all steps of factorization</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>Therefore, basic LU factorization algorithm is
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$$U=A$, $L={\rm I}$<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $j = 1:n-1$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}$<strong>for</strong> $i=j+1:n$ <strong>do</strong><br />
+<span class="linenum">4:</span>$\hspace{2.4em}$$\ell_{ij} = u_{ij}/u_{jj}$<br />
+<span class="linenum">5:</span>$\hspace{2.4em}$<strong>for</strong> $k=j:n$ <strong>do</strong><br />
+<span class="linenum">6:</span>$\hspace{3.6em}$$u_{ik} = u_{ik} - \ell_{ij}u_{jk}$<br />
+<span class="linenum">7:</span>$\hspace{2.4em}$<strong>end for</strong><br />
+<span class="linenum">8:</span>$\hspace{1.2em}$<strong>end for</strong><br />
+<span class="linenum">9:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+<li>Note that the entries of $U$ are updated each iteration<br />
+so at the start of step $j$, $U = L_{j-1}L_{j-2}\cdots L_1 A$</li>
+<li>Here line 4 comes straight from the definition $\ell_{ij} = \frac{u_{ij}}{u_{jj}}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>Line 6 accounts for the effect of $L_j$ on columns $k = j, \ldots, n$ of $U$</li>
+<li>For $k=j:n$ we have
+<div style="font-size:1em;margin:0;margin-left:-2em;">
+<p>
+\[
+L_j u_{(:,k)} =
+\left[
+\begin{array}{cccccc}
+1 &amp; \cdots &amp; 0 &amp; 0 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; 1 &amp; 0 &amp; \cdots &amp; 0\\
+0 &amp; \cdots &amp; -\ell_{j+1,j} &amp; 1 &amp; \cdots &amp; 0\\
+\vdots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+0 &amp; \cdots &amp; -\ell_{nj} &amp; 0 &amp; \cdots &amp; 1
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+u_{1k}\\
+\vdots\\
+u_{jk}\\
+u_{j+1,k}\\
+\vdots\\
+  u_{nk}
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+u_{1k}\\
+\vdots\\
+u_{jk}\\
+u_{j+1,k} - \ell_{j+1,j}u_{jk}\\
+\vdots\\
+  u_{nk} - \ell_{nj}u_{jk}
+\end{array}
+\right]
+\]
+</p>
+</div></li>
+<li>The right hand side is the updated $k$-th column of $U$,<br />
+which is computed in line 6</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>LU Factorization</h2>
+<ul>
+<li>LU factorization involves a triple nested loop, hence $\mathcal{O}(n^3)$ operations</li>
+<li>Careful operation counting shows LU factorization requires
+<ul>
+<li>$\sim \frac{1}{3}n^3$ additions</li>
+<li>$\sim \frac{1}{3}n^3$ multiplications</li>
+</ul></li>
+<li>Therefore $\sim \frac{2}{3}n^3$ operations in total</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving Linear Systems Using LU</h2>
+<ul>
+<li>To solve $Ax = b$, we perform the following three steps:
+<ul>
+<li><span class="color2">Step 1</span>: Factorize $A$ into $A=LU$: $\sim \frac{2}{3}n^3$</li>
+<li><span class="color2">Step 2</span>: Solve $Ly = b$ by forward substitution: $\sim n^2$</li>
+<li><span class="color2">Step 3</span>: Solve $Ux = y$ by backward substitution: $\sim n^2$</li>
+</ul></li>
+<li>The total work, dominated by Step 1, is $\sim \frac{2}{3}n^3$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving Linear Systems Using LU</h2>
+<ul>
+<li>An alternative approach would be to first compute $A^{-1}$<br />
+and evaluate $x = A^{-1}b$, but this is a <span class="color0">bad idea!</span></li>
+<li><span class="color2">Question</span>: How would we compute $A^{-1}$?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving Linear Systems Using LU</h2>
+<ul>
+<li><span class="color2">Answer</span>: Let $a^\text{inv}_{(:,k)}$ denote the $k$-th column of $A^{-1}$, then $a^\text{inv}_{(:,k)}$ must satisfy
+\[
+A a^\text{inv}_{(:,k)} = e_k
+\]
+where $e_k$ is the $k$-th basis vector</li>
+<li>Therefore, inverting matrix $A$ reduces to solving $Ax=b$ for $n$ various $b$</li>
+<li>We first factorize $A=LU$, then forward/backward substitute for
+\[
+LU a^\text{inv}_{(:,k)}=e_k, \quad k = 1, \ldots, n
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving Linear Systems Using LU</h2>
+<ul>
+<li>Solving linear systems using $A^{-1}$ is <span class="color0">inefficient!</span>
+<ul>
+<li>one pair of substitutions requires $\sim 2n^2$ operations</li>
+<li>$n$ pairs of substitutions require $\sim 2n^3$ operations</li>
+<li>evaluating $A^{-1}b$ takes $\sim 2n^2$ operations<br />
+(as many as one pair of substitutions)</li>
+</ul></li>
+<li>A rule of thumb in Numerical Linear Algebra:<br />
+<span class="color0">It is rarely a good idea to compute $A^{-1}$ explicitly</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Solving Linear Systems Using LU</h2>
+<ul>
+<li>Another case where LU factorization is very helpful<br />
+is if we want to solve $Ax = b_i$ for several different<br />
+right-hand sides $b_i$, $i = 1,\ldots,k$</li>
+<li>We incur the $\sim \frac{2}{3}n^3$ cost only once,<br />
+and then each subsequent pair of forward/backward<br />
+substitutions costs only $\sim 2n^2$</li>
+<li>Makes a huge difference if $n$ is large!</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability of Gaussian Elimination</h2>
+<ul>
+<li><span class="color0">There is a problem with the LU algorithm presented above</span></li>
+<li>Consider the matrix
+\[
+A =
+\left[
+\begin{array}{cc}
+0 &amp; 1\\
+1 &amp; 1
+\end{array}
+\right]
+\]
+</li>
+<li>$A$ is nonsingular, well-conditioned ($\kappa(A) \approx 2.62$)<br />
+but LU factorization fails at first step (division by zero)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability of Gaussian Elimination</h2>
+<ul>
+<li>LU factorization doesn’t fail for
+\[
+A =
+\left[
+\begin{array}{cc}
+10^{-20} &amp; 1\\
+1 &amp; 1
+\end{array}
+\right]
+\]
+but we get
+\[
+L =
+\left[
+\begin{array}{cc}
+1 &amp; 0\\
+10^{20} &amp; 1
+\end{array}
+\right]
+,
+\qquad
+U =
+\left[
+\begin{array}{cc}
+10^{-20} &amp; 1\\
+0 &amp; 1-10^{20}
+\end{array}
+\right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability of Gaussian Elimination</h2>
+<ul>
+<li>Let’s suppose that $-10^{20} \in \mathbb F$ (a floating point number)<br />
+and that $\mathop{\mathrm{round}}(1-10^{20}) = -10^{20}$</li>
+<li>Then in finite precision arithmetic we get
+\[
+\widetilde L =
+\left[
+\begin{array}{cc}
+1 &amp; 0\\
+10^{20} &amp; 1
+\end{array}
+\right]
+,
+\qquad
+\widetilde U =
+\left[
+\begin{array}{cc}
+10^{-20} &amp; 1\\
+0 &amp; -10^{20}
+\end{array}
+\right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability of Gaussian Elimination</h2>
+<ul>
+<li>Hence due to rounding error we obtain
+\[
+\widetilde L \widetilde U =
+\left[
+\begin{array}{cc}
+10^{-20} &amp; 1\\
+1 &amp;\htmlClass{color0}{  0}
+\end{array}
+\right]
+\]
+which is not close to
+\[
+A =
+\left[
+\begin{array}{cc}
+10^{-20} &amp; 1\\
+1 &amp; 1
+\end{array}
+\right]
+\]
+</li>
+<li>Then, for example, let $b = [3,3]^T$<br />
+
+<ul>
+<li>using $\widetilde L \widetilde U$, we get $\tilde x = [3,3]^T$</li>
+<li>true answer is $x = [0,3]^T$</li>
+</ul></li>
+<li>The relative error is large<br />
+even though the problem is well-conditioned</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability of Gaussian Elimination</h2>
+<ul>
+<li>In this example, standard Gaussian elimination yields a large residual</li>
+<li>Or equivalently, it yields the exact solution to a problem<br />
+corresponding to a large input perturbation: $\Delta b = [0,3]^T$</li>
+<li>So the algorithm is <span class="color0">unstable!</span></li>
+<li>In this case the cause of the large error in $x$<br />
+is numerical instability, not ill-conditioning</li>
+<li>To stabilize Gaussian elimination, we need to permute rows,<br />
+i.e. perform <span class="color2">pivoting</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Pivoting</h2>
+<ul>
+<li>Recall the Gaussian elimination process
+\[
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+\; &amp; x_{jj} &amp; * &amp; *\\
+\; &amp; * &amp; * &amp; *\\
+\; &amp; * &amp; * &amp; *
+\end{array}
+\right]
+\longrightarrow
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+\; &amp; x_{jj} &amp; * &amp; *\\
+\; &amp; 0 &amp; * &amp; *\\
+\; &amp; 0 &amp; * &amp; *
+\end{array}
+\right]
+\]
+</li>
+<li>But we could just as easily do
+\[
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+\; &amp; * &amp; * &amp; *\\
+\; &amp; x_{ij} &amp; * &amp; *\\
+\; &amp; * &amp; * &amp; *
+\end{array}
+\right]
+\longrightarrow
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+\; &amp; 0 &amp; * &amp; *\\
+\; &amp;  x_{ij} &amp; * &amp; *\\
+\; &amp; 0 &amp; * &amp; *
+\end{array}
+\right]
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Partial Pivoting</h2>
+<ul>
+<li>The entry $x_{ij}$ is called the <span class="color2">pivot</span>, and flexibility<br />
+in choosing the pivot is essential otherwise we can’t deal with:
+\[
+A =
+\left[
+\begin{array}{cc}
+0 &amp; 1\\
+1 &amp; 1
+\end{array}
+\right]
+\]
+</li>
+<li>Choosing the pivot as the largest element in column $j$<br />
+improves numerical stability. This is called <span class="color1">partial pivoting</span></li>
+<li><span class="color2">Full pivoting</span> additionally permutes the columns and looks for the largest<br />
+over $\mathcal{O}(n^2)$ elements, which is costly and only marginally beneficial for stability</li>
+<li>This ensures that each $\ell_{ij}$ entry — which acts as a <span class="color0">multiplier</span> in the LU factorization process — satisfies $|\ell_{ij}| \leq 1$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Partial Pivoting</h2>
+<ul>
+<li>To maintain the triangular LU structure,<br />
+we permute rows by premultiplying by permutation matrices
+<div style="margin-left:-2em;">
+<p>
+\[
+\begin{array}{ccccc}
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+&amp; * &amp; * &amp; *\\
+&amp; * &amp; * &amp; *\\
+&amp; \htmlClass{color2}{ x_{ij}} &amp; \htmlClass{color2}{ *} &amp; \htmlClass{color2}{ *}
+\end{array}
+\right]
+&amp;
+\xrightarrow{P_1}
+&amp;
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+&amp; \htmlClass{color2}{ x_{ij}} &amp; \htmlClass{color2}{ *} &amp; \htmlClass{color2}{ *}\\
+&amp; * &amp; * &amp; *\\
+&amp; \htmlClass{color2}{ *} &amp; \htmlClass{color2}{ *} &amp; \htmlClass{color2}{ *}
+\end{array}
+\right]
+&amp;
+\xrightarrow{L_1}
+&amp;
+\left[
+\begin{array}{cccc}
+* &amp; * &amp; * &amp; *\\
+&amp; x_{ij} &amp; * &amp; *\\
+&amp; 0 &amp; * &amp; *\\
+&amp; 0 &amp; * &amp; *
+\end{array}
+\right]\\
+{\rm pivot~selection} &amp; &amp; {\rm row~swap}
+\end{array}\hspace{-2em}
+\]
+</p>
+</div></li>
+<li>In this case
+\[
+P_1 =
+\left[
+\begin{array}{cccc}
+1 &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 1\\
+0 &amp; 0 &amp; 1 &amp; 0\\
+0 &amp; 1 &amp; 0 &amp; 0
+\end{array}
+\right]
+\]
+and each $P_j$ is obtained by swapping two rows of ${\rm I}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Partial Pivoting</h2>
+<ul>
+<li>Therefore, with partial pivoting we obtain
+\[
+L_{n-1}P_{n-1} \cdots L_2 P_2 L_1 P_1 A = U
+\]
+</li>
+<li>It can be shown (we omit the details here, see Trefethen &amp; Bau)<br />
+that this can be rewritten as
+\[
+\htmlClass{color2}{  P A = L U}
+\]
+where $P = P_{n-1} \cdots P_2 P_1$. Note that $L$ is not the same as without pivoting</li>
+<li><span class="color2">Theorem</span>: Gaussian elimination with partial pivoting produces<br />
+nonsingular factors $L$ and $U$ if and only if $A$ is nonsingular</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Partial Pivoting</h2>
+<ul>
+<li>Pseudocode for LU factorization with partial pivoting<br />
+(new code is <span class="color5">highlighted</span>):
+<div style="font-size:0.8em;text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$$U=A$, $L={\rm I}$, <span class="color5">$P={\rm I}$</span><br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $j = 1:n-1$ <strong>do</strong></p>
+<div class="color5">
+<p><span class="linenum">3:</span>$\hspace{1.2em}$Select $i (\geq j)$ that maximizes $|u_{ij}|$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}$Swap rows of $U$: $u_{(j,j:n)} \leftrightarrow u_{(i,j:n)}$<br />
+<span class="linenum">5:</span>$\hspace{1.2em}$Swap rows of $L$: $\ell_{(j,1:j-1)} \leftrightarrow \ell_{(i,1:j-1)}$<br />
+<span class="linenum">6:</span>$\hspace{1.2em}$Swap rows of $P$: $p_{(j,:)} \leftrightarrow p_{(i,:)}$</p>
+</div>
+<p><span class="linenum">7:</span>$\hspace{1.2em}$<strong>for</strong> $i=j+1:n$ <strong>do</strong><br />
+<span class="linenum">8:</span>$\hspace{2.4em}$$\ell_{ij} = u_{ij}/u_{jj}$<br />
+<span class="linenum">9:</span>$\hspace{2.4em}$<strong>for</strong> $k=j:n$ <strong>do</strong><br />
+<span class="linenum">10:</span>$\hspace{3.6em}$$u_{ik} = u_{ik} - \ell_{ij}u_{jk}$<br />
+<span class="linenum">11:</span>$\hspace{2.4em}$<strong>end for</strong><br />
+<span class="linenum">12:</span>$\hspace{1.2em}$<strong>end for</strong><br />
+<span class="linenum">13:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+<li>Again this requires $\sim \frac{2}{3}n^3$ floating point operations</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Partial Pivoting: Solve $Ax = b$</h2>
+<ul>
+<li>To solve $Ax = b$ using the factorization $PA = LU$
+<ul>
+<li>Multiply through by $P$ to obtain $PAx = LUx = Pb$</li>
+<li>Solve $Ly = Pb$ using forward substitution</li>
+<li>Then solve $Ux = y$ using back substitution</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Partial Pivoting in Python</h2>
+<ul>
+<li>Python’s <code>scipy.linalg.lu</code> function can do LU factorization with pivoting</li>
+</ul>
+<pre style="width:60%;"><code data-trim class="python">
+>>> import numpy as np
+>>> import scipy.linalg
+>>> A=np.random.rand(4, 4)
+>>> (P,L,U) = scipy.linalg.lu(A)
+>>> A
+array([[0.48657354, 0.72177328, 0.89725033, 0.10555858],
+       [0.19356039, 0.21192135, 0.001038  , 0.20308355],
+       [0.04709362, 0.82519218, 0.29700521, 0.85089909],
+       [0.35533098, 0.30291277, 0.98852909, 0.7303831 ]])
+>>> P
+array([[1., 0., 0., 0.],
+       [0., 0., 0., 1.],
+       [0., 1., 0., 0.],
+       [0., 0., 1., 0.]])
+>>> L
+array([[ 1.        ,  0.        ,  0.        ,  0.        ],
+       [ 0.09678623,  1.        ,  0.        ,  0.        ],
+       [ 0.73027189, -0.29679299,  1.        ,  0.        ],
+       [ 0.39780295, -0.09956144, -0.8465861 ,  1.        ]])
+>>> U
+array([[0.48657354, 0.72177328, 0.89725033, 0.10555858],
+       [0.        , 0.75533446, 0.21016373, 0.84068247],
+       [0.        , 0.        , 0.39566752, 0.9028053 ],
+       [0.        , 0.        , 0.        , 1.00909401]])
+</code></pre>
+</section>
+<section class="slide level2">
+<h2>Stability of Gaussian Elimination</h2>
+<ul>
+<li>Numerical stability of Gaussian Elimination has been<br />
+an important research topic since the 1940s</li>
+<li>Major figure in this field: James H. Wilkinson (England, 1919–1986)</li>
+<li>Showed that for $Ax = b$ with $A \in \mathbb R^{n\times n}$:
+<ul>
+<li>Gaussian elimination without partial pivoting is numerically unstable<br />
+(as we’ve already seen)</li>
+<li>Gaussian elimination with partial pivoting satisfies
+\[
+\htmlClass{color0}{ \frac{\|r\|}{\|A\|\|x\|} \leq 2^{n-1}n^2 \epsilon_\text{mach}}
+\]
+</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability of Gaussian Elimination</h2>
+<ul>
+<li>That is, pathological cases exist where the <span class="color2">relative residual</span> $\frac{\|r\|}{\|A\|\|x\|}$ grows<br />
+exponentially with $n$ due to rounding error</li>
+<li>Worst case behavior of Gaussian Elimination with partial pivoting is explosive instability <span class="color0">but such pathological cases are extremely rare!</span></li>
+<li>In over $50$ years of Scientific Computation, instability has only been encountered due to deliberate construction of pathological cases</li>
+<li>In practice, Gaussian elimination is stable in the sense that it produces a small relative residual</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stability of Gaussian Elimination</h2>
+<ul>
+<li>In practice, we typically obtain
+\[
+\htmlClass{color2}{ \frac{\|r\|}{\|A\|\|x\|} \lesssim n \epsilon_\text{mach}}
+\]
+i.e. grows only linearly with $n$, and is scaled by $\epsilon_\text{mach}$</li>
+<li>Combining this result with our inequality $(*)$:
+\[
+\frac{\|\Delta x\|}{\|x\|} \leq \kappa(A)\frac{\|r\|}{\|A\|\|x\|}
+\]
+implies that in practice Gaussian elimination gives small error for well-conditioned problems!</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Cholesky Factorization</h2>
+</section>
+<section class="slide level2">
+<h2>Cholesky Factorization</h2>
+<ul>
+<li>Suppose that matrix $A \in \mathbb R^{n\times n}$ is
+<ul>
+<li><span class="color2">symmetric</span>: $A^T = A$</li>
+<li><span class="color2">positive definite</span>: for any $x \neq 0$, $x^T A x &gt; 0$</li>
+</ul></li>
+<li>Then the matrix can be represented as
+\[
+A=L L^T
+\]
+known as <span class="color2">Cholesky factorization</span>,<br />
+where $L\in \mathbb R^{n\times n}$ is a lower triangular matrix</li>
+<li>In general, any matrix of the form $BB^T$<br />
+is symmetric and positive definite for any nonsingular $B \in \mathbb R^{n\times n}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Cholesky Factorization</h2>
+<ul>
+<li>Matrix $L$ is found directly from equation
+<p>
+\[
+A=L L^T
+\]
+</p></li>
+<li>Consider the $3\times 3$ case
+<p>
+\[
+\left[\begin{array}{ccc}a_{11} &amp; * &amp; *\\a_{21} &amp; a_{22} &amp; *\\a_{31} &amp; a_{32}
+&amp; a_{33}\end{array}\right] = \left[\begin{array}{ccc}\ell_{11}^{2} &amp; * &amp;
+*\\\ell_{11} \ell_{21} &amp; \ell_{21}^{2} + \ell_{22}^{2} &amp; *\\\ell_{11}
+\ell_{31} &amp; \ell_{21} \ell_{31} + \ell_{22} \ell_{32} &amp; \ell_{31}^{2} +
+\ell_{32}^{2} + \ell_{33}^{2}\end{array}\right]
+\]
+</p></li>
+<li>Equate components starting with the first column
+\[
+\begin{array}{l|l|l}
+  \ell_{11} = \sqrt{a_{11}}
+  &amp;
+  &amp;
+\\
+  \ell_{21} = a_{21}/\ell_{11}
+  &amp;
+  \ell_{22} = \sqrt{a_{22} - \ell_{21}^2}
+  &amp;
+\\
+  \ell_{31} = a_{31}/\ell_{11}
+  &amp;
+  \ell_{32} = (a_{32} - \ell_{21}\ell_{31})/\ell_{22}
+  &amp;
+  \ell_{33} = \sqrt{a_{33} - \ell_{31}^2 - \ell_{32}^2}
+\end{array}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Cholesky Factorization</h2>
+<ul>
+<li>The same approach is generalized to the $n\times n$ case
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$$L = 0$<br />
+<span class="linenum">2:</span>$\hspace{0em}$$\ell_{ij} = a_{ij}$ <strong>for</strong> $i=1,\ldots,n$, $j=1,\ldots,i$<br />
+<span class="linenum">3:</span>$\hspace{0em}$<strong>for</strong> $j = 1:n$ <strong>do</strong><br />
+<span class="linenum">4:</span>$\hspace{1.2em}$$\ell_{jj} = \sqrt{\ell_{jj}}$<br />
+<span class="linenum">5:</span>$\hspace{1.2em}$<strong>for</strong> $i=j+1:n$ <strong>do</strong><br />
+<span class="linenum">6:</span>$\hspace{2.4em}$$\ell_{ij} = \ell_{ij}/\ell_{jj}$<br />
+<span class="linenum">7:</span>$\hspace{1.2em}$<strong>end for</strong><br />
+<span class="linenum">8:</span>$\hspace{1.2em}$<strong>for</strong> $k=j+1:n$ <strong>do</strong><br />
+<span class="linenum">9:</span>$\hspace{2.4em}$<strong>for</strong> $i=k:n$ <strong>do</strong><br />
+<span class="linenum">10:</span>$\hspace{3.6em}$$\ell_{ik} = \ell_{ik} - \ell_{ij}\ell_{kj}$<br />
+<span class="linenum">11:</span>$\hspace{2.4em}$<strong>end for</strong><br />
+<span class="linenum">12:</span>$\hspace{1.2em}$<strong>end for</strong><br />
+<span class="linenum">13:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Cholesky Factorization</h2>
+<ul>
+<li>Notes on Cholesky factorization
+<ul>
+<li>Cholesky factorization is numerically stable<br />
+and does not require pivoting</li>
+<li>Operation count: $\sim \frac{1}{3}n^3$ operations in total,<br />
+i.e. about <span class="color1">half as many</span> as Gaussian elimination</li>
+<li>Only need to store $L$, so uses less memory than LU.<br />
+Can be done in-place, overwriting matrix $A$</li>
+</ul></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/cholesky.py">[examples/unit2/cholesky.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Performance Metrics</h2>
+</section>
+<section class="slide level2">
+<h2>Performance Metrics</h2>
+<ul>
+<li>There are various metrics for software performance
+<ul>
+<li>performance (FLOP/s): floating point operations per second</li>
+<li>time to solution</li>
+<li>scaling efficiency (for parallel computing)</li>
+</ul></li>
+<li>High Performance Computing studies and develops efficient<br />
+implementations of numerical algorithms</li>
+<li>Naive Python implementations (e.g. using for-loops) are typically slow</li>
+<li>Modules such as NumPy rely on faster implementations (e.g. written in C)</li>
+<li>Example of performance measurements for Cholesky factorization
+<ul>
+<li>Python <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/cholesky_time.py">[examples/unit2/cholesky_time.py]</a></li>
+<li>C++ <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/cholesky_time.cpp">[examples/unit2/cholesky_time.cpp]</a></li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sparse Matrices</h2>
+<ul>
+<li>In applications, we often encounter <span class="color5">sparse matrices</span></li>
+<li>Common example: discretizations of partial differential equations</li>
+<li>The term <span class="color5">sparse matrix</span> typically means that the number<br />
+of non-zero elements is comparable to the number of rows or columns<br />
+(e.g. $n\times n$ matrix with $\mathcal{O}(n)$ non-zeros)</li>
+<li>It is advantageous to store and operate only on non-zero elements</li>
+<li>Positions of non-zero elements of a sparse matrix form its <span class="color5">sparsity pattern</span></li>
+<li>Matrices that are not sparse are called <span class="color5">dense matrices</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sparse Matrices</h2>
+<ul>
+<li><span class="color5">Dense matrices</span> are typically stored as two-dimensional arrays</li>
+<li><span class="color5">Sparse matrices</span> benefit from special data structures and algorithms<br />
+for computational efficiency</li>
+<li>Example from <a href="../unit1/#/58">Unit 1 (constructing a spline)</a>
+<ul>
+<li>a tridiagonal matrix is stored as three one-dimensional arrays</li>
+<li>the linear system is solved using the TDMA algorithm</li>
+</ul></li>
+<li>Standard algorithms (e.g. LU or Cholesky factorization) can be directly applied to sparse matrices. However, new non-zero elements will appear</li>
+<li>These new non-zero elements are called the <span class="color5">fill-in</span>.<br />
+Fill-in can be reduced by permuting rows and columns of the matrix</li>
+<li><a href="https://docs.scipy.org/doc/scipy/reference/sparse.html"><code>scipy.sparse</code></a> implements sparse linear algebra</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Sparse Matrices: Data Structures</h2>
+<ul>
+<li><span class="color5">Coordinate format</span> (COO):<br />
+Arrays: <code>data</code>, <code>row</code>, <code>col</code><br />
+Element <code>data[k]</code> is in row <code>row[k]</code> and column <code>col[k]</code></li>
+<li><span class="color5">Compressed Sparse Row</span> (CSR):<br />
+Arrays: <code>data</code>, <code>indices</code>, <code>indptr</code><br />
+Row <code>i</code> contains elements <code>data[indptr[i]:indptr[i+1]]</code><br />
+in columns <code>indices[indptr[i]:indptr[i+1]]</code></li>
+<li><span class="color5">Compressed Sparse Column</span> (CSC):<br />
+Arrays: <code>data</code>, <code>indices</code>, <code>indptr</code><br />
+Column <code>j</code> contains elements <code>data[indptr[j]:indptr[j+1]]</code><br />
+in rows <code>indices[indptr[j]:indptr[j+1]]</code></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Sparse Matrix</h2>
+<p>
+\[
+\small \left[\begin{array}{ccccc}
+  a &amp; b &amp; b &amp; b &amp; b \\
+  0 &amp; c &amp; 0 &amp; 0 &amp; 0 \\
+  0 &amp; 0 &amp; c &amp; 0 &amp; 0 \\
+  0 &amp; 0 &amp; 0 &amp; c &amp; 0
+\end{array}\right]
+
+\]
+</p>
+<div class="rowf">
+<div class="columnf">
+<ul>
+<li><span class="color5">Coordinate format</span> (COO):<br />
+$\texttt{data}=(a, b, b, b, b, c, c ,c)$<br />
+$\texttt{row}=(0, 0, 0, 0, 0, 1, 2, 3)$<br />
+$\texttt{col}=(0, 1, 2, 3, 4, 1, 2, 3)$ (assume zero-based indexing)</li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/sparse.py">[examples/unit2/sparse.py]</a></li>
+</ul>
+</div>
+<div class="columnf">
+<ul>
+<li><span class="color5">Compressed Sparse Row</span> (CSR):<br />
+$\texttt{data}=(a, b, b, b, b, c, c, c)$<br />
+$\texttt{indices}=(0, 1, 2, 3, 4, 1, 2, 3)$<br />
+$\texttt{indptr}=(0, 5, 6, 7, 8)$</li>
+<li><span class="color5">Compressed Sparse Column</span> (CSC)<br />
+$\texttt{data}=(a, b, c, b, c, b, c, b)$<br />
+$\texttt{indices}=(0, 0, 1, 0, 2, 0, 3, 0)$<br />
+$\texttt{indptr}=(0, 1, 3, 5, 7, 8)$</li>
+</ul>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>QR Factorization</h2>
+<ul>
+<li>A <span class="color5">square</span> matrix $Q \in\mathbb R^{n\times n}$ is called <span class="color5">orthogonal</span><br />
+if its columns and rows are orthonormal vectors</li>
+<li>Equivalently, $Q^T Q = Q Q^T = {\rm I}$</li>
+<li>Orthogonal matrices preserve the Euclidean norm of a vector
+\[
+\|Qv\|_2^2 = v^T Q^T Q v = v^T v = \|v\|_2^2
+\]
+</li>
+<li>Geometrically, orthogonal matrices correspond to <span class="color5">reflection</span> or <span class="color5">rotation</span></li>
+<li>Orthogonal matrices are very important in scientific computing,<br />
+<span class="color5">norm-preservation implies no amplification of numerical error!</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Factorization</h2>
+<ul>
+<li>The <span class="color5">full $QR$ factorization</span> of matrix $A \in \mathbb R^{m\times n}$, $m \geq n$ has the form
+\[
+A = QR
+\]
+where
+<ul>
+<li>$Q \in \mathbb R^{m\times m}$ is orthogonal</li>
+<li>$R = {\small \Big[\!\!\begin{array}{c} \hat R\\ 0 \end{array}\!\!\Big]} \in \mathbb R^{m\times n}$</li>
+<li>$\hat R \in \mathbb R^{n\times n}$ is upper-triangular</li>
+</ul></li>
+<li>QR is used for solving <span class="color5">overdetermined linear least-squares problems</span></li>
+<li>QR can be used for solving square systems, but requires<br />
+twice as many operations as Gaussian elimination</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Factorization</h2>
+<ul>
+<li>Consider the 2-norm of the least-squares residual
+\[
+\begin{split}
+  \|r(x)\|_2^2
+= \|b - Ax\|_2^2
+=  \Big\|b -  Q
+  {\small \Big[\!\!\begin{array}{c} \hat R\\ 0 \end{array}\!\!\Big]}
+  x\Big\|_2^2 =\\
+=
+\Big\| Q^T\Big(b -
+Q
+  {\small \Big[\!\!\begin{array}{c} \hat R\\ 0 \end{array}\!\!\Big]}
+x\Big)
+\Big\|_2^2
+=
+\Big\| Q^Tb -
+  {\small \Big[\!\!\begin{array}{c} \hat R\\ 0 \end{array}\!\!\Big]}
+x\Big\|_2^2\end{split}
+\]
+</li>
+<li>Denote ${\small \Big[\!\!\begin{array}{c} c_1\\ c_2 \end{array}\!\!\Big]} = Q^T b$ with $c_1 \in \mathbb R^n, c_2 \in \mathbb R^{m-n}$, so that
+\[
+\|r(x)\|_2^2 =
+\Big\|
+  {\small \Big[\!\!\begin{array}{c} c_1\\ c_2 \end{array}\!\!\Big]}
+  -
+  {\small \Big[\!\!\begin{array}{c} \hat R\\ 0 \end{array}\!\!\Big]}
+x\Big\|_2^2
+=
+\Big\|
+  {\small \Big[\!\!\begin{array}{c} c_1 - \hat Rx\\ c_2 \end{array}\!\!\Big]}
+\Big\|_2^2
+=
+\|c_1 - \hat Rx\|_2^2 + \|c_2\|_2^2
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Factorization</h2>
+<ul>
+<li><span class="color5">Question:</span> How do we choose $x$ to minimize $\|r(x)\|_2$?
+\[
+\|r(x)\|_2^2 =
+\|c_1 - \hat Rx\|_2^2 + \|c_2\|_2^2
+\]
+where $A = Q{\small \Big[\!\!\begin{array}{c} \hat R\\ 0 \end{array}\!\!\Big]}$ and ${\small \Big[\!\!\begin{array}{c} c_1\\ c_2 \end{array}\!\!\Big]} = Q^T b$</li>
+<li><span class="color5">Answer:</span> Only the first term depends on $x$. Try setting<br />
+the first term to zero, i.e. solve the $n\times n$ triangular system
+\[
+\hat Rx = c_1
+\]
+</li>
+<li>This is what <code>numpy.linalg.lstsq()</code> does</li>
+<li>Also, this implies that $\min\limits_{x\in\mathbb R^n}\|r(x)\|_2 = \|c_2\|_2$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Factorization</h2>
+<ul>
+<li>Recall that solving linear least-squares via the normal equations<br />
+requires solving a system with the matrix $A^T A$</li>
+<li>But using the normal equations directly is problematic since
+\[
+\kappa(A^T A) = \kappa(A)^2
+\]
+(with $\kappa(A)$ for rectangular $A$ defined using SVD, to be covered soon)</li>
+<li>The QR approach avoids this condition-squaring effect<br />
+and is much more <span class="color5">numerically stable!</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>QR Factorization</h2>
+<ul>
+<li><span class="color5">How do we compute the QR factorization?</span></li>
+<li>There are three main methods
+<ul>
+<li>Gram–Schmidt orthogonalization</li>
+<li>Householder triangularization</li>
+<li>Givens rotations</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gram–Schmidt Orthogonalization</h2>
+<ul>
+<li>Suppose $A \in \mathbb R^{m\times n}$, $m \geq n$</li>
+<li>One way to picture the QR factorization is to construct<br />
+a sequence of <span class="color5">orthonormal</span> vectors $q_1, q_2, \ldots$ such that
+\[
+\mathop{\mathrm{span}}\{q_1,q_2,\ldots,q_j\} = \mathop{\mathrm{span}}\{a_{(:,1)},a_{(:,2)},\ldots,a_{(:,j)}\}, \quad j = 1,\ldots,n
+\]
+</li>
+<li>We seek coefficients $r_{ij}$ such that
+\[
+\begin{aligned}
+a_{(:,1)} &amp;= r_{11} q_1\\
+a_{(:,2)} &amp;= r_{12} q_1 + r_{22} q_2\\
+&amp;\dots\\
+a_{(:,n)} &amp;= r_{1n} q_1 + r_{2n} q_2 + \ldots + r_{nn}q_n\end{aligned}
+\]
+</li>
+<li>This can be done via the <span class="color5">Gram–Schmidt process</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gram–Schmidt Orthogonalization</h2>
+<ul>
+<li>In matrix form we have:
+\[
+\left[
+\begin{array}{c|c|c|c}
+&amp;&amp;&amp;\\
+&amp;&amp;&amp;\\
+a_{(:,1)} &amp; a_{(:,2)} &amp; \cdots &amp; a_{(:,n)}\\
+&amp;&amp;&amp;\\
+&amp;&amp;&amp;\\
+\end{array}
+\right]
+\begin{array}{c}
+\\
+\\
+=\\
+\\
+\\
+\end{array}
+\left[
+\begin{array}{c|c|c|c}
+&amp;&amp;&amp;\\
+&amp;&amp;&amp;\\
+q_1 &amp; q_2 &amp; \cdots &amp; q_n\\
+&amp;&amp;&amp;\\
+&amp;&amp;&amp;\\
+\end{array}
+\right]
+\left[
+\begin{array}{cccc}
+r_{11} &amp; r_{12} &amp; \cdots &amp; r_{1n} \\
+       &amp; r_{22} &amp;        &amp;  r_{2n} \\
+       &amp;        &amp; \ddots &amp;  \vdots\\
+       &amp;        &amp;        &amp; r_{nn}
+\end{array}
+\right]
+\]
+</li>
+<li>This gives $A = \hat Q \hat R$ for $\hat Q \in \mathbb R^{m\times n}$, $\hat R \in \mathbb R^{n\times n}$</li>
+<li>This is called the <span class="color5">reduced QR factorization</span> of $A$,<br />
+which is different from the full QR factorization: $Q$ is non-square</li>
+<li>Note that for $m&gt;n$, $\hat Q^T \hat Q = {\rm I}$, but $\hat Q \hat Q^T \neq {\rm I}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Full vs Reduced QR Factorization</h2>
+<ul>
+<li>To obtain the <span class="color5">full QR factorization</span> defined earlier
+\[
+A = QR
+\]
+
+<ul>
+<li>append $\hat Q$ by $m-n$ arbitrary columns<br />
+that are linearly independent with columns of $\hat Q$</li>
+<li>apply the Gram–Schmidt process to obtain an orthogonal $Q\in \mathbb R^{m\times m}$</li>
+</ul></li>
+<li>We also need to append $\hat R$ with zero rows to obtain $R =  {\small \Big[\!\!\begin{array}{c} \hat R\\ 0 \end{array}\!\!\Big]}  \in \mathbb R^{m\times n}$<br />
+so that the new arbitrary columns in $Q$ do not affect the product</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Full vs Reduced QR Factorization</h2>
+<figure>
+<img data-src="media/full_qr.svg" style="margin:auto; display: block;" height="180" alt="Full QR" />
+<figcaption aria-hidden="true">Full QR</figcaption>
+</figure>
+<p> </p>
+<figure>
+<img data-src="media/reduced_qr.svg" style="margin:auto; display: block;" height="180" alt="Reduced QR" />
+<figcaption aria-hidden="true">Reduced QR</figcaption>
+</figure>
+</section>
+<section class="slide level2">
+<h2>Full vs Reduced QR Factorization</h2>
+<ul>
+<li><span class="color0">Exercise:</span> Show that the linear least-squares solution is given by
+\[
+\hat R x = \hat Q^T b
+\]
+by plugging $A = \hat Q \hat R$ into the normal equations</li>
+<li>This is equivalent to the least-squares result<br />
+we showed earlier using the full QR factorization, since $c_1 = \hat Q^T b$ </li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Full vs. Reduced QR Factorization</h2>
+<div class="rowf">
+<div class="columnf">
+<ul>
+<li>By default, <code>numpy.linalg.qr()</code> does reduced QR factorization</li>
+</ul>
+<pre class="python-repl"><code>&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; np.random.seed(2022)
+&gt;&gt;&gt; a = np.random.random((4,2))
+&gt;&gt;&gt; a
+array([[0.00935861, 0.49905781],
+       [0.11338369, 0.04997402],
+       [0.68540759, 0.48698807],
+       [0.89765723, 0.64745207]])
+&gt;&gt;&gt; (q, r) = np.linalg.qr(a)
+&gt;&gt;&gt; q
+array([[-0.00824455,  0.99789386],
+       [-0.09988626, -0.06374317],
+       [-0.60381526, -0.01057732],
+       [-0.79079826,  0.00572413]])
+&gt;&gt;&gt; r
+array([[-1.13512797, -0.81516102],
+       [ 0.        ,  0.4933763 ]])</code></pre>
+</div>
+<div class="columnf">
+<ul>
+<li>Supplying <code>mode="complete"</code> gives complete QR factorization</li>
+</ul>
+<pre class="python-repl"><code>&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; np.random.seed(2022)
+&gt;&gt;&gt; a = np.random.random((4,2))
+&gt;&gt;&gt; a
+array([[0.00935861, 0.49905781],
+       [0.11338369, 0.04997402],
+       [0.68540759, 0.48698807],
+       [0.89765723, 0.64745207]])
+&gt;&gt;&gt; (q, r) = np.linalg.qr(a, mode=&quot;complete&quot;)
+&gt;&gt;&gt; q
+array([[-0.00824455,  0.99789386, -0.02953283, -0.0571636 ],
+       [-0.09988626, -0.06374317, -0.61111959, -0.78261893],
+       [-0.60381526, -0.01057732,  0.66414863, -0.44068338],
+       [-0.79079826,  0.00572413, -0.42961291,  0.43593358]])
+&gt;&gt;&gt; r
+array([[-1.13512797, -0.81516102],
+       [ 0.        ,  0.4933763 ],
+       [ 0.        ,  0.        ],
+       [ 0.        ,  0.        ]])</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Gram–Schmidt Orthogonalization</h2>
+<ul>
+<li>Returning to the Gram–Schmidt process,<br />
+how do we compute the $q_i$, $i=1,\ldots,n$?</li>
+<li>In the $j$-th step, find a unit vector $q_j \in \mathop{\mathrm{span}}\{a_{(:,1)},a_{(:,2)},\ldots,a_{(:,j)}\}$<br />
+that is orthogonal to $\mathop{\mathrm{span}}\{q_1,q_n,\ldots,q_{j-1}\}$</li>
+<li>We set
+\[
+v_j = a_{(:,j)}-\sum_{i=1}^{j-1} (q^T_{i} a_{(:,j)}) q_i
+\]
+and then set $q_j = v_j / \|v_j\|_2$</li>
+<li><span class="color0">Exercise:</span> Verify that $q_j$ satisfies the requirements</li>
+<li>We can now determine the required values of $r_{ij}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gram–Schmidt Orthogonalization</h2>
+<ul>
+<li>From the equations $A=\hat Q \hat R$, for $j=1,\ldots,n$
+<div>
+<p>
+\[
+q_j = \frac{a_{(:,j)} - \sum_{i=1}^{j-1} r_{ij}q_i}{r_{jj}}
+\]
+</p>
+</div></li>
+<li>From the Gram–Schmidt process, for $j=1,\ldots,n$
+\[
+
+q_j =
+\frac{a_{(:,j)}-\sum_{i=1}^{j-1} (q^T_{i} a_{(:,j)}) q_i}
+{\| a_{(:,j)}-\sum_{i=1}^{j-1} (q^T_{i} a_{(:,j)}) q_i \|_2}
+
+\]
+</li>
+<li>Both expressions have the same structure, by matching the terms
+\[
+\begin{aligned}
+  r_{ij} &amp;= q_i^T a_{(:,j)} \qquad (i \neq j) \\
+  |r_{jj}| &amp;= \|a_{(:,j)} -\textstyle \sum_{i=1}^{j-1} r_{ij}q_i\|_2\end{aligned}
+
+\]
+</li>
+<li>The sign of $r_{jj}$ is not determined uniquely, so we can choose $r_{jj} &gt; 0$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Classical Gram–Schmidt Process</h2>
+<ul>
+<li>The resulting algorithm is referred to as the<br />
+<span class="color0">classical Gram–Schmidt (CGS) method</span>
+<div>
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$<strong>for</strong> $j = 1:n$ <strong>do</strong><br />
+<span class="linenum">2:</span>$\hspace{1.2em}$$v_j = a_{(:,j)}$<br />
+<span class="linenum">3:</span>$\hspace{1.2em}$<strong>for</strong> $i=1:j-1$ <strong>do</strong><br />
+<span class="linenum">4:</span>$\hspace{2.4em}$$r_{ij} = q_i^T a_{(:,j)}$<br />
+<span class="linenum">5:</span>$\hspace{2.4em}$$v_j = v_j - r_{ij}q_i$<br />
+<span class="linenum">6:</span>$\hspace{1.2em}$<strong>end for</strong><br />
+<span class="linenum">7:</span>$\hspace{1.2em}$$r_{jj} = \|v_j\|_2$<br />
+<span class="linenum">8:</span>$\hspace{1.2em}$$q_j = v_j / r_{jj}$<br />
+<span class="linenum">9:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gram–Schmidt Orthogonalization</h2>
+<ul>
+<li>The only way the Gram–Schmidt process can fail<br />
+is if $|r_{jj}| = \|v_j\|_2 = 0$ for some $j$</li>
+<li>This can only happen if $a_{(:,j)} = \sum_{i=1}^{j-1} r_{ij}q_i$ for some $j$,<br />
+i.e. if $a_{(:,j)} \in \mathop{\mathrm{span}}\{q_1,q_n,\ldots,q_{j-1}\} = \mathop{\mathrm{span}}\{a_{(:,1)},a_{(:,2)},\ldots,a_{(:,j-1)}\}$</li>
+<li>This means that columns of $A$ are linearly dependent</li>
+<li>Therefore, Gram–Schmidt fails $\implies$ columns of $A$ linearly dependent</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gram–Schmidt Orthogonalization</h2>
+<ul>
+<li>Therefore, if columns of $A$ are linearly independent,<br />
+then the Gram–Schmidt succeeds</li>
+<li>The only non-uniqueness in the Gram–Schmidt process<br />
+was in the sign of $r_{ii}$, therefore <span class="color5">$\hat Q \hat R$ is unique</span><br />
+under the requirement that all $r_{ii} &gt; 0$</li>
+<li>This proves the following<br />
+<span class="color5">Theorem:</span> Every $A \in \mathbb R^{m\times n} (m \geq n)$ of full rank<br />
+has a unique reduced QR factorization $A = \hat Q \hat R$ with $r_{ii} &gt; 0$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Gram–Schmidt Orthogonalization</h2>
+<ul>
+<li><span class="color5">Theorem</span>: Every $A \in \mathbb R^{m\times n} (m \geq n)$ has a full QR factorization</li>
+<li><span class="color1">Case 1:</span> $A$ has full rank
+<ul>
+<li>we compute the reduced QR factorization from above</li>
+<li>to make $Q$ square we pad $\hat Q$ with $m-n$ arbitrary<br />
+orthonormal columns</li>
+<li>we also pad $\hat R$ with $m-n$ zero rows to get $R$</li>
+</ul></li>
+<li><span class="color1">Case 2:</span> $A$ does not have full rank
+<ul>
+<li>at some point in computing the reduced QR factorization,<br />
+we encounter $\|v_j\|_2 = 0$</li>
+<li>at this point we pick an arbitrary unit $q_j$ orthogonal to<br />
+$\mathop{\mathrm{span}}\{q_1,q_2,\ldots,q_{j-1}\}$ and then proceed as in Case 1</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Modified Gram–Schmidt Process</h2>
+<ul>
+<li>The classical Gram–Schmidt process is <span class="color0">numerically unstable!</span><br />
+(sensitive to rounding error, orthogonality of the $q_j$ degrades)</li>
+<li>The algorithm can be reformulated to give<br />
+the <span class="color1">modified Gram–Schmidt process</span>,<br />
+which is numerically more robust</li>
+<li><span class="color5">Key idea:</span> when each new $q_j$ is computed,<br />
+orthogonalize each remaining column of $A$ against it</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Modified Gram–Schmidt Process</h2>
+<ul>
+<li>Applying this idea results in the<br />
+<span class="color0">modified Gram–Schmidt (MGS) method</span>
+<div>
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$<strong>for</strong> $i = 1:n$ <strong>do</strong><br />
+<span class="linenum">2:</span>$\hspace{1.2em}$$v_i = a_{(:,i)}$<br />
+<span class="linenum">3:</span>$\hspace{0em}$<strong>end for</strong><br />
+<span class="linenum">4:</span>$\hspace{0em}$<strong>for</strong> $i=1:n$ <strong>do</strong><br />
+<span class="linenum">5:</span>$\hspace{1.2em}$$r_{ii} = \|v_i\|_2$<br />
+<span class="linenum">6:</span>$\hspace{1.2em}$$q_i = v_i / r_{ii}$<br />
+<span class="linenum">7:</span>$\hspace{1.2em}$<strong>for</strong> $j=i+1:n$ <strong>do</strong><br />
+<span class="linenum">8:</span>$\hspace{2.4em}$$r_{ij} = q_i^Tv_j$<br />
+<span class="linenum">9:</span>$\hspace{2.4em}$$v_j = v_j - r_{ij} q_i$<br />
+<span class="linenum">10:</span>$\hspace{1.2em}$<strong>end for</strong><br />
+<span class="linenum">11:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Modified Gram–Schmidt Process</h2>
+<ul>
+<li><span class="color1">Key difference between MGS and CGS</span>
+<ul>
+<li>In CGS we compute orthogonalization coefficients $r_{ij}$<br />
+using the original column $a_{(:,j)}$</li>
+<li>In MGS we remove components of $a_{(:,j)}$<br />
+in $\mathop{\mathrm{span}}\{q_1, q_2, \ldots, q_{i-1}\}$ <span class="color5">before</span> computing $r_{ij}$</li>
+</ul></li>
+<li>This makes no difference mathematically:<br />
+In exact arithmetic components in $\mathop{\mathrm{span}}\{q_1, q_2, \ldots, q_{i-1}\}$<br />
+are annihilated by $q_i^T$</li>
+<li>But in practice it reduces degradation of orthogonality of the $q_j$<br />
+and improves the numerical stability of MGS over CGS</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Operation Count</h2>
+<ul>
+<li>MGS is dominated by the innermost loop (lines 8 and 9):
+\[
+\begin{aligned}
+r_{ij} &amp;= q_i^Tv_j\\
+v_j &amp;= v_j - r_{ij} q_i\end{aligned}
+\]
+</li>
+<li>The first requires $m$ multiplications, $m-1$ additions;<br />
+the second requires $m$ multiplications, $m$ subtractions</li>
+<li>Therefore, each innermost iteration takes $\sim 4m$ operations</li>
+<li>The rotal number of operations is asymptotically
+\[
+\sum_{i=1}^n\sum_{j=i+1}^n 4m \sim 4m \sum_{i=1}^n i \sim 2mn^2
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Alternative QR Factorization Methods</h2>
+<ul>
+<li>The QR factorization can also be computed using
+<ul>
+<li><span class="color5">Householder triangularization</span></li>
+<li><span class="color5">Givens rotations</span></li>
+</ul></li>
+<li>Both methods apply a sequence of orthogonal matrices
+\[
+Q_1, Q_2, Q_3, \ldots
+\]
+that successively remove terms below the diagonal<br />
+(similar to the LU factorization)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Triangularization</h2>
+</section>
+<section class="slide level2">
+<h2>Householder Triangularization</h2>
+<ul>
+<li>We will now discuss the <span class="color5">Householder triangularization</span> which is<br />
+more numerically stable and more efficient than Gram–Schmidt</li>
+<li>Unlike Gram–Schmidt, it will not guarantee that the orthonormal<br />
+basis at each step will span the same subspaces as columns of $A$<br />
+\[
+\mathop{\mathrm{span}}\{a_{(:,1)}\},\quad \mathop{\mathrm{span}}\{a_{(:,1)},a_{(:,2)}\},\quad\ldots
+\]
+which may be important for some applications</li>
+<li>Method used by <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.qr.html"><code>scipy.linalg.qr()</code></a> calling <a href="https://netlib.org/lapack/explore-html/df/dc5/group__variants_g_ecomputational_ga3766ea903391b5cf9008132f7440ec7b.html"><code>dgeqrf()</code></a> from <a href="https://netlib.org/lapack/lug/node69.html">LAPACK</a></li>
+<li>Introduced by Alston Householder (1904–1993, USA)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Triangularization</h2>
+<ul>
+<li><span class="color5">Idea:</span> Apply a succession of orthogonal matrices<br />
+$Q_k \in \mathbb R^{m\times m}$ to $A$ to compute an upper triangular matrix $R$
+\[
+R=Q_n \cdots Q_2 Q_1 A
+\]
+</li>
+<li>That will result in the full QR factorization
+\[
+A = QR
+\]
+since $Q = Q_1^T Q_2^T \ldots Q_n^T$ is a square matrix</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Triangularization</h2>
+<ul>
+<li>In 1958, Householder proposed a way to choose $Q_k$<br />
+to introduce zeros below the diagonal in column $k$<br />
+while preserving the previous columns
+\[
+
+\underbrace{
+\left[
+\begin{array}{ccc}
+* &amp; * &amp; *\\
+* &amp; * &amp; *\\
+* &amp; * &amp; *\\
+* &amp; * &amp; *\\
+* &amp; * &amp; *
+\end{array}
+\right]
+}_{\normalsize A}
+\xrightarrow{Q_1}
+\underbrace{
+\left[
+\begin{array}{ccc}
+* &amp; * &amp; *\\
+0 &amp; * &amp; *\\
+0 &amp; * &amp; *\\
+0 &amp; * &amp; *\\
+0 &amp; * &amp; *
+\end{array}
+\right]
+}_{\normalsize Q_1A}
+\xrightarrow{Q_2}
+\underbrace{
+\left[
+\begin{array}{ccc}
+* &amp; * &amp; *\\
+0 &amp; * &amp; *\\
+0 &amp; 0 &amp; *\\
+0 &amp; 0 &amp; *\\
+0 &amp; 0 &amp; *
+\end{array}
+\right]
+}_{\normalsize Q_2Q_1A}
+\xrightarrow{Q_3}
+\underbrace{
+\left[
+\begin{array}{ccc}
+* &amp; * &amp; *\\
+0 &amp; * &amp; *\\
+0 &amp; 0 &amp; *\\
+0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0
+\end{array}
+\right]
+}_{\normalsize Q_3Q_2Q_1A}
+
+\]
+</li>
+<li>This is achieved by <span class="color5">Householder reflectors</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>We choose
+\[
+Q_k =
+\left[
+\begin{array}{cc}
+\mathrm{I}_{k-1} &amp; 0\\
+0 &amp; F
+\end{array}
+\right]
+\]
+
+<ul>
+<li>$\mathrm{I}_{k-1}\in \mathbb R^{(k-1)\times(k-1)}$</li>
+<li>$F \in \mathbb R^{(m-k+1)\times(m-k+1)}$ is a <span class="color5">Householder reflector</span></li>
+</ul></li>
+<li>The $\mathrm{I}_{k-1}$ block ensures the first $k-1$ rows are unchanged</li>
+<li>$F$ is an <span class="color1">orthogonal matrix</span> that operates on the bottom $m-k+1$ rows</li>
+<li>If $F$ is orthogonal, then $Q_k$ is orthogonal</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>Let $x \in \mathbb R^{m-k+1}$ denote elements $k,\ldots,m$<br />
+of the $k$-th column in the current matrix $Q_{k-1}\ldots Q_1A$</li>
+<li>We have two requirements for $F$
+<ol type="1">
+<li>$F$ is orthogonal, in particular $\|Fx\|_2 = \|x\|_2$</li>
+<li>only the first element of $Fx$ is non-zero</li>
+</ol></li>
+<li>Therefore, we must have
+\[
+Fx = F
+\left[
+\begin{array}{c}
+*\\
+*\\
+\vdots\\
+*
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+\|x\|_2\\
+  0\\
+\vdots\\
+  0
+\end{array}
+\right]
+= \|x\|_2 e_1
+\]
+</li>
+<li><span class="color5">Question:</span> How can we achieve this?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>We can see geometrically that this can be achieved<br />
+by <span class="color1">reflection across a hyperplane $H$</span></li>
+</ul>
+<p><img data-src="media/householder_1.svg" style="margin:auto; display: block;" height="300" /></p>
+<ul>
+<li>Here $H$ is the hyperplane orthogonal to $v = \|x\|e_1 - x$,<br />
+and the key point is that $H$ passes through the origin $0$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>$H$ passes through the origin because $x$ and $\|x\|e_1$<br />
+both belong to the hypersphere with radius $\|x\|_2$ centered at the origin
+<p><img data-src="media/householder_angles.svg" style="margin:auto; display: block;" height="300" /></p></li>
+<li>Also analytically, since $(x + \|x\|e_1)/2\in H$,<br />
+we have $0\in H \Longleftrightarrow (\|x\|e_1 - x)\cdot (x + \|x\|e_1) = \|x\|^2 - x\cdot x= 0$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>Next, we need to determine the matrix $F$ which maps $x$ to $\|x\|_2e_1$</li>
+<li>$F$ is closely related to the orthogonal projection of $x$ onto $H$,<br />
+since that projection takes us “half way” from $x$ to $\|x\|_2 e_1$</li>
+<li>Hence we first consider orthogonal projection onto $H$,<br />
+and subsequently derive $F$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>The orthogonal projection of vector $a$ onto vector $b$ is given by
+\[
+\frac{(a\cdot b)}{\|b\|^2}b
+\]
+since $\big(a - \frac{(a\cdot b)}{\|b\|^2}b\big)\cdot b=a\cdot b - \frac{(a\cdot b)}{\|b\|^2}b\cdot b=0$</li>
+<li>In the matrix form
+\[
+
+\frac{(a\cdot b)}{\|b\|^2}b
+=
+\frac{1}{b^T b} (a^T b) b
+=
+\frac{1}{b^T b} b (b^T a)
+=
+\big(\frac{1}{b^T b} b b^T\big) a
+
+\]
+</li>
+<li>Therefore, the matrix $\frac{1}{b^T b} b b^T$ orthogonally projects onto $b$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>We have that $\frac{1}{v^T v} v v^T$ orthogonally projects onto $v$</li>
+<li>Then, the following matrix
+\[
+P_H = \mathrm{I} - \frac{vv^T}{v^T v}
+\]
+orthogonally projects onto $H$ as it satisfies
+<ul>
+<li>$P_H x \in H$<br />
+since $v^TP_H x = v^Tx - v^T\frac{vv^T}{v^T v}x = v^Tx - \frac{v^Tv}{v^T v}v^Tx = 0$</li>
+<li>$x - P_H x$ is orthogonal to $H$<br />
+since $x - P_H x = x - x + \frac{vv^T}{v^T v}x = \frac{v^Tx}{v^T v}v$ is proportional to $v$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>But recall that $F$ should reflect across $H$ rather than project onto $H$
+\[
+P_H = \mathrm{I} - \frac{vv^T}{v^T v}
+\]
+</li>
+<li>We obtain $F$ by going “twice as far” in the direction of $v$ compared to $P_H$ <span class="color5">
+\[
+F = \mathrm{I} - 2\frac{vv^T}{v^T v}
+\]
+</span></li>
+<li><span class="color0">Exercise:</span> Show that $F$ is an orthogonal matrix, i.e. that $F^TF = \mathrm{I}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>In fact, there are two Householder reflectors that we can choose from
+<p><img data-src="media/householder_2.svg" style="margin:auto; display: block;" height="300" /></p></li>
+<li>Which one is better?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>If $x$ and $\|x\|_2 e_1$ (or $x$ and $-\|x\|_2e_1$) are close,<br />
+we could obtain loss of precision due to cancellation<br />
+when computing $v = \|x\|e_1 - x$ (or $v = -\|x\|e_1 - x$)</li>
+<li>To ensure $x$ and its reflection are well separated<br />
+we should <span class="color1">choose the reflection</span> to be
+\[
+-\mathop{\mathrm{sign}}(x_1)\|x\|_2 e_1
+\]
+</li>
+<li>Therefore, we want to have $v = -\mathop{\mathrm{sign}}(x_1)\|x\|_2 e_1 - x$</li>
+<li>Since the sign of $v$ does not affect $F$, we scale $v$ by $-1$ to get
+\[
+\htmlClass{color1}{ v = \mathop{\mathrm{sign}}(x_1)\|x\|_2 e_1 + x}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>Let’s compare the two options for $v$ in the potentially<br />
+problematic case when $x \approx \|x\|_2 e_1$, i.e. when $x_1 \approx \|x\|_2$
+<ul>
+<li>$\htmlClass{color0}{ v_\text{bad} = \|x\|_2 e_1 - x}$</li>
+<li>$\htmlClass{color1}{ v_\text{good} = \mathop{\mathrm{sign}}(x_1)\|x\|_2 e_1 + x}$</li>
+</ul></li>
+<li>The corresponding norms are
+<p>
+\[
+\htmlClass{color0}{ \|v_\text{bad}\|_2^2} = \big\|\|x\|_2 e_1 - x\big\|_2^2 \approx \htmlClass{color0}{ 0}
+\]
+</p>
+<p>
+\[
+\begin{aligned}
+  \hspace{-0.5cm} \htmlClass{color1}{ \|v_\text{good}\|_2^2} &amp;=  \big\|\mathop{\mathrm{sign}}(x_1)\|x\|_2 e_1 + x\big\|_2^2 \\
+          &amp;=  (\mathop{\mathrm{sign}}(x_1)\|x\|_2 + x_1)^2 + \|x_{(2:m-k+1)}\|_2^2\\
+          &amp;= (\mathop{\mathrm{sign}}(x_1)\|x\|_2 + \mathop{\mathrm{sign}}(x_1)|x_1|)^2 + \|x_{(2:m-k+1)}\|_2^2\\
+          &amp;= (\|x\|_2 + |x_1|)^2 + \|x_{(2:m-k+1)}\|_2^2 \approx \htmlClass{color1}{ (2\|x\|_2)^2}\end{aligned}
+\]
+</p></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Reflectors</h2>
+<ul>
+<li>Recall that $v$ is computed from two vectors of magnitude $\|x\|_2$</li>
+<li>The argument above shows that with $v_\text{bad}$ we can get $\|v\|_2 \ll \|x\|_2$<br />
+leading to <span class="color0">loss of precision due to cancellation</span></li>
+<li>In contrast, with $v_\text{good}$ we always have $\|v_\text{good}\|_2 \geq \|x\|_2$,<br />
+which rules out loss of precision due to cancellation</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Triangularization</h2>
+<ul>
+<li>We can now write out the <span class="color5">Householder algorithm</span>
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$<strong>for</strong> $k=1:n$ <strong>do</strong><br />
+<span class="linenum">2:</span>$\hspace{1.2em}$$x = a_{(k:m,k)}$<br />
+<span class="linenum">3:</span>$\hspace{1.2em}$$v_k = \mathop{\mathrm{sign}}(x_1)\|x\|_2 e_1 + x$<br />
+<span class="linenum">4:</span>$\hspace{1.2em}$$v_k = v_k / \|v_k\|_2$<br />
+<span class="linenum">5:</span>$\hspace{1.2em}$$a_{(k:m,k:n)} = a_{(k:m,k:n)} - 2v_k(v_k^T a_{(k:m,k:n)})$<br />
+<span class="linenum">6:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+<li>It overwrites $A$ with $R$ and stores $v_1,\ldots,v_n$</li>
+<li>Note that we do not divide by $v_k^T v_k$ in line 5<br />
+since we normalize $v_k$ in line 4</li>
+<li><span class="color1">Householder algorithm requires $\sim 2mn^2 - \frac{2}{3}n^3$ operations</span><br />
+(while Gram–Schmidt requires $2mn^2$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Triangularization</h2>
+<ul>
+<li>Note that <span class="color5">we do not explicitly form $Q$</span></li>
+<li>We can use the vectors $v_1,\ldots,v_n$ to compute $Q$ in a post-processing step</li>
+<li>Recall that
+\[
+Q_k =
+\left[
+\begin{array}{cc}
+  \mathrm{I} &amp; 0\\
+0 &amp; F
+\end{array}
+\right]
+\]
+and $Q = (Q_n \cdots Q_2 Q_1)^T = Q_1^T Q_2^T \cdots Q_n^T$</li>
+<li>Also, the Householder reflectors are symmetric (see the definition of $F$),<br />
+so $Q = Q_1^T Q_2^T \cdots Q_n^T = Q_1 Q_2 \cdots Q_n$ and</li>
+<li>Note that each $Q_k$ is <span class="color5">involutory</span> (i.e. $Q_k^{-1}=Q_k$)<br />
+but in general this does not hold for the product ($Q^{-1}\neq Q$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Triangularization</h2>
+<ul>
+<li>For any $y$, we can evaluate $Qy = Q_1 Q_2 \cdots Q_n y$ using the $v_k$
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$<strong>for</strong> $k=n:-1:1$ <strong>do</strong><br />
+<span class="linenum">2:</span>$\hspace{1.2em}$$y_{(k:m)} = y_{(k:m)} - 2v_k(v_k^T y_{(k:m)})$<br />
+<span class="linenum">3:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+<li><span class="color5">Question:</span> How can we use this to form the matrix $Q$?</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Householder Triangularization</h2>
+<ul>
+<li><span class="color5">Answer:</span> Compute $Q$ from $Q e_i$, $i=1,\ldots,m$<br />
+since $Q$ consists of columns $Q e_i$</li>
+<li>Similarly, compute the reduced $\hat Q$ from $Q e_i$, $i=1,\ldots,n$</li>
+<li>However, often not necessary to form $Q$ or $\hat Q$ explicitly,<br />
+e.g. to solve the least-squares problem $Ax \simeq b$,<br />
+we only need the product $Q^T b$ and the matrix $R$</li>
+<li>Note that the product $Q^Tb = Q_n \cdots Q_2 Q_1 b$ can be evaluated as
+<div style="text-align:center;">
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$<strong>for</strong> $k=1:n$ <strong>do</strong><br />
+<span class="linenum">2:</span>$\hspace{1.2em}$$b_{(k:m)} = b_{(k:m)} - 2v_k(v_k^T b_{(k:m)})$<br />
+<span class="linenum">3:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Givens Rotations</h2>
+</section>
+<section class="slide level2">
+<h2>Givens Rotations</h2>
+<ul>
+<li>Another method of QR-factorization is based on <span class="color5">Givens rotation matrix</span>
+<div style="font-size:0.8em">
+<p>
+\[
+G(i,j,\theta) = \left(
+\begin{array}{ccccccc}
+  1 &amp; \ldots &amp; 0 &amp; \ldots &amp; 0 &amp; \ldots &amp; 0 \\
+  \vdots &amp; \ddots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \ddots &amp; \vdots \\
+  0 &amp; \ldots &amp; c &amp; \ldots &amp; -s &amp; \ldots &amp; 0 \\
+  \vdots &amp; \ddots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \ddots &amp; \vdots \\
+  0 &amp; \ldots &amp; s &amp; \ldots &amp; c &amp; \ldots &amp; 0 \\
+  \vdots &amp; \ddots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \ddots &amp; \vdots \\
+  0 &amp; \ldots &amp; 0 &amp; \ldots &amp; 0 &amp; \ldots &amp; 1
+\end{array}
+\right)
+\]
+</p>
+</div>
+which is defined for $i&lt;j$ and $\theta\in\mathbb{R}$ as an $m\times m$ matrix with elements
+\[
+\begin{gathered}
+g_{ii}= c, \qquad g_{jj} = c, \qquad g_{ij}=-s, \qquad g_{ji}=s \\
+g_{kk}= 1 \quad \text{for $k \ne i,j$,} \qquad
+g_{kl}=0 \quad \text{otherwise}\end{gathered}
+\]
+where $c=\cos \theta$ and $s=\sin \theta$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Givens Rotations</h2>
+<ul>
+<li>A Givens rotation matrix applies a rotation<br />
+within the space spanned by the $i$-th and $j$-th coordinates</li>
+<li>Named after James W. Givens, Jr. (1910–1993, USA)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Effect of a Givens rotation</h2>
+<ul>
+<li>Consider a rectangular matrix $A\in\mathbb{R}^{m \times n}$ where $m\ge n$</li>
+<li>Suppose that $a_1$ and $a_2$ are in the $i$-th and $j$-th positions<br />
+in a particular column of $A$. Assume that $a_1^2+ a_2^2\neq 0$</li>
+<li>Restricting to just $i$-th and $j$-th dimensions,<br />
+a Givens rotation $G(i,j,\theta)$ for a particular angle $\theta$ can be chosen so that
+\[
+\left(
+\begin{array}{cc}
+  c &amp; -s \\
+  s &amp; c
+\end{array}
+\right)
+\left(
+\begin{array}{c}
+  a_1 \\
+  a_2
+\end{array}
+\right)
+=
+\left(
+\begin{array}{c}
+  \alpha \\
+  0
+\end{array}
+\right)
+\]
+where $\alpha$ is non-zero, and the $j$-th component is eliminated</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Stable computation</h2>
+<ul>
+<li>Since the length is preserved, $\alpha=\sqrt{a_1^2+a_2^2}$<br />
+</li>
+<li>We could compute
+\[
+c=\frac{a_1}{\sqrt{a_1^2+a_2^2}}, \qquad s=\frac{-a_2}{\sqrt{a_1^2+a_2^2}}
+\]
+but this is susceptible to underflow/overflow if $\alpha$ is very small</li>
+<li>A better procedure is
+<ul>
+<li>if $|a_1|&gt;|a_2|$, set $\;t=\tan \theta = a_2/a_1\;$ and then $\;c=\frac{1}{\sqrt{1+t^2}}, s=-ct$</li>
+<li>if $|a_2|\ge |a_1|$, set $\;t=\cot \theta = a_1/a_2\;$ and then $\;s=\frac{-1}{\sqrt{1+t^2}}, c=-st$</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Givens rotation algorithm</h2>
+<ul>
+<li>The following algorithm performs the full QR-factorization<br />
+of a matrix $A\in\mathbb{R}^{m \times n}$ with $m\ge n$ using Givens rotations
+<div>
+<div class="algo">
+<p><span class="linenum">1:</span>$\hspace{0em}$$R=A, Q=I$<br />
+<span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $k = 1:n$ <strong>do</strong><br />
+<span class="linenum">3:</span>$\hspace{1.2em}$<strong>for</strong> $j = m:k+1$ <strong>do</strong><br />
+<span class="linenum">4:</span>$\hspace{2.4em}$Construct $G=G(j-1,j,\theta)$ to eliminate $a_{jk}$<br />
+<span class="linenum">5:</span>$\hspace{2.4em}$$R=G R$<br />
+<span class="linenum">6:</span>$\hspace{2.4em}$$Q=Q G^T$<br />
+<span class="linenum">7:</span>$\hspace{1.2em}$<strong>end for</strong><br />
+<span class="linenum">8:</span>$\hspace{0em}$<strong>end for</strong></p>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Advantages of Givens Rotations</h2>
+<ul>
+<li>In general, for dense matrices, Givens rotations are not as efficient<br />
+as the other two approaches (Gram–Schmidt and Householder)</li>
+<li>However, they are advantageous for <span class="color5">sparse matrices</span>,<br />
+since non-zero elements can be eliminated one-by-one<br />
+without affecting other rows</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Advantages of Givens Rotations</h2>
+<ul>
+<li>Also, Givens rotations of different rows can be done concurrently</li>
+<li>Consider the $6\times 6$ matrix
+<div style="font-size:0.9em">
+<p>
+\[
+\left[
+\begin{array}{cccccc}
+  * &amp; * &amp; * &amp; * &amp; * &amp; * \\
+  5 &amp; * &amp; * &amp; * &amp; * &amp; * \\
+  \htmlClass{color5} 4 &amp; \htmlClass{color5} 6 &amp; \htmlClass{color5} * &amp; \htmlClass{color5} * &amp; \htmlClass{color5} * &amp; \htmlClass{color5} * \\
+  \htmlClass{color5}{ \boxed{3}} &amp; \htmlClass{color5} 5 &amp; \htmlClass{color5} 7 &amp; \htmlClass{color5} * &amp; \htmlClass{color5} * &amp; \htmlClass{color5} * \\
+  \htmlClass{color3} 2 &amp; \htmlClass{color3}4 &amp; \htmlClass{color3}6 &amp; \htmlClass{color3}8 &amp; \htmlClass{color3}* &amp; \htmlClass{color3}* \\
+  \htmlClass{color3}1 &amp; \htmlClass{color3}{ \boxed{3}} &amp; \htmlClass{color3}5 &amp; \htmlClass{color3}7 &amp; \htmlClass{color3}9 &amp; \htmlClass{color3}*
+\end{array}
+\right]
+\]
+</p>
+</div></li>
+<li>Each number denotes the step when that element can be eliminated</li>
+<li>For example, on step 3, elements <span class="color5">$(4,1)$</span> and <span class="color3">$(6,2)$</span> can be<br />
+eliminated concurrently using <span class="color5">$G(3,4,\cdot)$</span> and <span class="color3">$G(5,6,\cdot)$</span><br />
+since they operate on different rows</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Sparsity Patterns</h2>
+<ul>
+<li>Positions of non-zero elements of a sparse matrix form its <span class="color5">sparsity pattern</span></li>
+<li>Transformations of the matrix may introduce new non-zero elements</li>
+<li>These new non-zero elements are called the <span class="color5">fill-in</span></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/sparse_pattern.py">[examples/unit2/sparse_pattern.py]</a>
+<div style="margin-top:20px;">
+<div class="row">
+<div class="column">
+<img data-src="media/sparse_pattern_U.png" style="margin:auto; display: block;" height="250" />
+</div>
+<div class="column">
+<img data-src="media/sparse_pattern_L.png" style="margin:auto; display: block;" height="250" />
+</div>
+</div>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Singular Value Decomposition</h2>
+</section>
+<section class="slide level2">
+<h2>Singular Value Decomposition</h2>
+<ul>
+<li>How does a matrix deform the space?</li>
+<li>Example of $A=\left[ \begin{array}{cc}  1 &amp; 1.5 \\  0 &amp; 1 \end{array} \right]$ mapping the unit circle to an ellipse
+<div style="text-align:center;width=100%;margin:-20px;margin-bottom:-40px">
+<p><video height="300" loop data-autoplay> <source data-src="media/svd_drawing.webm" type="video/webm"> </video></p>
+</div></li>
+<li>In general, a matrix does not preserve orthogonality and length</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Singular Value Decomposition</h2>
+<ul>
+<li>However, orthogonal $v_1$ and $v_2$ can be chosen such that<br />
+$Av_1=\sigma_1u_1$ and $Av_2=\sigma_2u_2$ are orthogonal
+<div style="text-align:center;width=100%;margin:-20px;margin-bottom:-40px">
+<p><img data-src="media/svd_drawing.svg" height=300></p>
+</div>
+where $\sigma_1\geq\sigma_2\geq 0$ and $\|u_1\|=\|u_2\|=1$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Singular Value Decomposition</h2>
+<ul>
+<li>To obtain a Singular Value Decomposition (SVD) of a matrix $A \in \mathbb R^{m\times n}$,<br />
+we are looking for orthonormal vectors $v_i$ such that
+\[
+Av_i = \sigma_i u_i, \quad i = 1,\ldots,n
+\]
+where vectors $u_i$ are also orthonormal and $\sigma_i\in\mathbb{R},\;\sigma_i\geq 0$</li>
+<li>In the matrix form, we get <span class="color5">
+\[
+AV = \hat{U}\hat\Sigma
+\]
+</span>
+<div style="margin-left:-40px;">
+<p>
+\[
+
+\left[
+\begin{array}{c}
+\\
+\\
+~~~~~~A~~~~~~~\\
+\\
+\\
+\end{array}
+\right]
+\left[
+\begin{array}{c|c|c}
+&amp;&amp;\\
+&amp;&amp;\\
+v_1 &amp; \cdots &amp; v_n\\
+&amp;&amp;\\
+&amp;&amp;\\
+\end{array}
+\right]
+\begin{array}{c}
+\\
+\\
+=\\
+\\
+\\
+\end{array}
+\left[
+\begin{array}{c|c|c}
+&amp;&amp;\\
+&amp;&amp;\\
+u_1 &amp; \cdots &amp; u_n\\
+&amp;&amp;\\
+&amp;&amp;\\
+\end{array}
+\right]
+\left[
+\begin{array}{ccc}
+\sigma_1&amp;&amp;\\
+&amp;\ddots &amp;\\
+&amp;&amp;\sigma_n\\
+\end{array}
+\right]
+\]
+</p>
+</div></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Singular Value Decomposition</h2>
+<ul>
+<li>Matrices in <span class="color5">$AV = \hat{U}\hat\Sigma$</span> are
+<ul>
+<li>$A \in \mathbb R^{m\times n}$ is a general matrix</li>
+<li>$V \in \mathbb R^{n\times n}$ with orthonormal columns</li>
+<li>$\hat\Sigma \in \mathbb R^{n\times n}$ is diagonal with non-negative, real entries</li>
+<li>$\hat{U} \in \mathbb R^{m\times n}$ with orthonormal columns</li>
+</ul></li>
+<li>Therefore $V$ is an orthogonal matrix ($V^TV = V V^T = {\rm I}$) and<br />
+we have the following decomposition called the <span class="color5">reduced SVD</span> <span class="color5">
+\[
+A = \hat{U}\hat\Sigma V^T
+\]
+</span>
+<ul>
+<li>$\sigma_1, \sigma_2,\ldots,\sigma_n \geq 0$ are <span class="color5">singular values</span> (typically $\sigma_1 \geq \sigma_2 \geq \ldots$)</li>
+<li>$u_1,u_2,\ldots,u_n$ are <span class="color5">left singular vectors</span> (columns of $\hat U$)</li>
+<li>$v_1,v_2,\ldots,v_n$ are <span class="color5">right singular vectors</span> (rows of $V^T$)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Singular Value Decomposition</h2>
+<ul>
+<li>Just as with QR factorization, we can pad the columns of $\hat{U}$<br />
+with $m-n$ arbitrary orthonormal vectors<br />
+to obtain an orthogonal $U \in \mathbb R^{m\times m}$</li>
+<li>We then need to “silence” these arbitrary columns<br />
+by adding rows of zeros to $\hat\Sigma\in\mathbb{R}^{n\times n}$ to obtain $\Sigma\in\mathbb{R}^{m\times n}$</li>
+<li>This gives the <span class="color5">full SVD</span> for $A \in \mathbb R^{m\times n}$ <span class="color5">
+\[
+A = U \Sigma V^T
+\]
+</span></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Full vs Reduced SVD</h2>
+<figure>
+<img data-src="media/full_svd.png" style="margin:auto; display: block;" height="180" alt="Full SVD" />
+<figcaption aria-hidden="true">Full SVD</figcaption>
+</figure>
+<p> </p>
+<figure>
+<img data-src="media/reduced_svd.png" style="margin:auto; display: block;" height="180" alt="Reduced SVD" />
+<figcaption aria-hidden="true">Reduced SVD</figcaption>
+</figure>
+</section>
+<section class="slide level2">
+<h2>Singular Value Decomposition</h2>
+<ul>
+<li><span class="color5">Theorem:</span> Every matrix $A \in \mathbb R^{m\times n}$ has<br />
+a full singular value decomposition. Furthermore:
+<ul>
+<li>singular values $\sigma_i$ are uniquely determined</li>
+<li>if $A$ is square and $\sigma_j$ are distinct,<br />
+then $u_i$ and $v_i$ are uniquely determined up to sign</li>
+</ul></li>
+<li>Proof is outside of the scope of the course</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Singular Value Decomposition</h2>
+<ul>
+<li>This theorem justifies the statement:<br />
+<span class="color5">the image of the unit hypersphere under any $m \times n$ matrix is a hyperellipse</span></li>
+<li>Consider $A = U \Sigma V^T$ (full SVD) applied to the unit sphere $S\subset\mathbb R^n$:
+<ul>
+<li>the orthogonal map $V^T$ preserves $S$</li>
+<li>$\Sigma$ stretches $S$ into a hyperellipse aligned with the canonical axes $e_j$</li>
+<li>$U$ rotates or reflects the hyperellipse without changing its shape</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>SVD in Python</h2>
+<div class="row">
+<div class="column" style="flex:56%;margin-right:-30px;">
+<ul>
+<li><code>numpy.linalg.svd()</code> computes<br />
+the full SVD by default</li>
+</ul>
+<pre class="python-repl"><code>&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; np.random.seed(2022)
+&gt;&gt;&gt; a=np.random.random((4,2))
+&gt;&gt;&gt; a
+array([[0.00935861, 0.49905781],
+       [0.11338369, 0.04997402],
+       [0.68540759, 0.48698807],
+       [0.89765723, 0.64745207]])
+&gt;&gt;&gt; (u, s, v) = np.linalg.svd(a)
+&gt;&gt;&gt; u
+array([[-0.22570503,  0.97206861, -0.02953283, -0.0571636 ],
+       [-0.08357767, -0.08399541, -0.61111959, -0.78261893],
+       [-0.58696968, -0.14202585,  0.66414863, -0.44068338],
+       [-0.77300621, -0.16690133, -0.42961291,  0.43593358]])
+&gt;&gt;&gt; s
+array([1.42929716, 0.39183261])
+&gt;&gt;&gt; v
+array([[-0.77506396, -0.63188279],
+       [-0.63188279,  0.77506396]])</code></pre>
+</div>
+<div class="column">
+<ul>
+<li>with <code>full_matrices=0</code><br />
+it computes the reduced SVD</li>
+</ul>
+<pre class="python-repl"><code>&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; np.random.seed(2022)
+&gt;&gt;&gt; a = np.random.random((4,2))
+&gt;&gt;&gt; a
+array([[0.00935861, 0.49905781],
+       [0.11338369, 0.04997402],
+       [0.68540759, 0.48698807],
+       [0.89765723, 0.64745207]])
+&gt;&gt;&gt; (u, s, v) = np.linalg.svd(a, full_matrices=0)
+&gt;&gt;&gt; u
+array([[-0.22570503,  0.97206861],
+       [-0.08357767, -0.08399541],
+       [-0.58696968, -0.14202585],
+       [-0.77300621, -0.16690133]])
+&gt;&gt;&gt; s
+array([1.42929716, 0.39183261])
+&gt;&gt;&gt; v
+array([[-0.77506396, -0.63188279],
+       [-0.63188279,  0.77506396]])</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+<h2>Matrix Properties via the SVD</h2>
+<ul>
+<li>Let $r$ denote the number of nonzero singular values, so that
+\[
+\sigma_1\geq\sigma_2&gt;\dots\geq\sigma_r&gt;0,\quad \sigma_{r+1}=\ldots=\sigma_{n}=0
+\]
+</li>
+<li><span class="color1">Property:</span> $r=\mathop{\mathrm{rank}}(A)$</li>
+<li><span class="color5">Proof:</span> In the full SVD $A = U\Sigma V^T$, matrices $U$ and $V^T$ have full rank,<br />
+so multiplication by them preserves rank, leading to $\mathop{\mathrm{rank}}(A) = \mathop{\mathrm{rank}}(\Sigma)=r$</li>
+<li><span class="color1">Property:</span> $\mathop{\mathrm{image}}(A) = \mathop{\mathrm{span}}\{u_1,\ldots,u_r\}$ and $\mathop{\mathrm{null}}(A) = \mathop{\mathrm{span}}\{v_{r+1},\ldots,v_n\}$</li>
+<li><span class="color5">Proof</span>: This follows from $A = U\Sigma V^T$ and
+\[
+\begin{aligned}
+  {\mathop{\mathrm{image}}}(\Sigma) &amp;= \mathop{\mathrm{span}}\{e_1,\ldots,e_r\} \in \mathbb R^m\\
+  {\mathop{\mathrm{null}}}(\Sigma) &amp;= \mathop{\mathrm{span}}\{e_{r+1},\ldots,e_n\} \in \mathbb R^n
+  \end{aligned}
+  
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Matrix Properties via the SVD</h2>
+<ul>
+<li><span class="color1">Property:</span> $\|A\|_2 = \sigma_1$</li>
+<li><span class="color5">Proof</span>: By definition $\|A\|_2=\max_{\|v\|_2=1} \|Av\|_2=\max_{\|v\|_2=1} \|U\Sigma V^T v\|_2$.<br />
+Orthogonal matrices preserve the norm, $\|A\|_2 = \max_{\|v\|_2=1} \|\Sigma v\|_2=\sigma_1$</li>
+<li><span class="color1">Property:</span> Singular values of $A$ are the square roots<br />
+of the eigenvalues of $A^TA$ or $AA^T$</li>
+<li><span class="color5">Proof</span>: $A^TA = (U\Sigma V^T)^T(U\Sigma V^T) = V\Sigma U^T U \Sigma V^T = V (\Sigma^T \Sigma) V^T$<br />
+Therefore, $(A^TA)V = V (\Sigma^T \Sigma)$, or $(A^TA)v_{(:,j)} = \sigma_j^2 v_{(:,j)}$<br />
+(Analogous for $AA^T$)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Matrix Properties via the SVD</h2>
+<ul>
+<li>The <span class="color5">pseudoinverse</span> $A^+$ can be defined more generally in terms of the SVD</li>
+<li>Define pseudoinverse of a scalar $\sigma\in\mathbb{R}$ to be<br />
+$\sigma^+ = 1/\sigma$ if $\sigma \neq 0\quad\text{and}\quad\sigma^+=0$ if $\sigma=0$</li>
+<li>Define pseudoinverse $\Sigma^+\in\mathbb R^{n\times m}$ of a diagonal matrix $\Sigma\in\mathbb R^{m\times n}$<br />
+as its transpose after taking scalar pseudoinverse of each element</li>
+<li>Define pseudoinverse of $A \in \mathbb R^{m\times n}$ as
+\[
+A^+ = V \Sigma^+ U^T
+\]
+</li>
+<li><span class="color5">Note:</span> $A^+$ exists for <span class="color5">any</span> matrix $A$, and it covers<br />
+our previous definitions of pseudoinverse</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Matrix Properties via the SVD</h2>
+<ul>
+<li>We generalize the <span class="color5">condition number</span> to rectangular matrices<br />
+via the definition
+\[
+\kappa(A) = \|A\|\|A^+\|
+\]
+</li>
+<li><span class="color1">Property:</span> The 2-norm condition number is given by
+\[
+\kappa(A) = \sigma_{\max} / \sigma_{\min}
+\]
+</li>
+<li><span class="color5">Proof:</span> $\|A\|_2 = \sigma_{\max}$ as shown before.<br />
+The largest singular value of $A^+$ is $1/\sigma_{\min}$ so $\|A^+\|_2 = 1/\sigma_{\min}$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Matrix Properties via the SVD</h2>
+<ul>
+<li><span class="color5">These results indicate the importance of the SVD,<br />
+both theoretical and as a computational tool</span></li>
+<li>Algorithms for calculating the SVD are outside scope of this course</li>
+<li>SVD requires $\sim 4mn^2 - \frac{4}{3}n^3$ operations</li>
+<li>For more details on algorithms, see Trefethen &amp; Bau, or Golub &amp; van Loan</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Low-Rank Approximation via the SVD</h2>
+<ul>
+<li>One of the most useful properties of the SVD is that it allows us<br />
+to obtain an optimal <span class="color1">low-rank approximation</span> to $A$</li>
+<li>We can recast SVD as
+\[
+A = \sum_{j=1}^r \sigma_j u_j v_j^T
+\]
+</li>
+<li>Follows from writing $\Sigma$ as a sum of $r$ matrices $\Sigma_j$,<br />
+where $\Sigma_j = \mathop{\mathrm{diag}}(0,\ldots,0,\sigma_j,0,\ldots,0)$</li>
+<li>Each $u_j v_j^T$ is a <span class="color1">rank one</span> matrix: each column is a scaled version of $u_j$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Low-Rank Approximation via the SVD</h2>
+<ul>
+<li><span class="color5">Theorem:</span> For any index $\nu=0,\ldots, r$ the matrix
+\[
+A_\nu = \sum_{j=1}^\nu \sigma_j u_j v_j^T
+\]
+satisfies
+\[
+\|A - A_\nu\|_2 = \inf_{B \in \mathbb R^{m\times n},~\mathop{\mathrm{rank}}(B)\leq \nu} \|A - B\|_2 = \sigma_{\nu+1}
+\]
+</li>
+<li>That is
+<ul>
+<li>$A_\nu$ is the closest rank $\nu$ matrix to $A$, measured in the 2-norm</li>
+<li>The error in $A_\nu$ is given by the first <span class="color5">omitted</span> singular value</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Low-Rank Approximation via the SVD</h2>
+<ul>
+<li>A similar result holds in the Frobenius norm:
+\[
+\|A - A_\nu\|_F = \inf_{B \in \mathbb R^{m\times n},~\mathop{\mathrm{rank}}(B)\leq \nu} \|A - B\|_F = \sqrt{\sigma_{\nu+1}^2 + \cdots + \sigma_{r}^2}
+\]
+</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Low-Rank Approximation via the SVD</h2>
+<ul>
+<li>These theorems indicate that the SVD is an effective way<br />
+to <span class="color5">compress</span> data encapsulated by a matrix!</li>
+<li>For example, $A$ can represent an image</li>
+<li>If singular values of $A$ decay rapidly,<br />
+we can approximate $A$ with few rank one matrices</li>
+<li>For each rank one matrix $\sigma_j u_j v_j$,<br />
+we only need to store $m+n+1$ numbers: $\sigma_j,\; u_j,\; v_j$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Principal Component Analysis</h2>
+</section>
+<section class="slide level2">
+<h2>Principal Component Analysis</h2>
+<ul>
+<li>Consider a dataset of $(x_i,y_i)\in\mathbb{R}^2$ for $i=1,\ldots,m$
+<p><img data-src="media/pca_dataset.svg" style="margin:auto; display: block;" height="300" /></p></li>
+<li>There is a strong correlation between $x$ and $y$</li>
+<li>This means that we can describe most of the data with just one feature</li>
+<li>This is done by Principal Component Analysis (PCA)</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Principal Component Analysis</h2>
+<ul>
+<li>The new axis should maximize variance of the data</li>
+<li>Consider the empirical covariance matrix
+\[
+M=\left[
+\begin{array}{cc}
+  \mathrm{Var}(x) &amp; \mathrm{Cov}(x, y) \\
+  \mathrm{Cov}(x, y) &amp; \mathrm{Var}(y)
+\end{array}
+\right]
+\]
+</li>
+<li>In terms of the samples $(x_i,y_i)$
+\[
+M=\frac{1}{m} \left[
+\begin{array}{cc}
+  \sum_{i=1}^m (x_i - \bar x)^2 &amp; \sum_{i=1}^m (x_i - \bar x) (y_i - \bar y) \\
+  \sum_{i=1}^m (x_i - \bar x) (y_i - \bar y)  &amp; \sum_{i=1}^m (y_i - \bar y)^2
+\end{array}
+\right]
+\]
+where $\bar x= \sum_{i=1}^m x_i$ and $\bar y= \sum_{i=1}^m y_i$ are the empirical means</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Principal Component Analysis</h2>
+<ul>
+<li>$M$ is a symmetric positive-definite matrix</li>
+<li>Variance in the direction $v\in\mathbb{R}^2$ is given by $v^T M v$</li>
+<li>$v^T M v$ is maximized if $v$ is the eigenvector of $M$<br />
+corresponding to the largest eigenvalue</li>
+<li>Define a matrix $A\in\mathbb{R}^{m\times2}$
+\[
+
+A = \left[
+  \begin{array}{cc}
+    x_1 - \bar{x} &amp; y_1 - \bar{y}\\
+    x_2 - \bar{x} &amp; y_2 - \bar{y}\\
+    \vdots  &amp; \vdots \\
+    x_m - \bar{x} &amp; y_m - \bar{y}\\
+  \end{array}
+  \right]
+
+\]
+</li>
+<li>Then $M=\frac{1}{m}A^T A$</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Principal Component Analysis</h2>
+<ul>
+<li>From the full SVD $A=U\Sigma V^T$,<br />
+the columns of $V$ are the eigenvectors of $M=\frac{1}{m}A^TA$</li>
+<li>Define the new axes along $v_1$ and $v_2$
+<p><img data-src="media/pca_dataset_arrow.svg" style="margin:auto; display: block;" height="300" /></p></li>
+<li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/pca.py">[examples/unit2/pca.py]</a></li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Example: Video Reconstruction</h2>
+<ul>
+<li>Three videos
+<ul>
+<li>Paris <a href="https://www.pexels.com/video/852352">https://www.pexels.com/video/852352</a></li>
+<li>Vietnam <a href="https://www.youtube.com/watch?v=OiqSsE0B-Rc">https://www.youtube.com/watch?v=OiqSsE0B-Rc</a></li>
+<li>Sunrise <a href="https://www.pexels.com/video/855646">https://www.pexels.com/video/855646</a></li>
+</ul></li>
+<li>PCA applied to frames of the videos</li>
+</ul>
+</section>
+<section class="slide level2">
+<h2>Paris, original</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_paris.jpg">
+<source data-src="media/pcavideo/pcavideo_paris.mp4" type="video/mp4">
+</video>
+</section>
+<section class="slide level2">
+<h2>Paris, only first three</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_paris_first3.jpg">
+<source data-src="media/pcavideo/pcavideo_paris_first3.mp4" type="video/mp4">
+</video>
+</section>
+<section class="slide level2">
+<h2>Paris, without first three</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_paris_zero3.jpg">
+<source data-src="media/pcavideo/pcavideo_paris_zero3.mp4" type="video/mp4">
+</video>
+</section>
+<section class="slide level2">
+<h2>Vietnam, original</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_vietnam.jpg">
+<source data-src="media/pcavideo/pcavideo_vietnam.mp4" type="video/mp4">
+</video>
+</section>
+<section class="slide level2">
+<h2>Vietnam, only first three</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_vietnam_first3.jpg">
+<source data-src="media/pcavideo/pcavideo_vietnam_first3.mp4" type="video/mp4">
+</video>
+</section>
+<section class="slide level2">
+<h2>Vietnam, without first three</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_vietnam_zero3.jpg">
+<source data-src="media/pcavideo/pcavideo_vietnam_zero3.mp4" type="video/mp4">
+</video>
+</section>
+<section class="slide level2">
+<h2>Sunrise, original</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_sunrise.jpg">
+<source data-src="media/pcavideo/pcavideo_sunrise.mp4" type="video/mp4">
+</video>
+</section>
+<section class="slide level2">
+<h2>Sunrise, only first three</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_sunrise_first3.jpg">
+<source data-src="media/pcavideo/pcavideo_sunrise_first3.mp4" type="video/mp4">
+</video>
+</section>
+<section class="slide level2">
+<h2>Sunrise, without first three</h2>
+<video height="400" loop controls poster="media/pcavideo/pcavideo_sunrise_zero3.jpg">
+<source data-src="media/pcavideo/pcavideo_sunrise_zero3.mp4" type="video/mp4">
+</video>
+</section>
+    </div>
+  </div>
+
+  <script src="..//dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="..//plugin/notes/notes.js"></script>
+  <script src="..//plugin/math/math.js"></script>
+  <!--<script src="..//plugin/search/search.js"></script>-->
+  <script src="..//plugin/highlight/highlight.js"></script>
+
+  <script>
+    Reveal.initialize({
+      // Layout.
+      center: true,
+      width: 960,
+      height: 540,
+
+      transition: 'none',
+      transitionSpeed: 'fast',
+      backgroundTransition: 'none',
+
+      // Navigation.
+      controls: true,
+      controlsLayout: 'bottom-right',
+      controlsBackArrows: 'visible',
+      history: false,
+      hash: true,
+      mouseWheel: false,
+      controlsTutorial: false,
+      slideNumber: 'c',
+      progress: false,
+      // TODO: change to true.
+      hashOneBasedIndex: false,
+      pause: false, // No blackout on `;`.
+
+      katex: {
+        trust: true,
+      },
+      plugins: [RevealHighlight, RevealNotes, RevealMath.KaTeX]
+    });
+    Reveal.configure({ pdfSeparateFragments: false });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/copy-tex.min.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" crossorigin="anonymous"></script>
+
+    </body>
+</html>

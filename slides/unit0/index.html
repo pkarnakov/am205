@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>AM205 Unit0. Introduction</title>
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/am205.css" id="theme">
+    <link rel="stylesheet" href="../plugin/highlight/gruvbox-dark.css">
+
+    <script defer="" src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () {
+       var mathElements = document.getElementsByClassName("math");
+       var macros = [];
+       for (var i = 0; i < mathElements.length; i++) {
+        var texText = mathElements[i].firstChild;
+        if (mathElements[i].tagName == "SPAN") {
+         katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+         });
+      }}});
+    </script>
+  </head>
+  <body>
+
+    <style>
+.katex{
+  font-size:1em;
+}
+    </style>
+
+    <div class="reveal">
+      <div class="slides">
+
+<section>
+<h1>Applied Mathematics 205</h1>
+<h2>Unit 0. Introduction</h2>
+
+<br>
+Lecturer: Petr Karnakov
+<br>
+<br>
+August 31, 2022
+</section>
+
+<section>
+  <h2>Scientific Computing</h2>
+  <p>
+    Computation is now recognized as the "third pillar" of science
+    (along with theory and experiment). Why?
+  </p>
+  <ul>
+    <li>
+      Practically relevant mathematical models do not have analytical solutions
+    </li>
+    <li>
+      Large amounts of data need to be processed automatically
+    </li>
+    <li>
+      Modern computers can handle large-scale problems
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>What is Scientific Computing</h2>
+  <ul>
+    <li>
+      Scientific computing is closely related to  numerical analysis
+    </li>
+    <li>
+      <em>"Numerical analysis is the study of algorithms for the problems of
+        continuous mathematics"</em></q> [Nick Trefethen, SIAM News, 1992]
+    </li>
+    <li>
+      <b>Continuous mathematics</b> involves real numbers as opposed to integers
+    </li>
+    <li>
+      <b>Numerical analysis</b> studies these algorithms<br>
+    </li>
+    <li>
+      <b>Scientific computing</b> applies them to practical problems
+    </li>
+    <li>
+      <b>Scientific computing</b> is distinct from Computer Science,
+      which focuses on discrete mathematics (e.g. graph theory)
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h1>Applications of <br>Scientific Computing</h1>
+</section>
+
+<section>
+  <h2>Cosmology</h2>
+
+  Cosmological simulations to test theories of galaxy formation
+
+  <style>
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0 4px;
+}
+.column {
+  flex: 50%;
+  padding: 0 4px;
+}
+.column img {
+  margin-top: 0px;
+  vertical-align: middle;
+}
+  </style>
+
+  <div class="row">
+    <div class="column">
+      <img data-src="media/galaxy1.png">
+      <img data-src="media/galaxy2.png">
+    </div>
+    <div class="column">
+      <img data-src="media/galaxy3.png">
+      <img data-src="media/galaxy4.png">
+    </div>
+  </div>
+
+  <a href="http://cosmicweb.uchicago.edu/filaments.html">
+    http://cosmicweb.uchicago.edu/filaments.html
+  </a>
+</section>
+
+<section>
+  <h2>Biology</h2>
+  <ul>
+    <li>
+      Protein folding
+      <div style="text-align:center;">
+        <img height="130px" src="media/protein_folding.jpg">
+      </div>
+    </li>
+    <li>
+     Statistical analysis of gene expression
+      <div style="text-align:center;">
+        <img height="170px" src="media/pca_nature.png">
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Computational Fluid Dynamics</h2>
+
+  <ul>
+    <li>
+      CFD simulations replace or complement wind-tunnel experiments
+    </li>
+    <li>
+      Computational geometry is easier to tweak than a physical model
+    </li>
+    <li>
+      Simulations provide the entire flow field, not available experimentally
+    </li>
+  </ul>
+
+  <div>
+    <img height="300px" src="media/f1_cfd_2.jpg">
+  </div>
+</section>
+
+<section>
+  <h2>Geophysics</h2>
+
+  <ul>
+    <li>
+      Experimental data is only available on Earth's surface
+    </li>
+    <li>
+      Simulations help to test models of the interior
+    </li>
+  </ul>
+
+  <div>
+    <img height="200px" src="media/ghattas_1.jpg">
+  </div>
+
+</section>
+
+<section>
+  <h1>Calculation of $\pi$</h1>
+</section>
+
+<section>
+  <h2>Calculation of $\pi$</h2>
+
+  <ul>
+    <li>
+      $\pi$ is the ratio of a circle's circumference to its diameter
+    </li>
+    <li>
+      Babylonians (1900 BC): $3.125$
+    </li>
+    <li>
+      From the Old Testament (1 Kings 7:23):<br>
+      <q>And he made the molten sea of ten cubits from
+        brim to brim, round in compass, and the height thereof was five cubits;
+        and a lines of thirty cubits did compass it round about</q>
+      <br>
+      Implies $\pi\approx 3$
+    </li>
+    <li>
+      Egyptians (1850 BC): $(\frac{16}{9})^2\approx 3.16$
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Calculation of $\pi$</h2>
+
+  <ul>
+    <li>
+      Archimedes (287-212 BC) bounded $\pi$ by perimeters of regular polygons:
+      inscribed and superscribed
+      <div style="text-align:center;">
+        <a href="https://en.wikipedia.org/wiki/Pi#Polygon_approximation_era">
+          <img height="170px" src="media/Archimedes_pi.svg">
+        </a>
+      </div>
+    </li>
+    <li>
+      For 96-sided polygon:&nbsp;&nbsp;$\frac{223}{71} < \pi < \frac{22}{7}$ (interval length: 0.00201)
+    </li>
+    <li>
+      Example of an infinite process converging to the exact solution
+    </li>
+    <li>
+      Provides both the estimate <b>and</b> error bounds
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Calculation of $\pi$</h2>
+  <ul>
+    <li>
+      James Gregory (1638-1675) discovers the arctangent series
+      $$\arctan x = x - \frac{x^3}{3} + \frac{x^5}{5} - \frac{x^7}{7} + \ldots$$
+    </li>
+    <li>
+      Setting $x=1$ gives
+      $$\frac{\pi}{4}=1 - \frac{1}{3} + \frac{1}{5} - \frac{1}{7} + \ldots$$
+      but it converges very slowly
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Calculation of $\pi$</h2>
+  <ul>
+    <li>
+      The arctangent series converges faster for points closer to 0
+      $$\arctan x = x - \frac{x^3}{3} + \frac{x^5}{5} - \frac{x^7}{7} + \ldots$$
+    </li>
+    <li>
+      John Machin (1680-1752) observed that 
+      $$\frac{\pi}{4} = 4 \arctan \frac{1}{5} - \arctan \frac{1}{239}$$
+      and computed 100 digits of $\pi$
+    </li>
+    <li>
+      Derivation<br>
+
+      <ul style="columns:2;">
+        <li>$\tan \alpha = \frac{1}{5}$</li>
+        <li>$\tan 2\alpha = \frac{2\tan \alpha}{1-\tan^2 \alpha} = \frac{5}{12}$</li>
+        <li>$\tan 4\alpha = \frac{2\tan 2\alpha}{1-\tan^2 2\alpha} = \frac{120}{119}$</li>
+        <li>$\tan \left(4\alpha - \frac{\pi}{4} \right) = \frac{\tan 4\alpha - 1}{1+\tan 4\alpha} = \frac{1}{239}$</li>
+      </ul>
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Calculation of $\pi$</h2>
+  <p>Users of Manchin's formula</p>
+  <table>
+    <tr><td>1706</td><td>John Machin        </td><td>100 digits</td></tr>
+    <tr><td>1719</td><td>Thomas de Lagny    </td><td>112 digits</td></tr>
+    <tr><td>1739</td><td>Matsunaga Ryohitsu </td><td>50 digits </td></tr>
+    <tr><td>1794</td><td>Georg von Vega     </td><td>140 digits</td></tr>
+    <tr><td>1844</td><td>Zacharias Dase     </td><td>200 digits</td></tr>
+    <tr><td>1847</td><td>Thomas Clausen     </td><td>248 digits</td></tr>
+    <tr><td>1853</td><td>William Rutherford </td><td>440 digits</td></tr>
+    <tr><td>1876</td><td>William Shanks     </td><td>707 digits</td></tr>
+  </table>
+</section>
+
+<section>
+  <h1>Sources of Error <br>in Scientific Computing</h1>
+</section>
+
+<section>
+  <h2>Sources of Error in Scientific Computing</h2>
+
+  <ul>
+    <li>There are several sources of error in solving real-world problems</li>
+    <li>Some are beyond our control <br>(e.g. uncertainty in modeling parameters or initial conditions)</li>
+    <li>Some are introduced by our <span class="color2">numerical approximations</span>
+      <ul>
+        <li><span class="color5">Truncation/discretization error:</span><br>
+          Objects from continuous mathematics need to be discretized<br>
+          (finite differences, truncated infinite series...)</li>
+        <li><span class="color5">Rounding error:</span><br>
+          Computers work with finite precision arithmetic</li>
+      </ul>
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Sources of Error in Scientific Computing</h2>
+
+  <ul>
+    <li>It is crucial to understand and control the error introduced by numerical approximation, otherwise the results might be
+      <span class="color5">garbage</span></li>
+    <li>This is a major part of Scientific Computing, called <span class="color2">error analysis</span></li>
+    <li>Error analysis becomes more important for larger scale problems as errors accumulate</li>
+    <li>Most people are familiar with <span class="color5">rounding error</span>,<br>
+      but <span class="color5">discretization error</span> is far more important in practice
+    </li>
+  </ul>
+</section>
+
+
+<section>
+<h2>Discretization Error vs. Rounding Error</h2>
+<ul>
+<li>Consider a finite difference approximation to $f'(x)$
+  $$f_\text{diff}(x;h) = \frac{f(x+h) - f(x)}{h}$$</li>
+<li>From Taylor series (for $\theta \in [x,x+h])$
+  $$f(x+h) = f(x) + hf'(x) + f''(\theta)h^2/2$$
+  we see that 
+  $$f_\text{diff}(x;h) = \frac{f(x+h) - f(x)}{h} = f'(x) + f''(\theta)h/2$$
+  </li>
+<li>Suppose $|f''(\theta)| \leq M$, then bound on discretization error is 
+  $$|f'(x) - f_\text{diff}(x;h)| \leq Mh/2$$
+  </li>
+</ul>
+</section>
+
+<section>
+<h2>Discretization Error vs. Rounding Error</h2>
+<ul>
+<li>But we can’t compute $f_\text{diff}(x;h)$ in exact arithmetic</li>
+<li>Let $\tilde{f}_\text{diff}(x;h)$ denote finite precision approximation of $f_\text{diff}(x;h)$</li>
+<li>Numerator of $\tilde{f}_\text{diff}$ introduces rounding error $\lesssim \epsilon |f(x)|$
+  <br>(on modern computers $\epsilon \approx 10^{-16}$, will discuss this shortly)</li>
+<li>Hence we have the rounding error
+  $$\big| f_\text{diff}(x;h) - \tilde{f}_\text{diff}(x;h)\big|
+    \lesssim \left| \tfrac{f(x+h) - f(x)}{h} - \tfrac{f(x+h) - f(x) + \epsilon f(x)}{h} \right|
+    =  \epsilon |f(x)|/h$$
+  </li>
+</ul>
+</section>
+
+<section>
+<h2>Discretization Error vs. Rounding Error</h2>
+<ul>
+<li>Then we can bound the total error (discretization and rounding)<br />
+  $$
+    \begin{aligned} |f'(x) - \tilde{f}_\text{diff}(x;h)|
+    &amp;= |f'(x)  -  f_\text{diff}(x;h) + f_\text{diff}(x;h) - \tilde{f}_\text{diff}(x;h)| \\
+    &amp;\leq |f'(x) - f_\text{diff}(x;h)| + |f_\text{diff}(x;h) - \tilde{f}_\text{diff}(x;h)| \\
+    &amp;\leq {\color{green}Mh/2 + \epsilon |f(x)|/h}\end{aligned}
+  $$
+  </li>
+<li>Since $\epsilon$ is so small, here we expect discretization error to
+  dominate<br> until $h$ gets sufficiently small</li>
+</ul>
+</section>
+
+<section>
+<h2>Discretization Error vs. Rounding Error</h2>
+<ul>
+  <li>Consider $f(x) = \exp(5x)$.<br>Error of $f_\text{diff}(x,h)$ at $x=1$ as function of $h$</li>
+</ul>
+<img data-src="media/fd_abs.svg" width="400" style="margin:-0.2em"/>
+  <p><span class="color0">Exercise:</span>
+  Use calculus to find local minimum of error bound
+  <br>
+  $Mh/2 + \epsilon |f(x)|/h$
+  as a function of $h$ to see why minimum occurs at $h \approx 10^{-8}$</p>
+</section>
+
+<section>
+<h2>Discretization Error vs. Rounding Error</h2>
+<ul>
+<li>Note that in the finite difference example,
+  <br>we observe error growth due to rounding as $h \to 0$</li>
+<li>A more common situation (that we’ll see in Unit 1, for example)<br>
+  is that the error plateaus at around $\epsilon$ due to rounding error</li>
+</ul>
+<img data-src="media/quadrature_conv.svg" width="400" style="margin:-0.2em"/>
+</section>
+
+<section>
+<h2>Absolute vs. Relative Error</h2>
+<ul>
+<li>Recall our bound $|f'(x) - \tilde{f}_\text{diff}(x;h)| \leq Mh/2 + \epsilon |f(x)|/h$
+  <li>This is a bound on <span class="color5">Absolute Error</span></li>
+  <span class="color1">
+  $$\text{Absolute Error} = \text{true value} - \text{approximate value}$$
+  </span>
+  <li>Generally more interesting to consider <span class="color5">Relative Error</span></li>
+  <span class="color1">
+  $$\text{Relative Error} \equiv \frac{\text{Absolute Error}}{\text{true value}}$$
+  </span>
+  <li>Relative error is a dimensionless quantity</li>
+  <li>If unknown, true value is replaced with an estimate</li>
+</ul>
+</section>
+
+<section>
+<h2>Absolute vs. Relative Error</h2>
+<ul>
+<li>For our finite difference example, plotting relative error just rescales the error values</li>
+</ul>
+<img data-src="media/fd_rel.svg" width="400" style="margin:-0.2em"/>
+</section>
+
+<section>
+<h2>Convergence Plots</h2>
+<ul>
+<li>We have shown several plots of error as a function of a discretization parameter</li>
+<li>In general, these plots are very important in scientific computing to demonstrate that a numerical method is behaving as expected</li>
+<li>To display convergence data in a clear way, it is important to use appropriate axes for our plots</li>
+</ul>
+</section>
+
+<section>
+<h2>Convergence Plots</h2>
+<ul>
+<li>Most often we will encounter <span class="color1">algebraic convergence</span>, where error decreases as $C h^q$ for some $C,q\in \mathbb{R}$</li>
+<li><span class="color1">Algebraic convergence</span>: If $E=C h^q$, then 
+  $$\log E = \log C + q \log h$$
+  </li>
+<li>Plotting algebraic convergence on log–log axes asymptotically yields a straight line with slope $q$</li>
+<li>Hence a good way to deduce the algebraic convergence rate is by comparing error to $C h^q$ on log–log axes</li>
+</ul>
+</section>
+
+<section>
+<h2>Convergence Plots</h2>
+<ul>
+<li>Sometimes we will encounter <span class="color1">exponential convergence</span>,
+  where error decays as $C e^{-q N}$ as $N \to \infty$</li>
+<li>If $E=C e^{-q N}$ then
+  $$\log E = \log C - q N$$
+</li>
+<li>Hence for exponential convergence, better to use log-linear axes<br>(like the previous “error plateau” plot)</li>
+</ul>
+</section>
+
+<section>
+<h2>Numerical Sensitivity</h2>
+<ul>
+  <li>In practical problems we will always have input perturbations<br>(modeling uncertainty, rounding error)</li>
+  <li>Let $y = f(x)$, and denote perturbed input <span class="color5">$\hat x = x + \Delta x$</span></li>
+  <li>Also, denote perturbed output by $\hat y = f(\hat x)$, and <span class="color5">$\hat y = y + \Delta y$</span></li>
+  <li>The function $f$ is <em>sensitive</em> to input perturbations if $\Delta y \gg \Delta x$</li>
+  <li>This is sensitivity inherent in $f$, independent of any approximation (though a numerical approximation $\hat f \approx f$ can exacerbate sensitivity)</li>
+</ul>
+</section>
+
+<section>
+<h2>Sensitivity and Conditioning</h2>
+<ul>
+  <li>For a sensitive problem, <br><span class="color5">small input perturbation</span> leads to <span class="color5">large output perturbation</span></li>
+  <li>Can be made quantitative with the concept of (relative) <span class="color1">condition number</span>
+  $$\text{Condition number} = \frac{|\Delta y/y|}{|\Delta x/x|}$$
+  </li>
+  <li>
+    Problems with <span class="color5">$\text{Condition number} \gg 1$</span> are called <span class="color5">ill-conditioned</span>.
+    <br>In such problems, small input perturbations are amplified
+  </li>
+</li>
+</ul>
+</section>
+
+<section>
+<h2>Sensitivity and Conditioning</h2>
+<ul>
+<li>Condition number can be analyzed for various problem types (independent of algorithm used to solve the problem). Examples:
+<ul>
+<li>Function evaluation, $y = f(x)$</li>
+<li>Matrix multiplication, $Ax = b$ (solve for $b$ given $x$)</li>
+<li>Linear system, $Ax = b$ (solve for $x$ given $b$)</li>
+</ul></li>
+</ul>
+</section>
+
+<section>
+<h2>Conditioning: Function Evaluation</h2>
+<ul>
+  <li>Problem: evaluate function, $y=f(x)$</li>
+  <li>Perturbed problem: $y+\Delta y=f(x + \Delta x)$</li>
+  <li>Change in $x$: $\;\;\Delta x$</li>
+  <li>Change in $y$: $\;\;\Delta y \approx f'(x)\Delta x$</li>
+  <li>Condition number is the ratio of relative changes
+    $$\kappa = \frac{f'(x)\Delta x / f(x)}{\Delta x / x}= \frac{f'(x)x}{f(x)} $$
+  </li>
+</ul>
+</section>
+
+<section>
+<h2>Conditioning: Matrix Multiplication</h2>
+
+<ul>
+  <li>Problem: multiply matrix and vector, $b=Ax$<br>
+  <li>Perturbed problem: $b + \Delta b = A(x+\Delta x) \implies \Delta b=A\Delta x$<br>
+  <li>Condition number is
+    $$\kappa
+    =\frac{\|\Delta b\|/\|b\|}{\|\Delta x\|/\|x\|}
+    =\frac{\|A\Delta x\|}{\|\Delta x\|} \, \frac{\|x\|}{\|Ax\|}
+    =\frac{\|A\Delta x\|}{\|\Delta x\|} \, \frac{\|A^{-1}b\|}{\|b\|}$$
+  </li>
+  <li>Matrix norm
+    $$ \|A\| = \max_{v\neq 0} \frac{\|Av\|}{\|v\|} $$
+  </li>
+  <li>Condition number $\kappa(A)$ from linear algebra is an upper bound for $\kappa$
+    $$ \kappa =\frac{\|A\Delta x\|}{\|\Delta x\|} \, \frac{\|A^{-1}b\|}{\|b\|} \leq \|A\|\,\|A^{-1}\| = \kappa(A)$$
+  </li>
+</ul>
+</section>
+
+<section>
+<h2>Conditioning: Linear System</h2>
+<ul>
+  <li>Problem: solve linear system $Ax=b$<br>
+  <li>Perturbed problem: $A(x+\Delta x)=b + \Delta b\implies A\Delta x = \Delta b$<br>
+  <li>Condition number is
+    $$\kappa
+    =\frac{\|\Delta x\|/\|x\|}{\|\Delta b\|/\|b\|}
+    =\frac{\|\Delta x\|}{\|A\Delta x\|} \, \frac{\|Ax\|}{\|x\|}
+    =\frac{\|A^{-1}\Delta b\|}{\|\Delta b\|} \, \frac{\|Ax\|}{\|x\|}$$
+  </li>
+  <li>Matrix norm
+    $$ \|A\| = \max_{v\neq 0} \frac{\|Av\|}{\|v\|} $$
+  </li>
+  <li>Condition number $\kappa(A)$ from linear algebra is an upper bound for $\kappa$
+    $$ \kappa =\frac{\|A^{-1}\Delta b\|}{\|\Delta b\|} \, \frac{\|Ax\|}{\|x\|} \leq \|A^{-1}\|\,\|A\|  = \kappa(A)$$
+  </li>
+</ul>
+</section>
+
+<section>
+<h2>Exercise: Diagonal Matrix</h2>
+    \[A = 
+  \left(\begin{matrix}
+    d_1 & 0 & 0\\
+    0 & d_2 & 0\\
+    0 & 0 & d_3 
+  \end{matrix}\right)
+    \]
+<ul>
+  <li class="fragment fade-in">
+    Matrix norm $$\|A\|= \max_{v\neq 0} \frac{\|Av\|}{\|v\|} = \htmlClass{fragment fade-in}{\max({|d_1|,|d_2|,|d_3|})}$$
+  </li>
+  <li class="fragment fade-in">
+    Condition number $$\kappa(A) = \|A\| \|A^{-1}\| = \htmlClass{fragment fade-in}{\frac{\max({|d_1|,|d_2|,|d_3|})}{\min({|d_1|,|d_2|,|d_3|})}}$$
+  </li>
+</ul>
+</section>
+
+<section>
+<h2>Stability of an Algorithm</h2>
+<ul>
+<li>In practice, we solve problems by applying a <span class="color2">numerical method</span> to a <span class="color2">mathematical problem</span>, e.g. apply Gaussian elimination to $Ax = b$</li>
+<li>To obtain an accurate answer, we need to apply a <span class="color2">stable</span> numerical method to a <span class="color2">well-conditioned</span> mathematical problem</li>
+<li><span class="color5">Question:</span> What do we mean by a stable numerical method?</li>
+<li><span class="color5">Answer:</span> Roughly speaking, the numerical method doesn’t accumulate error (e.g. rounding error) and produce garbage</li>
+<li>We will make this definition more precise shortly, but first, we discuss rounding error and finite-precision arithmetic</li>
+</ul>
+</section>
+
+<section>
+<h2>Code Examples</h2>
+<ul>
+<li>From here on, a number of code examples will be provided</li>
+<li>They will be available via Git repository <br><a href="https://github.com/pkarnakov/am205">github.com/pkarnakov/am205</a></li>
+<li>Git is one example of <span class="color5">version control software</span>, which tracks the changes of files in a software project. Features:
+  <ul>
+    <li>Compare files to any previous version</li>
+    <li>Merge changes in the same files by multiple people</li>
+    <li>Not suitable for binary files (Word, PDF, images, videos, etc)</li>
+  </ul>
+  <li>Note: Avoid storing large binary files in repositories.<br>They cannot be removed without rewriting history</li>
+</li>
+</ul>
+</section>
+
+<section>
+<h2>Git</h2>
+<ul>
+<li>Git can be installed as a command-line utility on all major systems.</li>
+<li>For authentication, you will need to add an SSH key to your profile at <a href="https://code.harvard.edu/settings/keys">code.harvard.edu</a></li>
+<li>Follow this <a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent">guide</a> to generate an SSH key </li>
+<li>To download a copy of the repository, use
+  <pre><code class="language-shell">git clone git@code.harvard.edu:AM205/public.git</code></pre></li>
+<li>Then, at later times, you can type
+<pre><code class="language-shell">git pull</code></pre>
+to obtain any updated files. <a href="https://git-scm.com/download/gui/windows">Graphical interfaces</a> for Git are also available</li>
+</ul>
+</section>
+
+<section>
+<h2>Finite-Precision Arithmetic</h2>
+<ul>
+  <li><span class="color5">Key point:</span> we can only represent a finite and discrete subset of the real numbers on a computer.</li>
+
+  <li>The standard approach in modern hardware is to use binary floating point numbers (basically “scientific notation” in base 2),
+    $$\begin{aligned} x&amp;=  \pm (1+d_12^{-1} + d_2 2^{-2} + \ldots + d_p 2^{-p} ) \times 2^E \\ &amp;= \pm(1.d_1d_2\ldots d_p)_2 \times 2^E \end{aligned}$$
+    </li>
+</ul>
+</section>
+
+<section>
+<h2>Finite-Precision Arithmetic</h2>
+<ul>
+<li>We store <span class="math display">\underbrace{\pm}_{\text{1 sign bit}} \qquad \underbrace{d_1,d_2,\ldots,d_p}_{\text{$p$ mantissa bits}} \qquad
+  \underbrace{E}_{\text{exponent bits}}</span></li>
+<li>Note that the term bit is a contraction of “binary digit”</li>
+<li>This format assumes that <span class="math inline">d_0=1</span> to save a mantissa bit, 
+  <br>but sometimes <span class="math inline">d_0=0</span> is required, such as to represent zero.</li>
+<li>The exponent resides in an interval <span class="math inline">L\le E\le U</span>.</li>
+</ul>
+</section>
+
+<section>
+<h2>IEEE Floating Point Arithmetic</h2>
+<ul>
+<li>Universal standard on modern hardware is IEEE floating point arithmetic (IEEE 754), adopted in 1985</li>
+<li>Development led by Prof. William Kahan (UC Berkeley), who received the 1989 Turing Award for his work
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">total bits</th>
+<th style="text-align: center;">$p$</th>
+<th style="text-align: center;">$L$</th>
+<th style="text-align: center;">$U$</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>IEEE single precision</td>
+<td style="text-align: center;">32</td>
+<td style="text-align: center;">23</td>
+<td style="text-align: center;">-126</td>
+<td style="text-align: center;">127</td>
+</tr>
+<tr class="even">
+<td>IEEE double precision</td>
+<td style="text-align: center;">64</td>
+<td style="text-align: center;">52</td>
+<td style="text-align: center;">-1022</td>
+<td style="text-align: center;">1023</td>
+</tr>
+</tbody>
+</table></li>
+<li>Note that single precision has 8 exponent bits but only 254 (not 256) different values of $E$, since some exponent bits are reserved to represent special numbers</li>
+</ul>
+</section>
+
+<section>
+<h2>Exceptional Values</h2>
+<ul>
+<li>These exponents are reserved to indicate special behavior, including values such as Inf and NaN:
+<ul>
+<li>Inf = “infinity”, e.g. $1/0$ (also $-1/0 = -\text{Inf}$)</li>
+<li>NaN = “not a number”, e.g. $0/0$, $\text{Inf}/\text{Inf}$</li>
+</ul></li>
+</ul>
+</section>
+
+<section>
+<h2>IEEE Floating Point Arithmetic</h2>
+<ul>
+  <li>Let $\mathbb{F}$ denote the floating point numbers. Then $\mathbb{F}\subset \mathbb{R}$ and $|\mathbb{F}|&lt;\infty$.</li>
+  <li><span class="color5">Question:</span> How should we represent a real number $x$, which is not in $\mathbb{F}$?</li>
+  <li><span class="color5">Answer:</span> There are two cases to consider:</li>
+<ul>
+<li>Case 1: $x$ is outside the range of $\mathbb{F}$ (too small or too large)</li>
+<li>Case 2: The mantissa of $x$ requires more than $p$ bits.</li>
+</ul></li>
+</ul>
+</section>
+
+<section>
+<h2>IEEE Floating Point Arithmetic</h2>
+<p><span class="color5">Case 1: $x$ is outside the range of $\mathbb{F}$ (too small or too large)</span></p>
+<ul>
+<li>Too small:
+<ul>
+  <li>Smallest positive value that can be represented in <br>double precision is <span class="math inline">\approx 10^{-323}</span></li>
+  <li>For a value smaller than this we get <span style="color: blue">underflow</span>,<br> and the value typically set to 0</li>
+</ul></li>
+<li>Too large:
+<ul>
+  <li>Largest <span class="math inline">x\in \mathbb{F}</span> (<span class="math inline">E=U</span> and all mantissa bits are 1)<br>is approximately $2^{1024}\approx 10^{308}$</li>
+  <li>For values larger than this we get <span style="color: blue">overflow</span>,<br>and the value typically gets set to Inf</li>
+</ul></li>
+</ul>
+</section>
+
+<section>
+<h2>IEEE Floating Point Arithmetic</h2>
+<p><span class="color5">Case 2: The mantissa of $x$ requires more than $p$ bits</span></p>
+<ul>
+  <li>Need to round $x$ to a nearby floating point number</li>
+  <li>Let $\texttt{round}:\mathbb{R}\to \mathbb{F}$ denote our rounding operator</li>
+  <li>There are several different options:<br> round up, round down, round to nearest, etc</li>
+  <li>This introduces a rounding error
+    <ul>
+    <li>absolute rounding error $x-\texttt{round}(x)$</li>
+    <li>relative rounding error $(x-\texttt{round}(x))/x$</li>
+    </ul>
+  </li>
+</ul>
+</section>
+
+<section>
+<h2>Machine Precision</h2>
+<ul>
+<li>It is important to be able to quantify this rounding error — it’s related to <span class="color5">machine precision</span>,
+  often denoted as $\epsilon$ or $\epsilon_\text{mach}$</li>
+<li>$\epsilon$ is the difference between 1 and the next floating point number after 1, therefore $\epsilon = 2^{-p}$</li>
+<li>In IEEE double precision, $\epsilon = 2^{-52} \approx 2.22 \times 10^{-16}$</li>
+</ul>
+</section>
+
+<section>
+<h2>Rounding Error</h2>
+<ul>
+  <li>Let $x=(\htmlClass{color2}{1.d_1d_2\ldots d_p}\htmlClass{color0}{d_{p+1}})_2 \times 2^E \in \mathbb{R}_+$.</li>
+  <li>Then $x\in[x_-,x_+]$ for $x_-,x_+\in \mathbb{F}$, where<br> $x_-=(\htmlClass{color2}{1.d_1d_2\ldots d_p})_2 \times 2^E$ and $x_+ = x_- + \epsilon \times 2^E$.</li>
+  <li>$\texttt{round}(x)=x_-$ or $x_+$ depending on the rounding rule,<br>and hence $|\texttt{round}(x)-x|&lt;\epsilon\times 2^E$ <span style="color: blue"></span></li>
+<li>Also, $|x| \ge 2^E$</li>
+</ul>
+</section>
+
+<section>
+<h2>Rounding Error</h2>
+<ul>
+<li>Hence we have a relative error of less than $\epsilon$
+  $$\htmlClass{color1}{\left|\frac{\texttt{round}(x)-x}{x}\right| &lt; \epsilon}$$
+</li>
+<li>Another standard way to write this is 
+  $$\htmlClass{color2}{\texttt{round}(x) = x \left( 1 + \frac{\texttt{round}(x)-x}{x} \right) = x(1+\delta)}$$
+   where $\delta = \frac{\texttt{round}(x)-x}{x}$ and $|\delta|&lt;\epsilon$
+</li>
+<li>Hence rounding gives the correct answer to within a factor of $1+\epsilon$</li>
+</ul>
+</section>
+
+<section>
+<h2>Floating Point Operations</h2>
+<ul>
+<li>An arithmetic operation on floating point numbers is called a “floating point operation”: $\oplus$, $\ominus$, $\otimes$, $\oslash$ versus $+$, $-$, $\times$, $/$</li>
+<li>Computer performance is often measured in Flop/s: <br><span class="color5">number of Floating Point OPerations per second</span></li>
+<li>Supercomputers are ranked based on number of flops achieved in the LINPACK test, which solves dense linear algebra problems</li>
+<li>Currently, the fastest computers are in the 100 petaflop range:<br><span class="color5">1 petaflop = $10^{15}$ floating point operations per second</span></li>
+</ul>
+</section>
+
+<section>
+<h2>Supercomputers</h2>
+<p>See <a href="http://www.top500.org" class="uri">www.top500.org</a> for an up-to-date list of the fastest supercomputers</p>
+<img data-src="media/top500_2022_06.png" style="height:350px" class="r-stretch"/>
+<p>$R_\mathrm{max}$ is from LINPACK, $R_\mathrm{peak}$ is from clock rate</p>
+</section>
+
+<section>
+<h2>Supercomputers</h2>
+  <p>Modern supercomputers are very large, link many processors together with fast interconnect to minimize communication time</p>
+  <img data-src="media/hpc_frontier.jpg" style="height:200px" class="r-stretch"/>
+  <br><a href="https://www.top500.org/system/180047">Frontier</a> at Oak Ridge is 1102 PFlop/s
+</section>
+
+<section>
+<h2>Floating Point Operation Error</h2>
+<ul>
+<li>IEEE standard guarantees that for $x, y \in \mathbb{F}$
+  <span class="color5">$$x \circledast y = \texttt{round}( x \ast y)$$</span>
+  where $\ast$ and $\circledast$ represent one of the four arithmetic operations</li>
+<li>Hence from our discussion of rounding error, it follows that for $x, y \in \mathbb{F}$
+  $$x\circledast y = ( x\ast y)(1+\delta)$$
+  for some $|\delta| &lt; \epsilon$</li>
+</ul>
+</section>
+
+<section>
+<h2>Loss of Precision</h2>
+<ul>
+  <li>Machine precision can be tested. See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit0/precision.py">[unit0/precision.py]</a></li>
+  <li>Since $\epsilon$ is so small, we typically lose very little precision per operation</li>
+</ul>
+</section>
+
+<section>
+<h2>IEEE Floating Point Arithmetic</h2>
+<p>For more detailed discussion of floating point arithmetic, see:</p>
+<img data-src="media/floating_point_book.jpg" height="250" alt="IEEE" class="r-stretch"/>
+<p>
+  Michael L. Overton. <em>Numerical Computing with IEEE Floating Point Arithmetic.</em> SIAM, 2001
+  <a href="https://doi.org/10.1137/1.9780898718072">10.1137/1.9780898718072</a>
+</p>
+</section>
+
+<section>
+<h2>Numerical Stability of an Algorithm</h2>
+<ul>
+<li>We have discussed rounding for a single operation, but in AM205 we will study numerical algorithms that require many operations</li>
+<li>For an algorithm to be useful, it must be <span class="color5">stable</span> in the sense that rounding errors do not accumulate and result in “garbage” output</li>
+<li>More precisely, numerical analysts aim to prove <span class="color5">backward stability</span>:<br>The method gives the exact answer to a slightly perturbed problem</li>
+<li>For example, a numerical method for solving $Ax = b$ should give the exact answer for $(A+\Delta A)x = (b+\Delta b)$ for small $\Delta A$, $\Delta b$</li>
+</ul>
+</section>
+
+<section>
+<h2>Numerical Stability of an Algorithm</h2>
+<ul>
+  <li>We note the importance of <span class="color5">conditioning</span>:<br>backward stability doesn’t help us if the mathematical problem is ill-conditioned</li>
+  <li>For example, if $A$ is ill-conditioned then a backward stable algorithm for solving $Ax=b$ can still give large error for <span class="math inline">x</span></li>
+  <li>Backward stability analysis is a deep subject which we do not cover in detail in AM205</li>
+  <li>We will, however, compare algorithms with different stability properties and observe the importance of stability in practice</li>
+</ul>
+</section>
+
+    </div>
+  </div>
+
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin/markdown/markdown.js"></script>
+        <script src="../plugin/highlight/highlight.js"></script>
+        <script src="../plugin/notes/notes.js"></script>
+        <script src="../plugin/math/math.js"></script>
+
+        <script>
+          Reveal.initialize({
+            // Layout.
+            center: true,
+            width: 960,
+            height: 540,
+
+            transition: 'none',
+            transitionSpeed: 'fast',
+            backgroundTransition: 'none',
+
+            // Navigation.
+            controls: true,
+            controlsLayout: 'bottom-right',
+            controlsBackArrows: 'visible',
+            history: false,
+            hash: true,
+            mouseWheel: true,
+            controlsTutorial: false,
+            slideNumber: 'c',
+            progress: false,
+            // TODO: change to true.
+            hashOneBasedIndex: false,
+            pause: false, // No blackout on `;`.
+
+            katex: {
+              trust: true,
+            },
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX]
+          });
+          Reveal.configure({ pdfSeparateFragments: false });
+        </script>
+  </body>
+</html>
