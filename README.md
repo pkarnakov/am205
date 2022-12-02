@@ -279,6 +279,12 @@ Click on the image to see the relevant slide.
   <a href="https://pkarnakov.github.io/am205/slides/unit3/#/168"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/grid_cfl4.svg" height=100 alt="grid_cfl4.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit3/#/171"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/grid_cfl5.svg" height=100 alt="grid_cfl5.svg"></a>
 
+* [`unit3/wave.py`](media/unit3/media/wave.py)
+
+  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/191"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/wave_energy.svg" height=100 alt="wave_energy.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/191"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/wave_force.gif" height=100 alt="wave_force.webm"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/191"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/wave_signal.gif" height=100 alt="wave_signal.webm"></a>
+
 * [`unit3/sawtooth_mode.py`](media/unit3/media/sawtooth_mode.py)
 
   <a href="https://pkarnakov.github.io/am205/slides/unit3/#/198"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/sawtooth_mode.svg" height=100 alt="sawtooth_mode.svg"></a>
