@@ -54,15 +54,6 @@ Click on the image to see the relevant slide.
 
 ### Unit 1. Data fitting
 
-* [`unit1/cheb_conv.py`](media/unit1/media/cheb_conv.py)
-
-  <a href="https://pkarnakov.github.io/am205/slides/unit1/#/38"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/cheb_conv.svg" height=100 alt="cheb_conv.svg"></a>
-
-* [`unit1/data_anim.py`](media/unit1/media/data_anim.py)
-
-  <a href="https://pkarnakov.github.io/am205/slides/unit1/#/62"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/data_anim_poly.gif" height=100 alt="data_anim_poly.webm"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit1/#/62"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/data_anim_spline.gif" height=100 alt="data_anim_spline.webm"></a>
-
 * [`unit1/data.py`](media/unit1/media/data.py)
 
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/2"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/data.svg" height=100 alt="data.svg"></a>
@@ -102,6 +93,10 @@ Click on the image to see the relevant slide.
 
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/36"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/cheb.svg" height=100 alt="cheb.svg"></a>
 
+* [`unit1/cheb_conv.py`](media/unit1/media/cheb_conv.py)
+
+  <a href="https://pkarnakov.github.io/am205/slides/unit1/#/38"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/cheb_conv.svg" height=100 alt="cheb_conv.svg"></a>
+
 * [`unit1/lebesgue.py`](media/unit1/media/lebesgue.py)
 
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/46"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/lebesgue_equi_10.svg" height=100 alt="lebesgue_equi_10.svg"></a>
@@ -110,6 +105,11 @@ Click on the image to see the relevant slide.
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/47"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/lebesgue_cheb_20.svg" height=100 alt="lebesgue_cheb_20.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/48"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/lebesgue_equi_30.svg" height=100 alt="lebesgue_equi_30.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/48"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/lebesgue_cheb_30.svg" height=100 alt="lebesgue_cheb_30.svg"></a>
+
+* [`unit1/data_anim.py`](media/unit1/media/data_anim.py)
+
+  <a href="https://pkarnakov.github.io/am205/slides/unit1/#/62"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/data_anim_poly.gif" height=100 alt="data_anim_poly.webm"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit1/#/62"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/data_anim_spline.gif" height=100 alt="data_anim_spline.webm"></a>
 
 * [`unit1/nonpoly_fit.py`](media/unit1/media/nonpoly_fit.py)
 
@@ -183,12 +183,6 @@ Click on the image to see the relevant slide.
 
 ### Unit 3. Numerical calculus
 
-* [`unit3/lambdastab.py`](media/unit3/media/lambdastab.py)
-
-  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/95"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/lambdastab_m1.svg" height=100 alt="lambdastab_m1.svg"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/95"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/lambdastab_0.svg" height=100 alt="lambdastab_0.svg"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/95"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/lambdastab_1.svg" height=100 alt="lambdastab_1.svg"></a>
-
 * [`unit3/quad_rect.py`](media/unit3/media/quad_rect.py)
 
   <a href="https://pkarnakov.github.io/am205/slides/unit3/#/2"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/quad_rect.svg" height=100 alt="quad_rect.svg"></a>
@@ -216,10 +210,6 @@ Click on the image to see the relevant slide.
   <a href="https://pkarnakov.github.io/am205/slides/unit3/#/46"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/legendre_roots_15.svg" height=100 alt="legendre_roots_15.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit3/#/46"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/legendre_roots_20.svg" height=100 alt="legendre_roots_20.svg"></a>
 
-* [`unit3/legendre_cheb.py`](media/unit3/media/legendre_cheb.py)
-
-  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/46"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/legendre_cheb.svg" height=100 alt="legendre_cheb.svg"></a>
-
 * [`unit3/sparsity.py`](media/unit3/media/sparsity.py)
 
   <a href="https://pkarnakov.github.io/am205/slides/unit3/#/59"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/sparsity.svg" height=100 alt="sparsity.svg"></a>
@@ -228,6 +218,12 @@ Click on the image to see the relevant slide.
 * [`unit3/lotka_volterra.py`](media/unit3/media/lotka_volterra.py)
 
   <a href="https://pkarnakov.github.io/am205/slides/unit3/#/65"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/lotka_volterra.svg" height=100 alt="lotka_volterra.svg"></a>
+
+* [`unit3/lambdastab.py`](media/unit3/media/lambdastab.py)
+
+  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/95"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/lambdastab_m1.svg" height=100 alt="lambdastab_m1.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/95"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/lambdastab_0.svg" height=100 alt="lambdastab_0.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit3/#/95"><img src="https://pkarnakov.github.io/am205/slides/unit3/media/lambdastab_1.svg" height=100 alt="lambdastab_1.svg"></a>
 
 * [`unit3/stabregion_euler.py`](media/unit3/media/stabregion_euler.py)
 
@@ -308,23 +304,23 @@ Click on the image to see the relevant slide.
 
 ### Unit 4. Optimization
 
-* [`unit4/linear_prog.py`](media/unit4/media/linear_prog.py)
-
-  <a href="https://pkarnakov.github.io/am205/slides/unit4/#/15"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/linear_prog.svg" height=100 alt="linear_prog.svg"></a>
-
-* [`unit4/fixed.py`](media/unit4/media/fixed.py)
-
-  <a href="https://pkarnakov.github.io/am205/slides/unit4/#/30"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/fixed.svg" height=100 alt="fixed.svg"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit4/#/33"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/fixed_log.svg" height=100 alt="fixed_log.svg"></a>
-
 * [`unit4/bisection.py`](media/unit4/media/bisection.py)
 
   <a href="https://pkarnakov.github.io/am205/slides/unit4/#/8"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/bisection.svg" height=100 alt="bisection.svg"></a>
+
+* [`unit4/linear_prog.py`](media/unit4/media/linear_prog.py)
+
+  <a href="https://pkarnakov.github.io/am205/slides/unit4/#/15"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/linear_prog.svg" height=100 alt="linear_prog.svg"></a>
 
 * [`unit4/global.py`](media/unit4/media/global.py)
 
   <a href="https://pkarnakov.github.io/am205/slides/unit4/#/17"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/global_one.svg" height=100 alt="global_one.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit4/#/18"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/global_many.svg" height=100 alt="global_many.svg"></a>
+
+* [`unit4/fixed.py`](media/unit4/media/fixed.py)
+
+  <a href="https://pkarnakov.github.io/am205/slides/unit4/#/30"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/fixed.svg" height=100 alt="fixed.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit4/#/33"><img src="https://pkarnakov.github.io/am205/slides/unit4/media/fixed_log.svg" height=100 alt="fixed_log.svg"></a>
 
 * [`unit4/coercive.py`](media/unit4/media/coercive.py)
 
@@ -349,7 +345,9 @@ Click on the image to see the relevant slide.
 
 * [`unit5/multigrid.py`](media/unit5/media/multigrid.py)
 
+  <a href="https://pkarnakov.github.io/am205/slides/unit5/#/88"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_jacobi.gif" height=100 alt="multigrid_jacobi.webm"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/88"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_sm_jac.svg" height=100 alt="multigrid_sm_jac.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit5/#/90"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_gs.gif" height=100 alt="multigrid_gs.webm"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/90"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_sm.svg" height=100 alt="multigrid_sm.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/93"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_maxlvl_gs.svg" height=100 alt="multigrid_maxlvl_gs.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/94"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_maxlvl_jac.svg" height=100 alt="multigrid_maxlvl_jac.svg"></a>
