@@ -41,8 +41,9 @@ ZIP archive with interactive HTML slides: [am205_2022_slides.zip](https://pkarna
 
 ## Gallery
 
-These images have been created for the 2022 course.
+These images have been used to illustrate the material.
 The code to generate them is available in [media](media/).
+Click on the image to see the relevant slide.
 
 ### Unit 0. Introduction
 
