@@ -49,8 +49,8 @@ Click on the image to see the relevant slide.
 
 * [`unit0/fd.py`](media/unit0/media/fd.py)
 
-  <a href="https://pkarnakov.github.io/am205/slides/unit0/#/19"><img src="https://pkarnakov.github.io/am205/slides/unit0/media/fd_abs.svg" height=100 alt="fd_abs.svg"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit0/#/22"><img src="https://pkarnakov.github.io/am205/slides/unit0/media/fd_rel.svg" height=100 alt="fd_rel.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit0/#/20"><img src="https://pkarnakov.github.io/am205/slides/unit0/media/fd_abs.svg" height=100 alt="fd_abs.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit0/#/23"><img src="https://pkarnakov.github.io/am205/slides/unit0/media/fd_rel.svg" height=100 alt="fd_rel.svg"></a>
 
 ### Unit 1. Data fitting
 
