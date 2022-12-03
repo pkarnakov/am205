@@ -1,0 +1,8 @@
+#!/bin/sh -eu
+
+url="https://www.youtube.com/watch?v=OiqSsE0B-Rc&ab_channel=JanNiederhumer"
+file=vietnam.webm
+if [ ! -f "$file" ] ; then
+  yt-dlp -f 134 "$url" -o $file
+fi
+ffmpeg -v error -y -i $file -an -r 0.5 -start_number 0 -vf scale="640x360" a_%05d.png

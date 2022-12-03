@@ -181,6 +181,18 @@ Click on the image to see the relevant slide.
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/163"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pca_dataset.svg" height=100 alt="pca_dataset.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/166"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pca_dataset_arrow.svg" height=100 alt="pca_dataset_arrow.svg"></a>
 
+* [`unit2/pcavideo/pcavideo.py`](media/unit2/media/pcavideo/pcavideo.py)
+
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/168"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_paris.gif" height=100 alt="pcavideo_paris.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/169"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_paris_first3.gif" height=100 alt="pcavideo_paris_first3.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/170"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_paris_zero3.gif" height=100 alt="pcavideo_paris_zero3.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/171"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_vietnam.gif" height=100 alt="pcavideo_vietnam.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/172"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_vietnam_first3.gif" height=100 alt="pcavideo_vietnam_first3.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/173"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_vietnam_zero3.gif" height=100 alt="pcavideo_vietnam_zero3.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/174"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_sunrise.gif" height=100 alt="pcavideo_sunrise.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/175"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_sunrise_first3.gif" height=100 alt="pcavideo_sunrise_first3.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/176"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_sunrise_zero3.gif" height=100 alt="pcavideo_sunrise_zero3.mp4"></a>
+
 ### Unit 3. Numerical calculus
 
 * [`unit3/quad_rect.py`](media/unit3/media/quad_rect.py)

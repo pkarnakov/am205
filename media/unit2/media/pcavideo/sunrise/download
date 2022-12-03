@@ -1,0 +1,8 @@
+#!/bin/sh -eu
+
+url="https://www.pexels.com/video/855646/download/?search_query=&tracking_id=693xfarqgxs"
+file=sunrise.mp4
+if [ ! -f "$file" ] ; then
+  wget "$url" -O $file
+fi
+ffmpeg -loglevel warning -y -i $file -an -r 7.5 -start_number 0 -vf scale="640x360" a_%05d.png
