@@ -82,7 +82,7 @@ Click on the image to see the relevant slide.
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/30"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/runge_deg5.svg" height=100 alt="runge_deg5.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/30"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/runge_deg12.svg" height=100 alt="runge_deg12.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/30"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/runge_deg13.svg" height=100 alt="runge_deg13.svg"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit1/#/31"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/runge.svg" height=100 alt="runge.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit1/#/31"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/runge.svg" height=100 alt="runge.svg"></a>  
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/37"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/runge_cheb_deg4.svg" height=100 alt="runge_cheb_deg4.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/37"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/runge_cheb_deg5.svg" height=100 alt="runge_cheb_deg5.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit1/#/37"><img src="https://pkarnakov.github.io/am205/slides/unit1/media/runge_cheb_deg12.svg" height=100 alt="runge_cheb_deg12.svg"></a>
@@ -185,10 +185,10 @@ Click on the image to see the relevant slide.
 
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/168"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_paris.gif" height=100 alt="pcavideo_paris.mp4"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/169"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_paris_first3.gif" height=100 alt="pcavideo_paris_first3.mp4"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/170"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_paris_zero3.gif" height=100 alt="pcavideo_paris_zero3.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/170"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_paris_zero3.gif" height=100 alt="pcavideo_paris_zero3.mp4"></a>  
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/171"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_vietnam.gif" height=100 alt="pcavideo_vietnam.mp4"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/172"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_vietnam_first3.gif" height=100 alt="pcavideo_vietnam_first3.mp4"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/173"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_vietnam_zero3.gif" height=100 alt="pcavideo_vietnam_zero3.mp4"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit2/#/173"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_vietnam_zero3.gif" height=100 alt="pcavideo_vietnam_zero3.mp4"></a>  
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/174"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_sunrise.gif" height=100 alt="pcavideo_sunrise.mp4"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/175"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_sunrise_first3.gif" height=100 alt="pcavideo_sunrise_first3.mp4"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit2/#/176"><img src="https://pkarnakov.github.io/am205/slides/unit2/media/pcavideo/pcavideo_sunrise_zero3.gif" height=100 alt="pcavideo_sunrise_zero3.mp4"></a>
@@ -360,7 +360,7 @@ Click on the image to see the relevant slide.
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/88"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_jacobi.gif" height=100 alt="multigrid_jacobi.webm"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/88"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_sm_jac.svg" height=100 alt="multigrid_sm_jac.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/90"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_gs.gif" height=100 alt="multigrid_gs.webm"></a>
-  <a href="https://pkarnakov.github.io/am205/slides/unit5/#/90"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_sm.svg" height=100 alt="multigrid_sm.svg"></a>
+  <a href="https://pkarnakov.github.io/am205/slides/unit5/#/90"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_sm.svg" height=100 alt="multigrid_sm.svg"></a>  
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/93"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_maxlvl_gs.svg" height=100 alt="multigrid_maxlvl_gs.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/94"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_maxlvl_jac.svg" height=100 alt="multigrid_maxlvl_jac.svg"></a>
   <a href="https://pkarnakov.github.io/am205/slides/unit5/#/95"><img src="https://pkarnakov.github.io/am205/slides/unit5/media/multigrid_maxlvl_jac05.svg" height=100 alt="multigrid_maxlvl_jac05.svg"></a>
