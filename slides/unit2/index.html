@@ -837,8 +837,8 @@ x_2
 <li>Familiar idea for solving $Ax = b$ is to use <span class="color1">Gaussian elimination</span><br />
 to transform $Ax=b$ to a <span class="color2">triangular system</span></li>
 <li>What is a triangular system?
-<div class="row" style="width:110%;">
-<div class="column" style="margin-right:-1em;">
+<div class="rowf" style="width:110%;">
+<div class="columnf" style="margin-right:-1em;">
 <ul>
 <li>upper triangular $U \in \mathbb R^{n\times n}$
 <blockquote>
@@ -847,7 +847,7 @@ to transform $Ax=b$ to a <span class="color2">triangular system</span></li>
 <p>$U=\left[ \begin{array}{cc} u_{11} &amp; u_{12} &amp; u_{13} \\ 0 &amp; u_{22} &amp; u_{23} \\ 0 &amp; 0 &amp; u_{33} \\ \end{array} \right]$</p></li>
 </ul>
 </div>
-<div class="column">
+<div class="columnf">
 <ul>
 <li>lower triangular $L \in \mathbb R^{n\times n}$
 <blockquote>
@@ -1177,8 +1177,8 @@ L_j^{-1} =
 <ul>
 <li>$L_j L_j^{-1} = I$ can be verified directly by multiplication</li>
 <li><span class="color2">Intuitive explanation</span>
-<div class="row">
-<div class="column" style="margin-right:-0em;flex:50%;">
+<div class="rowf">
+<div class="columnf" style="margin-right:-0em;">
 <ul>
 <li>multiplication $L_j v$ subtracts<br />
 a scaled component $v_j$
@@ -1213,7 +1213,7 @@ L_j
 </div></li>
 </ul>
 </div>
-<div class="column" style="margin-left:-0em;margin-right:-2em;">
+<div class="columnf" style="margin-left:-0em;margin-right:-2em;">
 <ul>
 <li>so the inverse should add it back ($v_j$ itself is unchanged)
 <div style="font-size:0.9em;">
@@ -3611,7 +3611,7 @@ the columns of $V$ are the eigenvectors of $M=\frac{1}{m}A^TA$</li>
       controlsBackArrows: 'visible',
       history: false,
       hash: true,
-      mouseWheel: true,
+      mouseWheel: false,
       controlsTutorial: false,
       slideNumber: 'c',
       progress: false,

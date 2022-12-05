@@ -396,13 +396,13 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
  * CUSTOM AM205
  *********************************************/
 .row{display:flex;}
-.column{flex:50%;text-align:center;}
-.column3{flex:30%;text-align:center;}
-.column4{flex:25%;text-align:center;}
+.column{flex:50%;text-align:center; overflow:visible;}
+.column3{flex:30%;text-align:center; overflow:visible;}
+.column4{flex:25%;text-align:center; overflow:visible;}
 .rowf:after{content:""; display:table; clear:both;}
-.columnf{float:left; width:50%; text-align:center;}
-.columnf3{float:left; width:33.33%; text-align:center;}
-.columnf4{float:left; width:25%; text-align:center;}
+.columnf{float:left; width:50%; text-align:center; overflow:visible;}
+.columnf3{float:left; width:33.33%; text-align:center; overflow:visible;}
+.columnf4{float:left; width:25%; text-align:center; overflow:visible;}
 .algo {
   display: inline-block;
   border-style: solid;
