@@ -15,10 +15,15 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
   <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
   <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
@@ -36,20 +41,6 @@
 
 <section class="slide level2">
 
-<style>
-.reveal ul li {
-  margin-top: 0.2em;
-  margin-bottom: 0.2em;
-}
-.reveal ul ul li {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-.reveal ul ol li {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-</style>
 <section>
 <h1>
 Applied Mathematics 205
@@ -104,14 +95,17 @@ using a numerical method is called <span class="color5">quadrature</span></li>
 <section class="slide level2">
 <h2>Integration</h2>
 <ul>
-<li>We can numerically approximate this integral in Python using quadrature</li>
-</ul>
-<pre class="python-repl"><code>&gt;&gt;&gt; import scipy
-&gt;&gt;&gt; from math import *
-&gt;&gt;&gt; def f(x):
+<li>We can numerically approximate this integral<br />
+using <code>scipy.integrate.quad()</code>
+<pre style="width:550px"><code data-trim class="language-python-repl">
+>>> import scipy
+>>> from math import *
+>>> def f(x):
 ...    return exp(sin(cos(sinh(cosh(atan(log(x)))))))
-&gt;&gt;&gt; scipy.integrate.quad(f, 1, 2000)
-(1514.7806778270256, 4.231109731546272e-06)</code></pre>
+>>> scipy.integrate.quad(f, 1, 2000)
+(1514.7806778270256, 4.231109731546272e-06)
+</code></pre></li>
+</ul>
 </section>
 <section class="slide level2">
 <h2>Integration</h2>
@@ -131,7 +125,7 @@ based on a finite sum of samples at quadrature points
 by triangulating the domain</li>
 </ul>
 <blockquote>
-<p><a href="https://commons.wikimedia.org/wiki/File:Example_of_2D_mesh.png"><img data-src="media/triangular_mesh.png" height=300></a></p>
+<p><a href="https://commons.wikimedia.org/wiki/File:Example_of_2D_mesh.png"><img data-src="media/triangular_mesh.png" height=250></a></p>
 </blockquote>
 </section>
 <section class="slide level2">
@@ -970,7 +964,8 @@ D_{(i,:)}F \approx f'(x_i)
 <ul>
 <li>Forward difference corresponds to a bidiagonal matrix<br />
 with elements $D_{ii} = -\frac{1}{h},\;D_{i,i+1} = \frac{1}{h}$
-<pre style="width:550px"><code class="language-python-repl">>>> import numpy as np
+<pre style="width:550px"><code data-trim class="language-python-repl">
+>>> import numpy as np
 >>> import matplotlib.pyplot as plt
 >>> n = 11
 >>> h = 1 / (n - 1)
@@ -1602,7 +1597,7 @@ where <span class="color5">$z = V^{-1}y$</span> and <span class="color5">$z_0 = 
 and the stability of $z_i$ is determined by $\lambda_i$ for each $i$</li>
 <li>Since $z$ and $y$ are related by the matrix $V$,<br />
 then if all $z_i$ are stable then all $y_i$ will also be stable</li>
-<li>If <span class="color5">Re$(\lambda_i) \leq 0$ for $i=1,\ldots,n$</span> then $y' = Ay$ is a stable ODE</li>
+<li>If Re$(\lambda_i) \leq 0$ for $i=1,\ldots,n$ then $y' = Ay$ is a <span class="color5">stable ODE</span></li>
 <li>Next we consider stability of numerical approximations to ODEs</li>
 </ul>
 </section>
@@ -2443,7 +2438,7 @@ q(x,y) = ax^2 + bxy + cy^2 + dx + ey
 <li>Corresponding quadratic function is $q(x,t) = t^2 - x^2$</li>
 <li>$q(x,t) = c$ gives a <span class="color5">hyperbola</span>, e.g. for $c=0,2,4,6$, we have</li>
 </ul>
-<p><img data-src="media/conic_hyper.svg" style="margin:auto; display: block;" style="height:7cm" /></p>
+<p><img data-src="media/conic_hyper.svg" style="margin:auto; display: block;" height="200" /></p>
 </section>
 <section class="slide level2">
 <h2>PDEs: Parabolic</h2>
@@ -2452,7 +2447,7 @@ q(x,y) = ax^2 + bxy + cy^2 + dx + ey
 <li>Corresponding quadratic function is $q(x,t) = t - x^2$</li>
 <li>$q(x,t) = c$ gives a <span class="color5">parabola</span>, e.g. for $c=0,2,4,6$, we have</li>
 </ul>
-<p><img data-src="media/conic_para.svg" style="margin:auto; display: block;" style="height:7cm" /></p>
+<p><img data-src="media/conic_para.svg" style="margin:auto; display: block;" height="200" /></p>
 </section>
 <section class="slide level2">
 <h2>PDEs: Elliptic</h2>
@@ -2461,7 +2456,7 @@ q(x,y) = ax^2 + bxy + cy^2 + dx + ey
 <li>Corresponding quadratic function is $q(x,y) = x^2 + y^2$</li>
 <li>$q(x,y) = c$ gives an <span class="color5">ellipse</span>, e.g. for $c=0,2,4,6$, we have</li>
 </ul>
-<p><img data-src="media/conic_ell.svg" style="margin:auto; display: block;" style="height:7cm" /></p>
+<p><img data-src="media/conic_ell.svg" style="margin:auto; display: block;" height="200" /></p>
 </section>
 <section class="slide level2">
 <h2>PDEs</h2>
@@ -2733,7 +2728,7 @@ is determined by the characteristics passing through $(t_{n+1},x_j)$</li>
 <ul>
 <li>Domain of dependence of $U_j^n$: grid nodes •</li>
 <li>Domain of dependence of $u(t_{n+1}, x_j)$: solid line (characteristic)
-<p><img data-src="media/grid_cfl1.svg" style="margin:auto; display: block;" height="300" /></p></li>
+<p><img data-src="media/grid_cfl1.svg" style="margin:auto; display: block;" height="250" /></p></li>
 <li>In this case, the scheme satisfies the CFL condition</li>
 </ul>
 </section>
@@ -2742,16 +2737,16 @@ is determined by the characteristics passing through $(t_{n+1},x_j)$</li>
 <ul>
 <li>With a larger advection speed $c$,<br />
 the scheme does not satisfy the CFL condition
-<p><img data-src="media/grid_cfl2.svg" style="margin:auto; display: block;" height="300" /></p></li>
+<p><img data-src="media/grid_cfl2.svg" style="margin:auto; display: block;" height="250" /></p></li>
 </ul>
 </section>
 <section class="slide level2">
 <h2>Hyperbolic PDEs: Numerical Approximation</h2>
 <ul>
 <li>With a negative advection speed ($c&lt;0$),<br />
-the scheme does not satisfy the CFL condition</li>
+the scheme does not satisfy the CFL condition
+<p><img data-src="media/grid_cfl3.svg" style="margin:auto; display: block;" height="250" /></p></li>
 </ul>
-<p><img data-src="media/grid_cfl3.svg" style="margin:auto; display: block;" height="300" /></p>
 </section>
 <section class="slide level2">
 <h2>Hyperbolic PDEs: Numerical Approximation</h2>
@@ -2768,7 +2763,7 @@ to the value $u_0(x_0)$, which means that the method cannot be convergent</li>
 <ul>
 <li>If $c &gt; 0$, then we require $\nu = \frac{c\Delta t}{\Delta x} \leq 1$<br />
 for the CFL condition to be satisfied
-<p><img data-src="media/grid_cfl4.svg" style="margin:auto; display: block;" height="300" /></p></li>
+<p><img data-src="media/grid_cfl4.svg" style="margin:auto; display: block;" height="250" /></p></li>
 </ul>
 </section>
 <section class="slide level2">
@@ -2812,8 +2807,7 @@ U^n_{j-1}), \quad \text{if } c &gt; 0\\ U_j^n - c \frac{\Delta t}{\Delta x}
 x} = 0
 
 \]
-
-<p><img data-src="media/grid_cfl5.svg" style="margin:auto; display: block;" height="250" /></p></li>
+<img data-src="media/grid_cfl5.svg" style="margin:auto; display: block;" height="250" /></li>
 <li>It satisfies CFL for $|\nu| = |c\Delta t / \Delta x| \leq 1$ both for $c&gt;0$ and $c&lt;0$</li>
 <li>However, we will see that this method is unstable</li>
 </ul>
@@ -3326,7 +3320,7 @@ and stable (conditionally stable for $\theta \in [0,0.5)$)</li>
 so it tends to smooth out discontinuities</li>
 <li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/heat.py">[examples/unit3/heat.py]</a>,<br />
 forward Euler and Crank-Nicolson schemes for the heat equation
-<p><img data-src="media/heat_equation_smoothing.png" style="margin:auto; display: block;" style="height:3cm" /></p></li>
+<p><img data-src="media/heat_equation_smoothing.png" style="margin:auto; display: block;" height="200" /></p></li>
 <li>This is qualitatively different to hyperbolic equations,<br />
 e.g. the advection equation will just transport a discontinuity in $u_0$</li>
 </ul>
@@ -3402,7 +3396,7 @@ u_{xx} + u_{yy} \approx
     \frac{U_{i,j-1} + U_{i-1,j} - 4U_{i,j} + U_{i+1,j} + U_{i,j+1}}{h^2}
 \]
 </li>
-<li>This corresponds to a 5-point stencil <img data-src="media/fd_stencils_2d.png" style="margin:auto; display: block;" style="height:3cm" /></li>
+<li>This corresponds to a 5-point stencil <img data-src="media/fd_stencils_2d.png" style="margin:auto; display: block;" height="120" /></li>
 </ul>
 </section>
 <section class="slide level2">
@@ -3422,7 +3416,7 @@ the one-dimensional vector $U$ to the two-dimensional grid values $U_{i,j}$<br /
 <ul>
 <li>For instance, let’s enumerate the nodes from 0 to $N_xN_y-1$<br />
 starting from the bottom row $j=0$ (i.e. <span class="color5">row-major order</span>)
-<p><img data-src="media/grid_xy_flat.svg" style="margin:auto; display: block;" style="height:5cm" /></p></li>
+<p><img data-src="media/grid_xy_flat.svg" style="margin:auto; display: block;" height="200" /></p></li>
 <li>Let $G$ denote the mapping from the 2D indexing to the 1D indexing</li>
 <li>From the above schematic we have
 \[
@@ -3476,7 +3470,7 @@ accordingly on each boundary</li>
 <ul>
 <li>For example, in the case $N_x = N_y = 6$,<br />
 matrix $D$ has the following sparsity pattern
-<p><img data-src="media/poisson_spy.svg" style="margin:auto; display: block;" style="height:7cm" /></p></li>
+<p><img data-src="media/poisson_spy.svg" style="margin:auto; display: block;" height="220" /></p></li>
 </ul>
 </section>
 <section class="slide level2">
@@ -3484,7 +3478,7 @@ matrix $D$ has the following sparsity pattern
 <ul>
 <li>Poisson equation $\nabla^2 u = -10$<br />
 for $(x,y) \in \Omega = [0,1]^2$ with $u = 0$ on $\partial \Omega$
-<p><img data-src="media/poisson.svg" style="margin:auto; display: block;" style="height:6cm" /></p></li>
+<p><img data-src="media/poisson.svg" style="margin:auto; display: block;" height="200" /></p></li>
 <li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit3/poisson.py">[examples/unit3/poisson.py]</a>, solved using <code>scipy.sparse</code></li>
 </ul>
 </section>

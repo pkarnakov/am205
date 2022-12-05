@@ -15,10 +15,15 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
   <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
   <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
@@ -36,20 +41,6 @@
 
 <section class="slide level2">
 
-<style>
-.reveal ul li {
-  margin-top: 0.2em;
-  margin-bottom: 0.2em;
-}
-.reveal ul ul li {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-.reveal ul ol li {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-</style>
 <section>
 <h1>
 Applied Mathematics 205
@@ -246,7 +237,7 @@ i.e. parameters have to satisfy equations or inequalities</li>
 <h2>Motivation: Optimization</h2>
 <ul>
 <li>All these problems can be formulated as <span class="color5">constrained minimization</span>
-<div>
+<div style="text-align:center;">
 <div class="algo" style="padding:5px;">
 <p>Given an <span class="color5">objective function</span> $f : \mathbb{R}^n \to \mathbb{R}$ and a set $S \subset \mathbb{R}^n$,<br />
 find $x^\ast \in S$ such that $f(x^\ast) \leq f(x)$ $\forall x \in S$</p>

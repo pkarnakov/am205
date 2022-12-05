@@ -202,6 +202,18 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
   display: block;
   margin-left: 30px;
 }
+.reveal ul li {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+.reveal ul ul li {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.reveal ul ol li {
+  margin-top: 0;
+  margin-bottom: 0;
+}
 
 .reveal dt {
   font-weight: bold;
@@ -387,6 +399,10 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
 .column{flex:50%;text-align:center;}
 .column3{flex:30%;text-align:center;}
 .column4{flex:25%;text-align:center;}
+.rowf:after{content:""; display:table; clear:both;}
+.columnf{float:left; width:50%; text-align:center;}
+.columnf3{float:left; width:33.33%; text-align:center;}
+.columnf4{float:left; width:25%; text-align:center;}
 .algo {
   display: inline-block;
   border-style: solid;

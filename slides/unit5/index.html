@@ -15,10 +15,15 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
   <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
   <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
@@ -36,20 +41,6 @@
 
 <section class="slide level2">
 
-<style>
-.reveal ul li {
-  margin-top: 0.2em;
-  margin-bottom: 0.2em;
-}
-.reveal ul ul li {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-.reveal ul ol li {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-</style>
 <section>
 <h1>
 Applied Mathematics 205
@@ -463,14 +454,16 @@ and let $D = \mathop{\mathrm{diag}}(\lambda_1,\ldots,\lambda_n)$</li>
 <ul>
 <li>For <code>numpy</code>-array, the <code>.T</code> property contains the transpose,<br />
 while the <code>.getH()</code> function performs the conjugate transpose
-<pre class="python-repl"><code>&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; a = np.matrix([[1+1j, 2+3j], [0, 4]])
-&gt;&gt;&gt; a.T
+<pre style="width:60%"><code data-trim class="language-python-repl">
+>>> import numpy as np
+>>> a = np.matrix([[1+1j, 2+3j], [0, 4]])
+>>> a.T
 matrix([[ 1.+1.j,  0.+0.j],
         [ 2.+3.j,  4.+0.j]])
-&gt;&gt;&gt; a.getH()
+>>> a.getH()
 matrix([[ 1.-1.j,  0.-0.j],
-        [ 2.-3.j,  4.-0.j]])</code></pre></li>
+        [ 2.-3.j,  4.-0.j]])
+</code></pre></li>
 </ul>
 </section>
 <section class="slide level2">

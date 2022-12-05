@@ -15,10 +15,15 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
   <link rel="stylesheet" href="..//dist/theme/am205.css" id="theme">
   <link rel="stylesheet" href="..//plugin/highlight/gruvbox-dark.css">
@@ -36,20 +41,6 @@
 
 <section class="slide level2">
 
-<style>
-.reveal ul li {
-  margin-top: 0.2em;
-  margin-bottom: 0.2em;
-}
-.reveal ul ul li {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-.reveal ul ol li {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-</style>
 <section>
 <h1>
 Applied Mathematics 205
@@ -1337,7 +1328,7 @@ from all steps of factorization</li>
 <h2>LU Factorization</h2>
 <ul>
 <li>Therefore, basic LU factorization algorithm is
-<div>
+<div style="text-align:center;">
 <div class="algo">
 <p><span class="linenum">1:</span>$\hspace{0em}$$U=A$, $L={\rm I}$<br />
 <span class="linenum">2:</span>$\hspace{0em}$<strong>for</strong> $j = 1:n-1$ <strong>do</strong><br />
@@ -1793,7 +1784,7 @@ nonsingular factors $L$ and $U$ if and only if $A$ is nonsingular</li>
 <ul>
 <li>Python’s <code>scipy.linalg.lu</code> function can do LU factorization with pivoting</li>
 </ul>
-<pre><code data-trim class="python">
+<pre style="width:60%;"><code data-trim class="python">
 >>> import numpy as np
 >>> import scipy.linalg
 >>> A=np.random.rand(4, 4)
@@ -2045,22 +2036,17 @@ in rows <code>indices[indptr[j]:indptr[j+1]]</code></li>
 
 \]
 </p>
-<div class="row">
-<div class="column">
+<div class="rowf">
+<div class="columnf">
 <ul>
 <li><span class="color5">Coordinate format</span> (COO):<br />
 $\texttt{data}=(a, b, b, b, b, c, c ,c)$<br />
 $\texttt{row}=(0, 0, 0, 0, 0, 1, 2, 3)$<br />
-$\texttt{col}=(0, 1, 2, 3, 4, 1, 2, 3)$</li>
-</ul>
-<blockquote>
-<p>(assume zero-based indexing)</p>
-</blockquote>
-<ul>
+$\texttt{col}=(0, 1, 2, 3, 4, 1, 2, 3)$ (assume zero-based indexing)</li>
 <li>See <a href="https://github.com/pkarnakov/am205/tree/main/examples/unit2/sparse.py">[examples/unit2/sparse.py]</a></li>
 </ul>
 </div>
-<div class="column" style="flex:55%;">
+<div class="columnf">
 <ul>
 <li><span class="color5">Compressed Sparse Row</span> (CSR):<br />
 $\texttt{data}=(a, b, b, b, b, c, c, c)$<br />
@@ -2305,8 +2291,8 @@ we showed earlier using the full QR factorization, since $c_1 = \hat Q^T b$ </l
 </section>
 <section class="slide level2">
 <h2>Full vs. Reduced QR Factorization</h2>
-<div class="row">
-<div class="column" style="flex:45%;margin-right:-30px;">
+<div class="rowf">
+<div class="columnf">
 <ul>
 <li>By default, <code>numpy.linalg.qr()</code> does reduced QR factorization</li>
 </ul>
@@ -2328,9 +2314,9 @@ array([[-0.00824455,  0.99789386],
 array([[-1.13512797, -0.81516102],
        [ 0.        ,  0.4933763 ]])</code></pre>
 </div>
-<div class="column">
+<div class="columnf">
 <ul>
-<li>Supplying <code>mode="complete"</code> option gives complete QR factorization</li>
+<li>Supplying <code>mode="complete"</code> gives complete QR factorization</li>
 </ul>
 <pre class="python-repl"><code>&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; np.random.seed(2022)
