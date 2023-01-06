@@ -43,24 +43,30 @@ ZIP archive with interactive HTML slides: [am205_2022_slides.zip](https://pkarna
 
 * HW0. Introduction
   ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw0.pdf)
+  | [Solution](https://pkarnakov.github.io/am205/homework/am205_hw0_sol.pdf)
   | [Source](homework/hw0_intro))
 * HW1. Data fitting
   ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw1.pdf)
-  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw1_data.pdf)
+  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw1_data.zip)
+  | [Solution](https://pkarnakov.github.io/am205/homework/am205_hw1_sol.pdf)
   | [Source](homework/hw1_data_fitting))
 * HW2. Numerical linear algebra
   ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw2.pdf)
-  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw2_data.pdf)
+  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw2_data.zip)
+  | [Solution](https://pkarnakov.github.io/am205/homework/am205_hw2_sol.pdf)
   | [Source](homework/hw2_linear))
 * HW3. Numerical calculus
   ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw3.pdf)
+  | [Solution](https://pkarnakov.github.io/am205/homework/am205_hw3_sol.pdf)
   | [Source](homework/hw3_calculus))
 * HW4. PDEs, nonlinear equations, optimization
   ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw4.pdf)
+  | [Solution](https://pkarnakov.github.io/am205/homework/am205_hw4_sol.pdf)
   | [Source](homework/hw4_optimization))
 * HW5. PDEs, optimization, iterative methods
   ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw5.pdf)
-  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw5_data.pdf)
+  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw5_data.zip)
+  | [Solution](https://pkarnakov.github.io/am205/homework/am205_hw5_sol.pdf)
   | [Source](homework/hw5_iter))
 
 ## Quizzes
