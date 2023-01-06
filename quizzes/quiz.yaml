@@ -1,0 +1,27 @@
+fontsize: 12pt
+colorlinks: true
+urlcolor: color2
+geometry: margin=1in
+header-includes: |
+    \usepackage{mathpazo}
+    \usepackage{titlesec}
+
+    \titleformat{\section}{\large\bfseries}{}{0em}{}
+
+    \titlespacing*{\subsection}{0pt}{20pt}{4pt}
+    \titleformat{\subsection}{\normalfont\bfseries}{}{0em}{}
+    \renewcommand{\thesubsection}{Q\arabic{subsection}}
+
+    \usepackage{enumitem}
+    \setlist{leftmargin=23pt,itemsep=0pt,parsep=0pt,topsep=0pt}
+    \definecolor{color0}{HTML}{FF1F5B}
+    \definecolor{color1}{HTML}{00CD6C}
+    \definecolor{color2}{HTML}{009ADE}
+    \definecolor{color3}{HTML}{AF58BA}
+    \definecolor{color4}{HTML}{FFC61E}
+    \definecolor{color5}{HTML}{F28522}
+    \definecolor{color6}{HTML}{A0B1BA}
+    \definecolor{color7}{HTML}{A6761D}
+    \definecolor{color8}{HTML}{E9002D}
+    \definecolor{color9}{HTML}{FFAA00}
+    \definecolor{color10}{HTML}{00B000}

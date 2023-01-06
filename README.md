@@ -63,6 +63,25 @@ ZIP archive with interactive HTML slides: [am205_2022_slides.zip](https://pkarna
   | [Data](https://pkarnakov.github.io/am205/homework/am205_hw5_data.pdf)
   | [Source](homework/hw5_iter))
 
+## Quizzes
+
+* Quiz 1. Data fitting
+  ([PDF](https://pkarnakov.github.io/am205/quizzes/am205_quiz1.pdf)
+  | [Solution](https://pkarnakov.github.io/am205/quizzes/am205_quiz1_sol.pdf)
+  | [Source](quizzes/am205_quiz1_sol.md))
+* Quiz 2. Numerical linear algebra
+  ([PDF](https://pkarnakov.github.io/am205/quizzes/am205_quiz2.pdf)
+  | [Solution](https://pkarnakov.github.io/am205/quizzes/am205_quiz2_sol.pdf)
+  | [Source](quizzes/am205_quiz2_sol.md))
+* Quiz 3. Numerical calculus
+  ([PDF](https://pkarnakov.github.io/am205/quizzes/am205_quiz3.pdf)
+  | [Solution](https://pkarnakov.github.io/am205/quizzes/am205_quiz3_sol.pdf)
+  | [Source](quizzes/am205_quiz3_sol.md))
+* Quiz 4. Optimization
+  ([PDF](https://pkarnakov.github.io/am205/quizzes/am205_quiz4.pdf)
+  | [Solution](https://pkarnakov.github.io/am205/quizzes/am205_quiz4_sol.pdf)
+  | [Source](quizzes/am205_quiz4_sol.md))
+
 ## Gallery
 
 These images have been used to illustrate the material.
