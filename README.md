@@ -39,6 +39,30 @@ ZIP archive with interactive HTML slides: [am205_2022_slides.zip](https://pkarna
   | [HTML](https://pkarnakov.github.io/am205/slides/unit5)
   | [Examples](examples/unit5))
 
+## Homework
+
+* HW0. Introduction
+  ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw0.pdf)
+  | [Source](homework/hw0_intro))
+* HW1. Data fitting
+  ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw1.pdf)
+  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw1_data.pdf)
+  | [Source](homework/hw1_data_fitting))
+* HW2. Numerical linear algebra
+  ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw2.pdf)
+  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw2_data.pdf)
+  | [Source](homework/hw2_linear))
+* HW3. Numerical calculus
+  ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw3.pdf)
+  | [Source](homework/hw3_calculus))
+* HW4. PDEs, nonlinear equations, optimization
+  ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw4.pdf)
+  | [Source](homework/hw4_optimization))
+* HW5. PDEs, optimization, iterative methods
+  ([PDF](https://pkarnakov.github.io/am205/homework/am205_hw5.pdf)
+  | [Data](https://pkarnakov.github.io/am205/homework/am205_hw5_data.pdf)
+  | [Source](homework/hw5_iter))
+
 ## Gallery
 
 These images have been used to illustrate the material.

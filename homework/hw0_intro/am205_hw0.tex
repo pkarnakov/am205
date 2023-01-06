@@ -1,0 +1,86 @@
+\input{../preamble.tex}
+
+\title{AM205 HW0. Introduction}
+
+\begin{document}
+
+\maketitle
+
+\section{P1. Chebyshev polynomials}
+
+The Chebyshev polynomials $T_k(x)$ can be defined using the recursive relation
+\[
+T_k(x) = 2xT_{k-1}(x) - T_{k-2} (x)
+\]
+and $T_0(x)=1$, $T_1(x)=x$. Evaluate and plot the Chebyshev polynomial of degree
+5 at 101 evenly spaced points in the interval $x\in [-1,1]$. Draw a 3D surface
+plot of the function $T_3(x)T_5(y)$ on a $101\times 101$ grid in the domain
+$(x,y) \in [-1,1]^2$.
+
+\section{P2. Square root}
+Use the iteration
+\[
+x_{k+1} = \frac{1}{2} \left( x_k + \frac{a}{x_k} \right)
+\]
+to approximate $\sqrt{a}$. This is known as Heron's
+formula and it is equivalent to
+the Newton--Raphson method for the function $f(x)=x^2-a$. Choose an initial
+starting value of $x_0=a$ and iterate until $|x_{k+1} - x_k|<\epsilon$ for
+some tolerance $\epsilon$. Determine the number of iterations required to
+compute $\sqrt{5}$ for the cases of $\epsilon=10^{-3}$ and
+$\epsilon=10^{-9}$.
+
+\section{P3. Finite differences}
+
+\subsection{(a)}
+Let $f(x)=\tan x$ and consider the finite-difference approximation
+\[
+  f'_a(x;h) = \frac{f(x+h)-f(x-h)}{2h}.
+\]
+Make a log--log plot of the relative error
+$E=|f'(x) - f'_a(x;h)| / |f'(x)|$ at $x=1$
+as a function of $h$ for $h=10^{-k}$, using
+$k=1,1.5,\ldots, 16$. Use linear regression to fit the
+relative error to the straight line
+\[
+  \log E = \log C + q \log h
+\]
+for some constants $C$ and $q$. Show that $q\approx 2$,
+meaning that the approximation is second-order accurate.
+
+\subsection{(b)}
+Repeat the analysis for the approximation
+\[
+f'_b(x;h) = \frac{-11f(x) + 18 f(x+h) - 9f(x+2h) + 2f(x+3h)}{6h}
+\]
+and determine the rate of convergence $q$.
+
+\section{P4. Calculation of Pi}
+In the first lecture we discussed Archimedes' method of calculating~$\pi$
+from perimeters of inscribed and superscribed regular
+polygons.
+Areas of the polygons can serve the same purpose.
+Consider a circle of unit radius.
+Let $a_n$ and $b_n$ be the areas of inscribed and superscribed regular polygons
+with $3 \times 2^n$ sides, respectively.
+
+\subsection{(a)}
+The case of $n=0$ therefore corresponds to inscribed and superscribed
+equilateral triangles. Use geometry to show that $a_0=\frac{3}{4}\sqrt{3}$ and
+$b_0=3\sqrt{3}$.
+
+\subsection{(b)}
+Show that
+\[
+\frac{2}{b_{n+1}} = \frac{1}{a_{n+1}} + \frac{1}{b_n}, \qquad a_{n+1}^2 = a_nb_n
+\]
+and write a program to evaluate $(a_n,b_n)$ for $n=0,1,\ldots,40$.
+In addition, calculate $c_n=\frac{1}{2}(a_n+b_n)$.
+
+\subsection{(c)}
+Make a log-linear plot of the absolute errors $|a_n-\pi|$ and
+$|c_n-\pi|$ as a function of $n$. How fast do these two sequences
+converge to $\pi$? Is there a difference in the convergence rate
+between $a_n$ and $c_n$?
+
+\end{document}

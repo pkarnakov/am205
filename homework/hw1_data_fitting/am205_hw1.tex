@@ -1,0 +1,289 @@
+\input{../preamble.tex}
+
+\title{AM205 HW1. Data fitting}
+
+\newcommand{\ZipName}{\texttt{\detokenize{am205_hw1_data.zip}}}
+
+\begin{document}
+
+\maketitle
+
+\section{P1. Polynomial approximation of the gamma function\Pts{10}}
+
+The \href{https://en.wikipedia.org/wiki/Gamma_function}{gamma function}
+is defined as
+\begin{equation*}
+  \Gamma(x) = \int_0^\infty t^{x-1} e^{-t}\,dt
+\end{equation*}
+and satisfies $(n-1)! = \Gamma(n)$ for integers $n$.\\
+\textbf{Note:} In Python, the gamma function is available in the
+\href{https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.gamma.html}{\texttt{scipy.special}}
+module.
+
+\subsection{(a)\Pts{3}}
+Construct an approximation $g(x)$ to the gamma function as the Lagrange
+polynomial of the following points:
+\begin{center}
+  \begin{tabular}{c|r|r|r|r|r}
+    $n$ & 1 & 2 & 3 & 4 & 6 \\
+    \hline
+    $\Gamma(n)$ & 1 & 1 & 2 & 6 & 120
+  \end{tabular}
+\end{center}
+Write the polynomial as $g(x)=\sum_{k=0}^4 g_k x^k$.
+Report the values of the coefficients $g_k$.
+
+\subsection{(b)\Pts{3}}
+Construct another approximation~$h(x)$ to the gamma function by first
+calculating the fourth order polynomial~$p(x)$ that interpolates the points
+$(n,\log(\Gamma(n)))$ for $n=1,2,3,4,6$. Then define the approximation as
+$h(x)=\exp(p(x))$.
+Report the values of the coefficients of $p(x)$.
+
+\subsection{(c)\Pts{2}}
+Plot values of $\Gamma(x)$, $g(x)$, and $h(x)$
+and the relative errors $|\Gamma(x)-g(x)|/\Gamma(x)$ and
+$|\Gamma(x)-h(x)|/\Gamma(x)$ on the interval $1\le x \le 6$.
+Use a logarithmic scale for the error.
+
+\subsection{(d)\Pts{2}}
+Calculate the maximum relative error between $\Gamma(x)$ and $g(x)$ on the
+interval $1\le x\le 6$ by evaluating the functions on a uniform grid with 1001
+points. Repeat this for $\Gamma(x)$ and $h(x)$. Which of the two approximations
+is more accurate?
+
+\section{P2. Error bounds with Lagrange polynomials\Pts{15}}
+
+\subsection{(a)\Pts{3}}
+Let $f(x)=e^{-4x}+e^{3x}$.
+Write a program to calculate and plot the
+Lagrange polynomial $p_{n-1}(x)$ of $f(x)$ at the Chebyshev points $x_j
+= \cos ((2j-1)\pi/2n)$ for $j = 1,\ldots,n$. For $n=4$, over the range
+$[-1,1]$, plot $f(x)$ and Lagrange polynomial $p_3(x)$.
+
+\subsection{(b)\Pts{4}}
+Recall from the lectures that the infinity norm for a function $g$ on $[-1,1]$
+is defined as $\|g\|_\infty = \max_{x\in[-1,1]} |g(x)|$. Calculate
+$\|f-p_3\|_\infty$ by sampling the function at 1001 equally-spaced points over
+$[-1,1]$.
+
+\subsection{(c)\Pts{6}}
+Recall the interpolation error formula from the lectures,
+\begin{equation*}
+  f(x)-p_{n-1}(x) = \frac{f^{(n)}(\theta)}{n!} (x-x_1)(x-x_2)\ldots(x-x_n)
+\end{equation*}
+for some $\theta \in [-1,1]$. Use this formula to derive an upper bound for
+$\|f-p_{n-1}\|_\infty$ for any positive integer $n$. Your bound should be a
+mathematical formula, and should not rely on numerical sampling.
+
+\subsection{(d)\Pts{2}}
+Find a cubic polynomial $p_3^\dagger$ such that
+$\|f-p_3^\dagger\|_\infty<\|f-p_3\|_\infty$.
+
+\section{P3. Condition number of a matrix\Pts{8}}
+For a $2\times 2$ invertible matrix $A$, define the condition number to be
+$\kappa(A) = \|A\|\,\|A^{-1}\|$
+as discussed in the lectures. Assume that the matrix norm is defined using the
+Euclidean vector norm.
+
+\subsection{(a)\Pts{2}}
+Find two $2\times 2$ invertible matrices $B$ and $C$ such that 
+$\kappa(B+C) < \kappa(B) + \kappa(C)$.
+
+\subsection{(b)\Pts{2}}
+Find two $2\times 2$ invertible matrices $B$ and $C$ such that
+$\kappa(B+C) > \kappa(B) + \kappa(C)$.
+
+\subsection{(c)\Pts{4}}
+Suppose that $Q$ is an orthogonal matrix, i.e. $Q^\Trans=Q^{-1}$,
+and $\alpha\in\mathbb{R}$.
+Find $\kappa(QA)$ in terms of $\kappa(A)$ and $Q$.
+Find $\kappa(\alpha A)$ in terms of $\kappa(A)$ and $\alpha$.
+
+\section{P4. Periodic cubic splines\Pts{15}}
+
+In the lectures we discussed the
+construction of cubic splines to interpolate between a number of control
+points. We found that it was necessary to impose additional constraints at
+the end points of the spline in order to have enough constraints to
+determine the cubic spline uniquely. Here, we examine the construction of
+cubic splines on a periodic interval $t\in [0,4)$, where $t=0$ is
+equivalent to $t=4$.
+Working in a periodic interval simplifies the spline construction
+and requires no additional constraints. \\
+\textbf{Note:}
+Do not use existing modules, such as \verb`scipy.interpolate`, for constructing
+the spline.
+However, you may use other modules for solving linear systems
+and numerical integration (e.g. \verb`numpy.linalg.solve` and
+\verb`scipy.integrate`).
+
+\subsection{(a)\Pts{5}}
+Consider four points $(t,x)=(0,0), (1,4), (2,0), (3,-4)$.  Construct a cubic
+spline $s_x(t)$ that is piecewise cubic in the four intervals $[0,1)$, $[1,2)$,
+$[2,3)$, and $[3,4)$. At $t=0,1,2,3$ the cubics should match the control points,
+giving eight constraints. At $t=0,1,2,3$ the first and second derivatives should
+match, giving and additional eight constraints and allowing $s_x(t)$ to be
+uniquely determined.
+
+\subsection{(b)\Pts{1}}
+Plot $s_x(t)$ and $4\sin(t\pi/2)$ on the interval $[0,4)$ and show that they are
+similar.
+
+\subsection{(c)\Pts{6}}
+Construct a second cubic spline $s_y(t)$ that goes through the four points
+$(t,y)=(0,2), (1,0), (2,-2), (3,0)$. Plot $s_y(t)$ and $2\cos(t\pi/2)$ on the
+interval $0 \le t <4$ to see how similar they are.
+
+\subsection{(d)\Pts{3}}
+In the $xy$-plane, plot the parametric curve $(s_x(t),s_y(t))$ for $t\in[0,4)$.
+Calculate the area enclosed by the parametric curve to at least five decimal
+places. Use the area to estimate $\pi$ from the relationship $A=r_1r_2\pi$ where
+$r_1=2$ and $r_2=4$.
+
+\section{P5. Image reconstruction from low light\Pts{24}}
+
+\newcommand{\tpA}{{\texttt{0258}}\xspace}
+\newcommand{\tpB}{{\texttt{0646}}\xspace}
+\newcommand{\tpC}{{\texttt{0704}}\xspace}
+\newcommand{\tpD}{{\texttt{0927}}\xspace}
+
+In the archive \ZipName, you will find a directory called \verb`p5_fragments`
+that contains several photo fragments of a scene with different objects
+taken from
+\href{http://www.youtube.com/watch?v=Er1d5QV3LHU}{a bird feeder station in the Netherlands}.
+The filename of each image (e.g. \verb`0258_frag0.png`) consists of two parts.
+The first part is a timestamp (hours and minutes).
+The second part denotes one of the four fragments showing different objects.
+Images \tpA, \tpB, and \tpC were taken in low light,
+while image \tpD was taken in regular light.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[height=2.3in]{p5_scene.jpg}
+  \includegraphics[height=2.3in]{p5_all_frags.jpg}
+  \caption{Full scene at time \texttt{0927} (left) and all extracted fragments
+  (right).}
+\end{figure}
+
+The size of each image is $256\times256$ pixels.
+Each pixel in the image can be represented as
+a vector $\vp\in\mathbb{R}^3$ containing three intensity values between 0
+and 1 for the red, green, and blue components.
+Assume that all pixels in fragments having the same timestamp are indexed
+and $K_\mathrm{all}$ is the set of all possible indices,
+so that $|K_\mathrm{all}|=4\cdot 256^2$.
+Let $K_0$, $K_1$, $K_2$, $K_3\subset K_\mathrm{all}$ denote the subsets
+of indices corresponding to fragments 0, 1, 2, and 3 respectively,
+so that $|K_0|=|K_1|=|K_2|=|K_3|=256^2$.
+Then, let $\vp^A_k$, $\vp^B_k$, $\vp^C_k$, and $\vp^D_k$
+be the $k$-th pixel of images with timestamps 
+\tpA, \tpB, \tpC, and \tpD respectively.
+
+\subsection{(a)\Pts{13}}
+Consider reconstructing the regular-light photo~$\vp^D$
+from the three low-light photos~$\vp^A$, $\vp^B$, and $\vp^C$
+using the following model
+\begin{equation}
+ \label{e_color_model}
+ \vp_k = F^A \vp^A_k + F^B \vp^B_k + F^C \vp^C_k + \vp_\text{const},
+\end{equation}
+where $F^A$, $F^B$, and $F^C$ are $3\times 3$ matrices and
+$\vp_\text{const}\in\mathbb{R}^3$.
+Find a least-squares fit for the unknown
+$F^A$, $F^B$, $F^C$, and $\vp_\text{const}$ using pixels from fragments~0 and~1.
+Specifically, you should minimize the error
+\begin{equation*}
+  S_{ABC}(K) = \frac{1}{|K|} \sum_{k\in K}
+  \| F^A \vp^A_k + F^B \vp^B_k + F^C \vp^C_k + \vp_\text{const} - \vp^D_k\|^2_2
+\end{equation*}
+for $K=K_0\cup K_1$.
+Report the obtained values of $F^A$, $F^B$, $F^C$, and $\vp_\text{const}$.
+Visualize the output of the fitted model~\cref{e_color_model} for all four
+fragments together with the reference images~\tpD.
+Some pixel intensities you obtain from~\cref{e_color_model} may lie outside
+the range between 0 and 1, in which case you need to clip them,
+e.g. using \verb`numpy.clip`. Calculate the error $S_{ABC}$ for each fragment,
+i.e. report values of
+$S_{ABC}(K_0)$, $S_{ABC}(K_1)$, $S_{ABC}(K_2)$, and $S_{ABC}(K_3)$.
+
+\subsection{(b)\Pts{8}}
+Repeat part~\Part{a} using only images \tpB as input. In this case, the model
+simplifies to
+\begin{equation}
+ \vp_k = F^B \vp^B_k + \vp_\text{const},
+\end{equation}
+and the fitting error takes the form
+\begin{equation*}
+  S_{B}(K) = \frac{1}{|K|} \sum_{k\in K} \| F^B \vp^B_k + \vp_\text{const} -
+  \vp^D_k\|^2_2.
+\end{equation*}
+
+\subsection{(c)\Pts{3}}
+Compare results from parts~\Part{a} and \Part{b}. Does using multiple light
+levels as input improve the quality of the fit compared to using a single light
+level?
+
+\section{P6. Determining hidden chemical sources\Pts{20}}
+Suppose that $\rho(\vx,t)$
+represents the concentration of a chemical diffusing in two-dimensional space,
+where $\vx=(x,y)$. The concentration satisfies the diffusion equation
+\begin{equation}
+  \label{e_diff}
+  \frac{\p \rho}{\p t} = \frac{\p^2 \rho}{\p x^2} + \frac{\p^2 \rho}{\p y^2}\,.
+\end{equation}
+If a localized point source of
+chemical is introduced at the origin at $t=0$, its concentration satisfies
+\begin{equation*}
+  \rho_c(\vx,t) = \frac{1}{4\pi t} \exp \Big( -\frac{x^2+y^2}{4t}\Big).
+\end{equation*}
+
+\subsection{(a)\Pts{3}}
+Show by direct calculation that the concentration
+$\rho_c$ satisfies~\cref{e_diff}.
+
+\subsection{(b)\Pts{7}}
+Suppose that 49 point sources of chemicals are
+introduced at $t=0$ with different strengths, on a $7 \times 7$ regular
+lattice covering the coordinates $x=-3,-2,\ldots,3$ and
+$y=-3,-2,\ldots,3$. By linearity of~\cref{e_diff} the concentration
+will satisfy
+\begin{equation*}
+  \rho(\vx,t) = \sum_{k=0}^{48} \lambda_k \rho_c(\vx-\vec{v}_k,t),
+\end{equation*}
+where $\vec{v}_k$ is the $k$-th lattice site and $\lambda_k$ is the strength
+of the chemical introduced at that site. In the archive \ZipName, you will find
+a file \verb`p6_data.txt` with many measurements of $\rho(\vx,t)$ at~$t=4$.
+The file contains three columns:
+position~$x_i$, position~$y_i$, and concentration $\rho(\vx_i,4)$
+for $i=0,\dots,199$.
+By any means necessary, determine the concentration strengths $\lambda_k$.
+
+\subsection{(c)\Pts{6}}
+Suppose that the measurements have some experimental error, so that
+the measured values $\tilde{\rho}_i$ in the file are related to the true
+values $\rho_i$ according to
+\begin{equation*}
+  \tilde{\rho}_i = \rho_i + e_i
+\end{equation*}
+where the $e_i$ are normally distributed with mean $0$ and variance
+$10^{-8}$. Construct a hypothetical sample of the true $\rho_i$, and
+repeat your procedure from part~\Part{b} to determine the concentrations
+$\lambda_k$. Repeat this sampling procedure for at least 100 times, and
+use it to measure the standard deviation in the $\lambda_k$ at the
+lattice sites $(0,0)$, $(1,1)$, $(2,2)$, $(3,3)$. Which of these has
+the largest standard deviation and why?
+
+\subsection{(d)\Pts{4}}
+You should find that the concentrations $\lambda_k$ from part~\Part{b} take
+values in the range between 0 and 32.
+Round each $\lambda_k$ to the nearest integer and convert the integer
+to its binary representation consisting of five bits.
+The bits encode monochrome images.
+To recover the first image, take the most significant (fifth bit, even if zero)
+bit from the 5-bit binary
+representation of all $\lambda_k$ and draw them on a $7x7$ grid.
+Repeating this for all bits will give you five images.
+What message can you read from them?
+
+\end{document}

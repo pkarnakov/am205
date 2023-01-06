@@ -1,0 +1,336 @@
+\input{../preamble.tex}
+
+\title{AM205 HW5. PDEs, optimization, iterative methods}
+
+\newcommand{\PointsMax}{92\xspace}
+\newcommand{\PointsCap}{40\xspace}
+
+\begin{document}
+
+\maketitle
+
+\section{P1. Acoustics of Pierce Hall\Pts{40}}
+
+Here you will solve the wave equation in a two-dimensional complex geometry.
+The image below shows a plan of the third floor of Pierce Hall,
+which will be your computational domain.
+\begin{center}
+  \includegraphics{p1_pierce.pdf}
+\end{center}
+
+A group of students hold an event in Pierce 301, the large room in the
+bottom left of the plan. They set up a speaker shown in red.
+The speaker creates acoustic waves propagating through the building,
+possibly disturbing the occupants.
+The wave equation
+\begin{equation}
+  p_{tt} - c^2 (p_{xx} + p_{yy})  = 0
+\end{equation}
+describes the propagation of acoustic waves
+in the pressure field $p(x, y, t)$.
+The pressure on the speaker equals $P(t)=P_0 \sin{\omega t}$.
+The initial conditions are
+$p(x, y, 0)=P(0)$ and $p_t(x, y, 0)=P'(0)$ inside the speaker,
+and $p(x, y, 0)=0$ and $p_t(x, y, 0)=0$ everywhere else.
+The boundary conditions are Dirichlet $p(x, y, t)=P(t)$ on the speaker
+and zero Neumann $\mathbf{n} \cdot \nabla p=0$ on each wall, where $\mathbf{n}$
+is a normal to the wall.
+
+To discretize the problem, we will use a uniform grid of $N_x\times N_y$ cells
+with $N_x=200$ and $N_y=100$.
+Let $\Omega=\{(i,j) \;|\; 0\leq i < N_x, \; 0 \leq j < N_y\}$
+denote the set of all cell indices.
+Each cell $(i,j)$ is a square of size $h$ centered at $(x_i, y_j)$,
+where $x_i=(i+0.5)h$ and $y_j=(j+0.5)h$.
+The provided text file \verb`p1_pierce.txt` stores a matrix $M$
+of size $N_x \times N_y$ representing the floor plan.
+Each element corresponds to a cell of the grid.
+Walls have values $M_{i,j}=0$ and open areas have $M_{i,j}=1$
+for $(i,j)\in\Omega$.
+The index of the bottom left corner cell is $(0, 0)$.
+The index of the bottom right corner cell is $(N_x - 1, 0)$.
+The speaker consists of cells
+$S=\{(i,j) \;|\; 20\leq i < 24, \;20 \leq j < 24\}\subset \Omega$.
+
+Use the following constants: $P_0=1$, $c=1$, $h=1$, $\Delta t = 0.5$,
+and $\omega=0.67$.
+These values correspond to acoustic waves at a frequency of about $100~\text{Hz}$ in air.
+
+\subsection{(a)\Pts{5}} Read the matrix $M$ from \verb`p1_pierce.txt`.
+Produce an image visualizing~$M$ and mark the location of the speaker on the
+image.
+
+\subsection{(b)\Pts{25}} Here we discretize the problem with
+the following finite difference scheme
+\begin{equation}
+  \frac{p_{i,j}^{n+1} - 2p_{i,j}^n + p_{i,j}^{n-1}}{\Delta t^2}
+  - c^2 \frac{p_{i+1,j}^n + p_{i,j+1}^n - 4p_{i,j}^n +
+  p_{i-1,j}^n+p_{i,j-1}^n}{h^2} = 0,
+\end{equation}
+where $p^n_{i,j}\approx p(x_i, y_j, n\Delta t)$ are cell-centered values.
+To discretize the boundary conditions on the walls,
+we reformulate the scheme using two new variables
+\begin{equation}
+    u_{i,j}^n = 
+    \begin{cases}
+      (p^n_{i+1,j} - p^n_{i,j})/h, & M_{i+1,j} = M_{i,j}\\
+      0,                           & M_{i+1,j} \neq M_{i,j}\\
+    \end{cases}
+\end{equation}
+\begin{equation}
+    v_{i,j}^n = 
+    \begin{cases}
+      (p^n_{i,j+1} - p^n_{i,j})/h, & M_{i,j+1} = M_{i,j}\\
+      0,                           & M_{i,j+1} \neq M_{i,j}\\
+    \end{cases}
+\end{equation}
+which approximate $p_x$ and $p_y$ taking into account the boundary conditions.
+Now the update rule to obtain $p_{i,j}^{n+1}$ is
+\begin{equation}
+  \frac{p_{i,j}^{n+1} - 2p_{i,j}^n + p_{i,j}^{n-1}}{\Delta t^2}
+  - c^2 \frac{u_{i,j}^n - u_{i-1,j}^n + v_{i,j}^n - v_{i,j-1}^n}{h} = 0
+\end{equation}
+for cells $(i,j)\notin S$.
+Set $p_{i,j}^{n+1}=P((n+1) \Delta t)$ for cells $(i,j)\in S$,
+i.e. inside the speaker.
+Note that the scheme depends on values $p_{i,j}^n$ 
+at $i=-1$, $i=N_x$, $j=-1$, and $j=N_y$.
+You can either set them to zero or use periodic conditions.
+The first two time levels $n=0$ and $n=1$ come from the initial
+conditions
+\begin{equation}
+    p_{i,j}^n =
+    \begin{cases}
+      P(n\Delta t),  & (i,j)\in S\\
+      0,             & (i,j)\notin S\\
+    \end{cases}
+\end{equation}
+for cells $(i,j)\in\Omega$.
+Write a program that implements the algorithm.
+
+\subsection{(c)\Pts{5}}
+Run your program from part \Part{b} until $n=5000$.
+Visualize the pressure field $p^{n}_{i,j}$
+at $n=1, 30, 100, 500, 1000$, and $5000$.
+Qualitatively describe your results.
+
+\subsection{(d)\Pts{5}}
+The image above shows the locations of three measurement points $A$, $B$,
+and~$C$.
+They are located in cells with indices $(40, 49)$, $(168, 79)$, and~$(168, 10)$
+respectively.
+Run your program from part \Part{b} until $n=5000$.
+For each of the three points, plot the signal $p^n_{i,j}$ as a function of $n$ 
+and report the maximum achieved absolute value.
+Qualitatively describe your results.
+
+\section{P2. Bridge designer\Pts{30}}
+
+This is a problem on PDE-constrained optimization.
+Following the lecture
+(\href{https://pkarnakov.github.io/am205/slides/unit4/#/134}{Unit~4, slide~135}),
+consider a one-dimensional boundary value problem
+\begin{equation}
+\begin{aligned}
+  -u'' + r(x,p) u &= f(x) \\
+  u(0) &= 0 \\
+  u(1) &= 0
+\end{aligned}
+  \label{e_primal}
+\end{equation}
+referred to as the \emph{primal problem}.
+Here $u(x)$ is the unknown function in the domain $x\in[0,1]$,
+$p\in\mathbb{R}^n$ is a parameter vector and
+the other functions are
+\begin{equation}
+\begin{aligned}
+  r(x, p) &=  \frac{A}{S} \sum_{i=1}^{n}e^{-\big(\frac{x - p_i}{S}\big)^2} \\
+  f(x) &=  -1 \\
+\end{aligned}
+\end{equation}
+with $n=2$, $A=20$, and $S=0.02$.
+Let $u(x;p)$ denote the solution of the problem for a given~$p$.
+One physical interpretation of this model is that~$u(x;p)$ is the height
+of a bridge. The bridge is attached at the endpoints and
+supported by~$n$ elastic pillars specified in~$r(x,p)$.
+The bridge deforms under gravity specified in~$f(x)$.
+The objective function is
+\begin{equation}
+  \mathcal{G}(p) = -\int_0^1 u(x;p) {\,\rm d}x,
+  \label{e_obj}
+\end{equation}
+which is the negative mean value of the solution,
+or the negative mean height of the bridge.
+
+The task will be to minimize the objective function,
+i.e. find the locations of the pillars that provide the largest mean height of
+the bridge. You will need to solve various boundary value problems.
+To discretize the equation, use a uniform grid with 1000 points
+and second-order central differences for the second derivative.
+To solve the resulting linear system, 
+use a \textbf{sparse} linear solver,
+e.g. TDMA or \verb`scipy.sparse.linalg.spsolve()`.
+Use the trapezoid rule for the integrals such as~(\ref{e_obj}).
+
+\subsection{(a)\Pts{6}}
+Solve the primal problem for $p=p_\mathrm{init}=(0.2, 0.5)$.
+Plot the solution $u(x;p)$ and the coefficient $r(x,p)$ as functions of $x$.
+The expected result is shown below.
+
+\begin{center}
+\includegraphics{p2_init.pdf}
+\end{center}
+
+\subsection{(b)\Pts{4}}
+Compute the derivatives of the objective function at $p=p_\mathrm{init}$
+using forward differences
+\begin{equation}
+  \frac{\partial \mathcal{G}}{\partial p_i} \approx 
+  \frac{\mathcal{G}(p + \delta e_i) - \mathcal{G}(p)}{\delta}
+  \qquad i=1,\dots, n
+\end{equation}
+with $\delta=10^{-5}$.
+Report the obtained values of
+$\frac{\partial \mathcal{G}}{\partial p_i}$ up to 16 significant digits.
+
+\subsection{(c)\Pts{7}}
+Compute the derivatives of the objective function at $p=p_\mathrm{init}$
+using the \emph{direct method} discussed in the lecture.
+In particular, differentiate the primal equation~(\ref{e_primal})
+with respect to~$p_i$ to derive a boundary value problem 
+for $\frac{\partial u}{\partial p_i}$,
+solve the problem and evaluate the integral
+\begin{equation}
+  \frac{\partial \mathcal{G}(p)}{\partial p_i}
+  =
+  \int_0^1 \frac{\partial u}{\partial p_i} {\,\rm d}x
+  \qquad i=1,\dots, n.
+\end{equation}
+Report the obtained values of
+$\frac{\partial \mathcal{G}}{\partial p_i}$ up to 16 significant digits.
+
+\subsection{(d)\Pts{8}}
+Compute the derivatives of the objective function at $p=p_\mathrm{init}$
+using the \emph{adjoint method} discussed in the lecture.
+In particular, solve the adjoint problem to obtain $z(x;p)$
+such that the derivatives are given by
+\begin{equation}
+  \frac{\partial \mathcal{G}(p)}{\partial p_i}
+  =
+  - \int_0^1 \frac{\partial r(x,p)}{\partial p_i} z(x;p) u(x;p) \text{d}x.
+\end{equation}
+Report the obtained values of
+$\frac{\partial \mathcal{G}}{\partial p_i}$ up to 16 significant digits.
+
+\subsection{(e)\Pts{5}}
+Use a gradient-based optimizer, e.g. BFGS in \verb`scipy.optimize.minimize()`,
+to minimize $\mathcal{G}(p)$.
+To compute the gradients, choose any of the methods
+you have implemented in parts \Part{b}, \Part{c}, or \Part{d}.
+Report the optimal parameters $p_\mathrm{opt}$.
+Plot the solution $u(x;p)$ and the coefficient $r(x,p)$
+at $p=p_\mathrm{opt}$ as functions of $x$.
+The expected outcome is that the pillars are distributed in the
+domain more evenly and the mean height of the bridge increases.
+
+
+\section{P3. Conjugate gradients\Pts{22}}
+
+Consider a boundary value problem for the discrete Laplace equation
+\begin{equation}
+  \begin{aligned}
+    -u_{i-1} + 2u_i - u_{i+1} &= 0 \qquad i=1,\dots,n-1 \\
+    u_0 &= a \\
+    u_n &= b \\
+  \end{aligned}
+  \label{e_laplace}
+\end{equation}
+with $a=-1$ and $b=2$.
+Assume that the grid points are $x_i=i/n$ for $i=0,\dots,n$.
+This linear problem can be written in matrix form as $Au=f$ with
+the matrix $A\in\mathbb{R}^{(n+1)\times(n+1)}$ and
+vectors~$u,f\in\mathbb{R}^{(n+1)}$ defined as
+\begin{equation}
+  A =
+  \left[
+  \begin{array}{cccccc}
+  1  & 0  &         &        &      &         \\
+  0  & 2  & -1      &        &      &         \\
+     & -1 & \ddots  & \ddots &      &         \\
+     &    & \ddots  & \ddots & -1   &         \\
+     &    &         & -1     & 2    & 0        \\
+     &    &         &        & 0    & 1       \\
+  \end{array}
+  \right],
+\quad 
+  u =
+  \left[
+  \begin{array}{c}
+    u_0\\
+    u_1\\
+    u_2\\
+    \vdots \\
+    u_{n-2}\\
+    u_{n-1}\\
+    u_n\\
+  \end{array}
+  \right],
+\quad 
+  f =
+  \left[
+  \begin{array}{c}
+    a\\
+    a\\
+    0\\
+    \vdots \\
+    0\\
+    b\\
+    b\\
+  \end{array}
+  \right].
+\end{equation}
+Note that $A$ is symmetric and sparse.
+However, \textbf{avoid constructing the matrix} $A$ in the following tasks,
+you should only rely on matrix-vector products.
+
+\subsection{(a)\Pts{2}}
+Analytically verify that $Au=f$ is indeed equivalent to~(\ref{e_laplace}).
+
+\subsection{(b)\Pts{3}}
+Write a function \verb`mul_A(u)` that takes a vector $u$ and returns the product $Au$.
+The algorithmic complexity of the function needs to be $\mathcal{O}(n)$.
+
+\subsection{(c)\Pts{8}}
+Implement the conjugate gradient method to solve a linear system $Au=f$.
+Your implementation should use \verb`mul_A(u)` without accessing the matrix~$A$
+directly.
+
+\subsection{(d)\Pts{5}}
+Set $n=32$ and solve the equation $Au=f$ using your implementation from
+part~\Part{c}. 
+Let $u^{(k)}$ denote the solution at iteration $k$ of the method.
+For the initial guess use
+\begin{equation}
+    u^{(0)}_i=
+    \begin{cases}
+      a, & i=0 \\
+      b, & i=n \\
+      0, & \text{otherwise}
+    \end{cases}
+\end{equation}
+which satisfies the boundary conditions.
+Perform $n + 1$ iterations.
+Make a log-linear plot of the norm of the residual $\|Au^{(k)}-f\|_2$ as a function of $k$.
+Qualitatively describe your results.
+How many iterations does it take to achieve $\|Au^{(k)}-f\|_2<10^{-10}$?
+
+\subsection{(e)\Pts{4}}
+Plot $u^{(k)}_i$ from part~\Part{d} as a function of $x_i$ for $k=0, 1, \dots, n$.
+Showing only those points for which $|(Au^{(k)}-f)_i|>10^{-2}$,
+make a log-linear plot of $|(Au^{(k)}-f)_i|$ as a function of $x_i$ for $k=0, 1,
+\dots, n$.
+Qualitatively describe your results.
+Do you observe two different trends between the cases of $k<n/2$ and $k>n/2$?
+
+
+\end{document}

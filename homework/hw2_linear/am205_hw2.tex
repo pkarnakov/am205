@@ -1,0 +1,329 @@
+\input{../preamble.tex}
+
+\title{AM205 HW2. Numerical linear algebra}
+
+\newcommand{\ZipName}{\texttt{\detokenize{am205_hw2_data.zip}}\xspace}
+\newcommand{\PointsMax}{92\xspace}
+\newcommand{\PointsCap}{70\xspace}
+
+\begin{document}
+
+\maketitle
+
+\section{P1. Equations with vector norms\Pts{8}}
+
+Define a matrix
+\begin{equation*}
+  A=\left[
+  \begin{array}{cc}
+4 & -3 \\
+2 & 0
+  \end{array}
+  \right]
+\end{equation*}
+representing a linear transformation $Av$ for $v=(x,y)^T \in \R^2$.
+Here you will consider a system of equations
+$\|v\|_p=1$ and $\|Av\|_p=2$
+and see that the system has only four solutions for any finite $p$
+but has infinitely many solutions for $p=\infty$.
+
+\subsection{(a)\Pts{3}}
+Plot two curves $\|v\|_2=1$ and $\|Av\|_2=2$.
+Analytically find the coordinates of four points $v \in \R^2$
+where the two curves intersect and mark them on the plot.
+
+\subsection{(b)\Pts{1}}
+Plot two curves $\|v\|_4=1$ and $\|Av\|_4=2$.
+
+\subsection{(c)\Pts{2}}
+Plot two curves $\|v\|_\infty=1$ and $\|Av\|_\infty=2$.
+Analytically show that both curves contain the entire
+line segment connecting the points $(1, \frac{2}{3})$ and $(1,1)$.
+Mark the line segment on the plot.
+
+\subsection{(d)\Pts{2}}
+For any finite $p\geq 1$, analytically show
+that if $v \in \R^2$ satisfies both $\|v\|_p=1$ and $\|Av\|_p=2$,
+then either $4x=y$ or $4x=5y$, i.e. the solutions always lie on the two straight
+lines. Draw the straight lines on your plots from the previous parts.
+
+\section{P2. Condition number of LU factorization\Pts{15}}
+
+\subsection{(a)\Pts{5}} Implement the LU factorization algorithm
+for a square matrix $A\in\mathbb{R}^{n\times n}$
+with partial pivoting and without pivoting. Do not use library functions
+for the LU factorization.
+
+\subsection{(b)\Pts{3}} In the same log-linear plot,
+show the condition number $\kappa(A)$ and
+the condition numbers $\kappa(L)$ and $\kappa(U)$ after each step of the
+algorithm (i.e. after eliminating the elements below the diagonal in one
+column) with and without pivoting for the Vandermonde
+matrix on 10 equidistant points in the range $[1,2]$ (including the endpoints).
+Use the same ordering as in \verb`numpy.vander()` by default,
+i.e. decreasing powers from left to right.
+
+\subsection{(c)\Pts{3}} Repeat part \Part{b} for the following ``pseudorandom'' matrix
+$A\in\mathbb{R}^{n\times n}$
+$$
+A_{ij}=\cos\big(37\,\cos(37\,(i+nj))\big)\quad \text{for}~i,\,j=1,\ldots,n
+$$
+with $n=10$.
+
+\subsection{(d)\Pts{4}} Sample $1000$ random $10\times10$ matrices A with elements
+distributed uniformly in $[-1,1]$ and plot the histograms of
+$\log_{10}\kappa(A)$, $\log_{10}\kappa(U)$ with pivoting, and
+$\log_{10}\kappa(U)$ without pivoting.
+To compute the histograms, use $50$ equal-width bins in the range $[0,5]$.
+Report the most probable value of $\kappa$,
+i.e. value from the bin with the largest number of samples.
+Which algorithm (with or without pivoting) is expected to provide a smaller
+condition number $\kappa(U)$?
+Are your results consistent with this expectation?
+
+\section{P3. Sparse linear algebra\Pts{19}}
+
+Here you will implement common operations with sparse matrices in different
+formats and analyze their cost.
+Consider three different storage formats:
+two-dimensional array (dense),
+compressed sparse row (CSR),
+and compressed sparse column (CSC).
+Do not use library functions or operators.
+However, you may and should use existing data structures (e.g.
+\verb`scipy.sparse.csr_array`).
+
+\subsection{(a)\Pts{3}} Write three functions that implement the matrix-vector
+product $Ax$ for $x\in\mathbb{R}^n$ 
+and matrix $A\in \mathbb{R}^{n\times n}$ stored
+in each of the three formats (dense, CSR, CSC).
+Store vectors as one-dimensional arrays.
+
+\subsection{(b)\Pts{5}} 
+Consider a matrix $A\in \mathbb{R}^{n\times n}$
+stored in the CSR format
+and matrix $B\in \mathbb{R}^{n\times n}$ stored in the CSC format.
+Write a function that returns the product $A B$ in the CSC format.
+
+\subsection{(c)\Pts{5}} Write a function that takes matrix
+$A\in \mathbb{R}^{n\times n}$ in the CSC
+format and column index $j$ and returns the elementary elimination matrix
+$$
+L_j =
+  \left[
+  \begin{array}{cccccc}
+   1 & \cdots & 0 & 0 & \cdots & 0\\
+  \vdots & \ddots & \vdots & \vdots & \ddots & \vdots\\
+   0 & \cdots & 1 & 0 & \cdots & 0\\
+  0 & \cdots & -a_{j+1,j}/a_{jj} & 1 & \cdots & 0\\
+  \vdots & \ddots & \vdots & \vdots & \ddots & \vdots\\
+  0 & \cdots & -a_{nj}/a_{jj} & 0 & \cdots & 1
+  \end{array}
+  \right]
+$$ in the CSR format, such that $L_jA$ contains only zeros below the diagonal in
+column~$j$.
+
+\subsection{(d)\Pts{2}} 
+Write a function \verb`sparse_lu()` that takes a matrix $A\in \mathbb{R}^{n\times n}$ stored in the CSC format
+and returns an upper triangular matrix $U=L_{n-1} \cdots L_2 L_1 A$
+stored in the CSC format.
+Reuse the two functions from parts \Part{b} and \Part{c}.
+
+\subsection{(e)\Pts{4}} By adding a counter to your functions (use a global
+variable or return the number of operations together with the result),
+measure the number of floating point operations $K(n)$
+required to complete \verb`sparse_lu()` for $n=5,6,\ldots,50$
+in each of the following cases
+\begin{itemize}
+  \item $A$ is a tridiagonal matrix
+$$
+  A =
+  \left[
+  \begin{array}{ccccc}
+  3       & 1       &         &         &         \\
+  1       & 3       & 1       &         &         \\
+          & 1       & \ddots  & \ddots  &         \\
+          &         & \ddots  & \ddots  & 1       \\
+          &         &         & 1       & 3       \\
+  \end{array}
+  \right],
+$$
+ \item $A=I+H$, where $H$ is a Hilbert matrix with elements
+   $$H_{ij}=\frac{1}{i + j - 1}\quad \text{for}~i,\,j=1,\ldots,n.$$
+\end{itemize}
+You may ignore those operations and loops that do not contribute to the leading
+term of~$K(n)$, i.e. measure it up to asymptotic equivalence.
+Make a log-log plot of the number of operations~$K(n)$ as a function of $n$.
+Fit a straight line $\log{C} + q\log{n} \approx \log{K(n)}$
+and report the obtained $C$ and $q$.
+
+\section{P4. Unstable LU factorization\Pts{15}}
+
+Consider matrices $G(n, c)\in\R^{n\times n}$ of the form
+\begin{equation*}
+  G(n, c) =
+  \left[
+  \begin{array}{cccccc}
+  c       & 0     & 0      & \ldots  & 0       & c       \\
+  -1      & 1     & 0      & \ldots  & 0       & 0       \\
+  -1      & -1    & 1      & \ldots  & 0       & 0       \\
+  \vdots  &       &        & \ddots  & \vdots  & \vdots  \\
+  -1      & -1    & -1     & \ldots  & 1       & 0       \\
+  -1      & -1    & -1     & \ldots  & -1      & 0       \\
+  \end{array}
+  \right]
+\end{equation*}
+with $n\geq3$ and $c\in\mathbb{R}$, $c>0$.
+In the following, you will perform the LU factorization of $G(n,c)$ with
+partial pivoting, i.e. by selecting the row with the largest absolute value
+in the corresponding column.
+If the choice of the pivot is non-unique, i.e. multiple rows contain elements
+with the same absolute value,
+select the one with the minimal row index
+(however, if you use a library implementation in part \Part{d}, any choice of the row is allowed).
+
+\subsection{(a)\Pts{3}} Consider two cases $0<c<1$ and $c>1$.
+In each case, perform the LU factorization of $G(4, c)$
+with partial pivoting (either by hand or using symbolic computation).
+Report matrices $U_1$, $U_2$, and $U_3=U$ obtained after each step of the algorithm,
+i.e. after eliminating the elements below the diagonal in one column.
+The results should contain $c$ as a parameter.
+
+\subsection{(b)\Pts{3}} Consider two cases $0<c<1$ and $c>1$.
+For each case, perform the LU factorization of $G(n, c)$ with partial pivoting
+in general for all $n\geq 3$ and report the resulting matrix $U$.
+The result should contain $c$ as a parameter.
+Showing the results of intermediate steps is not necessary.
+
+\subsection{(c)\Pts{2}} Write a function that returns $G(n, c)$.
+
+\subsection{(d)\Pts{7}} Consider two cases $c=0.95$ and $c=1.05$.
+For each case and for $n = 3, 4, \ldots, 80$, let $G=G(n,c)$,
+define the reference solution $x\in\R^n$ as $n$ equidistant points
+in the range $[1,2]$ (including the endpoints),
+and construct a right-hand side vector $b=Gx$.
+Perform the LU factorization of $G$ with partial pivoting numerically
+(e.g. using \verb`scipy.linalg.lu`) and solve the system
+$G \tilde{x} = b$ by solving two triangular systems
+(e.g. using \verb`scipy.linalg.solve_triangular`).
+Plot the 2-norm relative error $\|x-\tilde x\|_2/\|x\|_2$ as a function of $n$
+for each $c$.
+Explain if the observed behavior of the error is consistent
+with the form of the matrix $U$ obtained in parts~\Part{a} or \Part{b}.
+
+\section{P5. QR factorization applied to a bouncing ball\Pts{15}}
+
+Here you will analyze the trajectories of a bouncing
+\href{https://en.wikipedia.org/wiki/Super_Ball}{Super Ball}.
+In the data archive \ZipName, there is a directory \verb`super` containing twenty images
+showing two bounces of the ball on a table top.
+The images are given for illustration only, you will not need to process them.
+The duration between two frames is $7/120\;\text{s}$.
+The diameter of the ball is $42.5~\text{mm}$ corresponding to 43.5 pixels.
+In the same archive, you will find a text file \verb`super_ypos.txt`
+that lists the $y$ positions of the ball center measured in pixels for each
+frame $k$, which were calculated from the images.
+
+\subsection{(a)\Pts{6}} 
+Write a function that performs the QR factorization using Givens rotations for an
+arbitrary rectangular matrix $A\in\mathbb{R}^{m \times n}$ where $m\ge n$.
+Test your function on 10~random $11\times 7$ matrices,
+with elements drawn from a uniform distribution in $[-1, 1]$,
+by verifying that the Frobenius norm $\|A-QR\|_F$ is small.
+Do not use library functions for the QR factorization.
+
+\subsection{(b)\Pts{6}}
+During the experiment, the ball follows three parabolic arcs separated from each
+other by the two bounces.
+Using your QR factorization function, fit each of the three different arcs to
+\begin{equation*}
+  y(k) = \alpha k^2 + \beta k + \gamma,
+\end{equation*}
+where $k$ is the frame index.
+Report the obtained coefficients and plot the fitted model together with the data points.
+
+\subsection{(c)\Pts{3}}
+Using your fitted models from part \Part{b},
+calculate and report the gravitational acceleration $g$ from each of the three
+parabolic arcs. Using the fits to the first two arcs, calculate
+the height $h$ above the table top from which the ball is released.
+This should be the distance from the table top to the bottom of the ball.
+All quantities should be reported in the SI units.
+
+\section{P6. Traffic light images from PCA\Pts{20}}
+
+Here you will apply the principal component analysis (PCA)
+to images showing a traffic light, calibrate the components using labeled images,
+and generate new images not observed in practice.
+The images are extracted from a
+\href{https://www.youtube.com/watch?v=yGE-dyjht64}{time-lapse video} produced in Italy.
+
+In the archive \ZipName, you will find a directory \verb`traffic`
+with images \verb`a_*.png` numbered by the image index.
+Each image has a resolution of $240\times 135$ pixels with RGB channels.
+In the following, each image is represented as a vector $p\in\mathbb{R}^n$
+containing the color intensity values between $0$ and $1$, where $n=240\times
+135\times 3$.
+The dataset consists of $m=64$ images $p_i$ for $i=0,\ldots,m-1$.
+
+\subsection{(a)\Pts{4}} Construct the image $p_\mathrm{min}\in\mathbb{R}^n$
+as the element-wise minimum over all images. Visualize $p_\mathrm{min}$.
+In the following, vectors $p_i - p_\mathrm{min}$ are referred to as relative
+images.
+
+\subsection{(b)\Pts{5}} Assemble a matrix $A\in\mathbb{R}^{m\times n}$
+with rows $(p_i - p_\mathrm{min})^T$ for $i=0,\ldots,m-1$.
+Using the reduced SVD of $A$, extract the first three principal components
+$v_1$, $v_2$, $v_3\in\mathbb{R}^n$ which are orthonormal vectors.
+It is important to use the reduced SVD since the matrices generated by the full
+SVD will not fit in memory.
+Note that unlike the case discussed in the lecture,
+the reduced SVD is applied to matrix $A$ with $m<n$ and returns you
+a non-square matrix of the right singular vectors.
+Visualize the images defined as $0.5 (1 + v_k / \|v_k\|_\infty)$ for $k=1,2,3$.
+
+\subsection{(c)\Pts{8}}
+Three images with indices 0, 37, and 5 are used for calibration.
+They show three states of the traffic light:
+$g_1=(1, 0, 0)^T$ (red), $g_2=(0, 1, 0)^T$ (yellow), and $g_3=(0, 0, 1)^T$ (green).
+\begin{center}
+\includegraphics[width=1\textwidth]{traffic.jpg}
+\end{center}
+Denote the respective relevant images as
+$q_1=p_0-p_\mathrm{min}$, $q_2=p_{37}-p_\mathrm{min}$, and
+$q_3=p_5-p_\mathrm{min}$.
+Assemble a matrix $V\in\mathbb{R}^{3\times n}$ with rows
+$v_1$, $v_2$, $v_3$ from part~\Part{b}.
+Define a new of set vectors $w_1,w_2,w_3\in\mathbb{R}^n$
+and the corresponding matrix $W\in\mathbb{R}^{3\times n}$ as
+\begin{equation}
+  \label{pca_wv}
+  W = FV
+\end{equation}
+with an unknown matrix $F\in \mathbb{R}^{3\times3}$.
+The state vectors will be used as coordinates in the basis $W$.
+The relative image corresponding to a state vector $g\in\mathbb{R}^3$
+is recovered by~$W^T g$.
+The unknown matrix $F$ can be found by minimizing the least-squares error
+$$
+S(F) = \sum_{k=1}^3 \big\|q_k - W^T g_k \big\|^2
+     = \sum_{k=1}^3 \big\|q_k - V^T F^T g_k \big\|^2,
+$$
+which is equivalent to solving the normal equations
+$$
+V(q_k - V^T F^T g_k) = 0,\quad k=1,2,3.
+$$
+Note that $V$ consists of orthonormal rows and
+the state vectors $g_1,g_2,g_3$ are linearly independent.
+Solve these equations to obtain $F$, then compute $W$ from (\ref{pca_wv})
+that will give you $w_1,w_2,w_3$.
+Report the obtained $F$.
+Visualize the images defined as $0.5 (1 + w_k / \|w_k\|_\infty)$ for $k=1,2,3$.
+
+\subsection{(d)\Pts{3}}
+Some state vectors correspond to abnormal states of the traffic light.
+Consider new state vectors $g=(0,1,1)$, $(1,0,1)$, and $(1,1,0)$.
+Visualize the corresponding images~$p_\mathrm{min}+W^Tg$
+after clipping the values to $[0, 1]$.
+
+\end{document}

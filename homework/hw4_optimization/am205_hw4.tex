@@ -1,0 +1,269 @@
+\input{../preamble.tex}
+
+\title{AM205 HW4. PDEs, nonlinear equations, optimization}
+
+\newcommand{\PointsMax}{92\xspace}
+\newcommand{\PointsCap}{70\xspace}
+
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\vy}{\vec{y}}
+\newcommand{\vv}{\vec{v}}
+
+\begin{document}
+
+\maketitle
+
+\section{P1. Finite differences for advection \Pts{31}}
+
+Here you will compare the stability and accuracy of two finite difference
+schemes for the linear advection equation $u_t + cu_x = 0$.
+Assume that $c\in\mathbb{R}$ is a constant and $c>0$.
+The exact solution $u(x,t)$ is approximated
+with values $u_j^n\approx u(x_j, t^n)$
+on a uniform grid $x_j=j\Delta x$ and $t^n=n\Delta t$.
+Denote the CFL number as $\nu=c\Delta t / \Delta x$.
+The two schemes are the central difference scheme
+\begin{equation}
+  \frac{u^{n+1}_j - u^{n}_j}{\Delta t} +
+  c\frac{u^{n}_{j+1}-u^{n}_{j-1}}{2\Delta x} = 0
+\end{equation}
+and the second-order upwind scheme
+\begin{equation}
+  \frac{u^{n+1}_j - u^{n}_j}{\Delta t} +
+  c\frac{3u^{n}_j-4u^{n}_{j-1}+u^{n}_{j-2}}{2\Delta x} = 0.
+\end{equation}
+
+\subsection{(a)\Pts{2}}
+For each scheme, determine the range of $\nu$ that satisfy the CFL condition.
+
+\subsection{(b)\Pts{8}}
+For each scheme,
+show that its truncation error has the form
+\begin{equation}
+  T^n_j = A_1 u_{tt}(t^n, x_j)\Delta t + A_2 u_{xxx}(t^n, x_j)\Delta x^2 + \text{h.o.t.}
+\end{equation}
+and provide expressions for the factors $A_1$ and $A_2$.
+
+\subsection{(c)\Pts{11}}
+To analyze the stability,
+substitute the ansatz $u_j^n = \lambda^n e^{ijk\Delta x}$
+into each scheme and derive an expression for the amplification factor $\lambda$
+as a function of $k\Delta x$ and $\nu$.
+Stability implies that the Fourier modes are not amplified, i.e. $|\lambda|\leq 1$.
+However, you are not asked to solve this inequality analytically.
+Instead, perform the following for each scheme
+\begin{itemize}
+  \item Set $\nu=0.25$ and plot $|\lambda|$ as a function of $k \Delta x\in[0,\pi]$.
+    Report $k\Delta x$ and $|\lambda|$ of the "most unstable" mode, i.e.
+    corresponding to the largest $|\lambda|$.
+    Are there any values of $k\Delta x$ for which the scheme is stable?
+    Use samples of $\lambda$ obtained at 100 equidistant points $k\Delta x\in[0,\pi]$.
+  \item Plot $\max_{k \Delta x}|\lambda|$ as a function of $\nu\in[0,0.5]$.
+    Are there any values of $\nu$ for which the scheme is stable?
+    Use samples of $\lambda$ obtained at 100 equidistant points $k\Delta x\in[0,\pi]$
+    and 100 equidistant points $\nu\in[0,0.5]$.
+\end{itemize}
+
+\subsection{(d)\Pts{10}}
+Implement both schemes and solve an initial value problem for the advection
+equation with periodic boundary conditions in the range $x\in[0,1]$
+using a uniform grid of 128 points.
+Set $c=1$ and $\nu=0.25$.
+You can start from
+\href{\GitRoot/examples/unit3/advection.py}{\texttt{[examples/unit3/advection.py]}}
+which already implements the central difference scheme.
+Try using a smooth initial profile $u(x,0)=e^{-20(x - 0.5)^2}$
+and solve the equation in the time range $t\in[0,0.5]$.
+Also try using a discontinuous initial profile $u(x,0)=1$ if $|x-0.5|<0.2$
+and $u(x,0)=0$ otherwise and solve the equation in the time range $t\in[0,0.1]$.
+These parameters are chosen to demonstrate that although both schemes
+can be unstable and have the same order of accuracy,
+the second-order upwind scheme produces more accurate results.
+
+
+\section{P2. Newton fractal \Pts{31}}
+A fractal is a geometric shape containing structures at arbitrarily small
+scales.
+One example is the \href{https://en.wikipedia.org/wiki/Newton_fractal}{Newton fractal}
+which is characterized by Newton's method applied to a complex-valued polynomial.
+Following the canonical example of the Newton fractal, we use
+the polynomial
+\begin{equation}
+  \label{e_fz}
+  f(z) = z^3 - 1
+\end{equation}
+with complex roots
+\begin{equation}
+  \label{e_fz_roots}
+1,\quad
+-\tfrac{1}{2} + i\tfrac{\sqrt{3}}{2},\quad
+-\tfrac{1}{2} - i\tfrac{\sqrt{3}}{2}.
+\end{equation}
+A unique color is assigned to each root (e.g. red, green, and blue).
+The fractal is represented by an image in the complex plane.
+Each point $z\in\mathbb{C}$ is colored depending
+on the outcome of Newton's method applied to $f$ and started from $z$.
+If the iteration converges to a root, $z$~is colored by the color of that root.
+Otherwise, $z$~receives a default color (e.g. white).
+You will visualize the canonical Newton fractal
+and also apply the same technique to other iterative methods.
+
+Denote $z=x+iy\in\mathbb{C}$,
+$f(z)=u(x,y)+iv(x,y)\in\mathbb{C}$,
+and $\mathbf{x}=(x,y)\in\mathbb{R}^2$.
+Define a vector-valued function $\mathbf{g}:\mathbb{R}^2\to\mathbb{R}^2$
+as $\mathbf{g}(\mathbf{x})=(u(x,y), v(x,y))$.
+These types of notation will be used interchangeably.
+Recall that the function $f(z)$ is complex differentiable
+if partial derivatives of $u(x,y)$ and $v(x,y)$ exist
+and satisfy the Cauchy--Riemann equations
+$\frac{\partial u}{\partial x}=\frac{\partial v}{\partial y}$
+and 
+$\frac{\partial u}{\partial y}=-\frac{\partial v}{\partial x}$.
+
+\subsection{(a)\Pts{6}}
+Newton's method can be formulated in two different ways:
+for the complex-valued function $f(z)$ and the vector-valued function
+$\mathbf{g}(\mathbf{x})$.
+They correspond to two update rules
+\begin{equation}
+  z_{k+1} = z_k - f(z_k) / f'(z_k)
+\end{equation}
+and 
+\begin{equation}
+  \mathbf{x}_{k+1} =
+  \mathbf{x}_k-(\mathbf{J}_\mathbf{g}(\mathbf{x_k}))^{-1}\mathbf{g}(\mathbf{x}_k),
+\end{equation}
+where $\mathbf{J}_\mathbf{g}$ is the Jacobian matrix of $\mathbf{g}$.
+Analytically show that both formulations are equivalent,
+i.e. they produce the sequences related as $z_{k} = x_{k} + iy_k$.
+To do this,
+use the Cauchy--Riemann equations and write both update rules as linear
+equations instead of inverting the derivatives.
+Your proof should be general for any complex differentiable function $f(z)$,
+e.g. without assuming that it is a polynomial.
+
+\subsection{(b)\Pts{8}}
+Implement Newton's method for $f(z)$ given by (\ref{e_fz}).
+Terminate the algorithm if any of the following conditions is met
+\begin{itemize}
+  \item the distance to one of the roots $z$ is below the tolerance
+    $\epsilon=10^{-3}$, i.e. $|z-z_k|<\epsilon$;
+  \item the absolute value exceeds the threshold $A=10^3$, i.e. $|z_k|>A$;
+  \item the number of iterations reaches $K=100$, i.e. $k\geq K$.
+\end{itemize}
+Plot the trajectories of the method, i.e. all points $z_k$,
+for each of the starting points
+\begin{equation}
+-0.2+0.75i, \quad 0.4+0.75i,\quad  1 +0.75i,\quad  1.6+0.75i,
+\end{equation}
+which are chosen to demonstrate convergence to different roots.
+Mark the starting points and the exact roots (\ref{e_fz_roots}) on the plot.
+
+Generate an image representing the Newton fractal.
+The image should cover the rectangle $x,y\in[-2,2]$
+and have a resolution of $256\times 256$.
+You may increase or decrease the resolution depending on
+your implementation's performance.
+Mark the exact roots (\ref{e_fz_roots}) on the image.
+Qualitatively describe your observations.
+Does the method converge from any starting point?
+
+\subsection{(c)\Pts{8}}
+Recall the secant method which replaces the derivative in Newton's method
+by its finite-difference approximation using the function values from two previous
+iterations.
+The secant method is only applicable to univariate scalar functions,
+since in a higher-dimensional space the derivative is a matrix.
+However, the secant method can be applied on the complex plane
+using the following update rule
+\begin{equation}
+  z_{k+1} = z_k - f(z_k)\frac{z_k - z_{k-1}}{f(z_k) - f(z_{k-1})}.
+\end{equation}
+Repeat part~\Part{b} using the secant method.
+For the first iteration to obtain $z_1$ given $z_0$, apply Newton's method.
+
+\subsection{(d)\Pts{9}}
+Another method of root finding is gradient descent applied to the squared
+residual
+\begin{equation}
+  L(\mathbf{x}) = \|\mathbf{g}(\mathbf{x})\|_2^2
+\end{equation}
+with the update rule
+\begin{equation}
+  \mathbf{x}_{k+1} = \mathbf{x}_k -\eta \nabla L(\mathbf{x}_k),
+\end{equation}
+where $\eta=0.025$.
+Repeat part \Part{b} using this method.
+The gradient $\nabla L(\mathbf{x})$ should be computed analytically
+(symbolically or by hand).
+
+\section{P3. Himmelblau's function \Pts{30}}
+One benchmark for optimization algorithms is the minimization of
+\href{https://en.wikipedia.org/wiki/Himmelblau's_function}{Himmelblau's function}
+\begin{equation}
+  f(x, y)=\big(x^2+y-11\big)^2+\big(x+y^2-7\big)^2,
+\end{equation}
+which has four global minima of $0$.
+You will apply three different optimization algorithms to this function
+with various starting points aiming for its four different global minima.
+Denote $\mathbf{x}=(x, y)$.
+You should not use library functions that already implement the three considered
+optimization algorithms. However, you may and should use library functions
+for specific steps of the algorithms, as indicated below.
+
+\subsection{(a)\Pts{10}}
+Minimize Himmelblau's function using gradient descent with a constant factor,
+i.e. with the update rule
+\begin{equation}
+  \mathbf{x}_{k+1} = \mathbf{x}_k -\eta \nabla f(\mathbf{x}_k),
+\end{equation}
+where $\eta=0.015$.
+Try two sets of starting points
+\begin{itemize}
+  \item $(1,1)$, $(-1,1)$, $(-1,-1)$, $(1,-1)$,
+  \item $(3,3)$, $(-3,3)$, $(-3,-3)$, $(3,-3)$.
+\end{itemize}
+Terminate the algorithm if either $\|\nabla f(\mathbf{x}_k)\|_2<\epsilon$
+with $\epsilon=10^{-5}$ or the number of iterations reaches~1000.
+For each set of the starting points, plot in the same graph
+\begin{itemize}
+  \item contours of $f(x,y)$ with $x,y\in[-5,5]$,
+  \item starting points,
+  \item trajectories of the optimizer, i.e. points $\mathbf{x}_k$ from all iterations.
+\end{itemize}
+For each starting point, report the performed number of iterations,
+solution $\mathbf{x}_\text{term}$ at the last iteration,
+values of the function $f(\mathbf{x}_\text{term})$,
+and its gradient $\nabla f(\mathbf{x}_\text{term})$.
+Qualitatively describe your observations.
+Does the method converge to the global minimum?
+Does the method find critical points, i.e. such that $\nabla f(\mathbf{x})=0$?
+
+\subsection{(b)\Pts{10}}
+Repeat part \Part{a} using steepest descent method, i.e. with the update rule
+\begin{equation}
+  \mathbf{x}_{k+1} = \mathbf{x}_{k} + \alpha \mathbf{s},
+\end{equation}
+where $\mathbf{s}=-\nabla f(\mathbf{x}_{k})$ is the line search direction,
+and $\alpha$ minimizes the function
+\begin{equation}
+g(\alpha)=f(\mathbf{x}_k+\alpha \mathbf{s}).
+\end{equation}
+Use any optimizer to minimize the function $g(\alpha)$.
+One option is the BFGS method available in \verb`scipy.optimize.minimize`.
+Another option is \verb`scipy.optimize.line_search` that enforces
+strong \href{https://en.wikipedia.org/wiki/Wolfe_conditions}{Wolfe conditions}.
+
+
+\subsection{(c)\Pts{10}}
+Repeat part \Part{a} using Newton's method, i.e. with the update rule
+\begin{equation}
+  H_f(\mathbf{x}_k) (\mathbf{x}_{k+1} - \mathbf{x}_{k})= -\nabla{f(\mathbf{x}_k)},
+\end{equation}
+where $H_f(\mathbf{x}_k)$ is the Hessian of $f$.
+Use a library function to solve the linear system.
+
+
+
+\end{document}
